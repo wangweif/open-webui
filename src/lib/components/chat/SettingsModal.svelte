@@ -328,7 +328,7 @@
 		);
 	};
 
-	let selectedTab = 'general';
+	let selectedTab = 'account';
 
 	// Function to handle sideways scrolling
 	const scrollHandler = (event) => {
@@ -431,7 +431,7 @@
 								<div class=" self-center">{$i18n.t('General')}</div>
 							</button>
 						{:else if tabId === 'interface'}
-							<button
+							<!-- <button
 								class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 								'interface'
 									? ''
@@ -455,10 +455,10 @@
 									</svg>
 								</div>
 								<div class=" self-center">{$i18n.t('Interface')}</div>
-							</button>
+							</button> -->
 						{:else if tabId === 'connections'}
 							{#if $user.role === 'admin' || ($user.role === 'user' && $config?.features?.enable_direct_connections)}
-								<button
+								<!-- <button
 									class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-right transition {selectedTab ===
 									'connections'
 										? ''
@@ -480,10 +480,10 @@
 										</svg>
 									</div>
 									<div class=" self-center">{$i18n.t('Connections')}</div>
-								</button>
+								</button> -->
 							{/if}
 						{:else if tabId === 'personalization'}
-							<button
+							<!-- <button
 								class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 								'personalization'
 									? ''
@@ -496,9 +496,9 @@
 									<User />
 								</div>
 								<div class=" self-center">{$i18n.t('Personalization')}</div>
-							</button>
+							</button> -->
 						{:else if tabId === 'audio'}
-							<button
+							<!-- <button
 								class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 								'audio'
 									? ''
@@ -523,9 +523,9 @@
 									</svg>
 								</div>
 								<div class=" self-center">{$i18n.t('Audio')}</div>
-							</button>
+							</button> -->
 						{:else if tabId === 'chats'}
-							<button
+							<!-- <button
 								class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 								'chats'
 									? ''
@@ -549,7 +549,7 @@
 									</svg>
 								</div>
 								<div class=" self-center">{$i18n.t('Chats')}</div>
-							</button>
+							</button> -->
 						{:else if tabId === 'account'}
 							<button
 								class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
@@ -577,7 +577,7 @@
 								<div class=" self-center">{$i18n.t('Account')}</div>
 							</button>
 						{:else if tabId === 'about'}
-							<button
+							<!-- <button
 								class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 								'about'
 									? ''
@@ -601,7 +601,7 @@
 									</svg>
 								</div>
 								<div class=" self-center">{$i18n.t('About')}</div>
-							</button>
+							</button> -->
 						{:else if tabId === 'admin'}
 							{#if $user.role === 'admin'}
 								<button

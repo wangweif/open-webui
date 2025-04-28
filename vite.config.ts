@@ -39,5 +39,14 @@ export default defineConfig({
 	},
 	worker: {
 		format: 'es'
-	}
+	},
+	server: {
+        proxy: {
+          '/api': {
+            target: 'http://192.168.8.250:8080', // 后端地址
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api/, '/api')
+            }
+        }
+    }
 });

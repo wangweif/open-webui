@@ -545,6 +545,8 @@
 					/>
 
 					{#if recording}
+						<!-- 移除语音录制按钮 -->
+						<!--
 						<VoiceRecording
 							bind:recording
 							on:cancel={async () => {
@@ -567,6 +569,7 @@
 								}
 							}}
 						/>
+						-->
 					{:else}
 						<form
 							class="w-full flex gap-1.5"
@@ -1232,6 +1235,8 @@
 
 									<div class="self-end flex space-x-1 mr-1 shrink-0">
 										{#if !history?.currentId || history.messages[history.currentId]?.done == true}
+											<!-- 移除语音录制按钮 -->
+											<!--
 											<Tooltip content={$i18n.t('Record voice')}>
 												<button
 													id="voice-input-button"
@@ -1278,11 +1283,14 @@
 													</svg>
 												</button>
 											</Tooltip>
+											-->
 										{/if}
 
 										{#if !history.currentId || history.messages[history.currentId]?.done == true}
 											{#if prompt === '' && files.length === 0}
 												<div class=" flex items-center">
+													<!-- 移除通话按钮，因为在没有输入时也不需要显示通话按钮 -->
+													<!--
 													<Tooltip content={$i18n.t('Call')}>
 														<button
 															class=" {webSearchEnabled ||
@@ -1345,6 +1353,29 @@
 															aria-label="Call"
 														>
 															<Headphone className="size-5" />
+														</button>
+													</Tooltip>
+													-->
+													<!-- 在没有输入时也显示发送按钮，只是禁用状态 -->
+													<Tooltip content={$i18n.t('Send message')}>
+														<button
+															id="send-message-button"
+															class="text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled transition rounded-full p-1.5 self-center"
+															type="submit"
+															disabled={true}
+														>
+															<svg
+																xmlns="http://www.w3.org/2000/svg"
+																viewBox="0 0 16 16"
+																fill="currentColor"
+																class="size-5"
+															>
+																<path
+																	fill-rule="evenodd"
+																	d="M8 14a.75.75 0 0 1-.75-.75V4.56L4.03 7.78a.75.75 0 0 1-1.06-1.06l4.5-4.5a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06L8.75 4.56v8.69A.75.75 0 0 1 8 14Z"
+																	clip-rule="evenodd"
+																/>
+															</svg>
 														</button>
 													</Tooltip>
 												</div>

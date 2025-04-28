@@ -293,7 +293,7 @@
 		sideOffset={3}
 	>
 		<slot>
-			{#if searchEnabled}
+			<!-- {#if searchEnabled}
 				<div class="flex items-center gap-2.5 px-5 mt-3.5 mb-1.5">
 					<Search className="size-4" strokeWidth="2.5" />
 
@@ -322,10 +322,10 @@
 						}}
 					/>
 				</div>
-			{/if}
+			{/if} -->
 
 			<div class="px-3 mb-2 max-h-64 overflow-y-auto scrollbar-hidden group relative">
-				{#if tags}
+				<!-- {#if tags}
 					<div class=" flex w-full sticky">
 						<div
 							class="flex gap-1 scrollbar-none overflow-x-auto w-fit text-center text-sm font-medium rounded-full bg-transparent px-1.5 pb-0.5"
@@ -356,7 +356,7 @@
 							{/each}
 						</div>
 					</div>
-				{/if}
+				{/if} -->
 
 				{#each filteredItems as item, index}
 					<button
@@ -635,7 +635,7 @@
 			{#if showTemporaryChatControl}
 				<hr class="border-gray-100 dark:border-gray-800" />
 
-				<div class="flex items-center mx-2 my-2">
+				<!-- <div class="flex items-center mx-2 my-2">
 					<button
 						class="flex justify-between w-full font-medium line-clamp-1 select-none items-center rounded-button py-2 px-3 text-sm text-gray-700 dark:text-gray-100 outline-hidden transition-all duration-75 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer data-highlighted:bg-muted"
 						on:click={async () => {
@@ -666,7 +666,7 @@
 							<Switch state={$temporaryChatEnabled} />
 						</div>
 					</button>
-				</div>
+				</div> -->
 			{/if}
 
 			<div class="hidden w-[42rem]" />

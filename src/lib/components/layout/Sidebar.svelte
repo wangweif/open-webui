@@ -884,7 +884,7 @@
 		<div class="px-2">
 			<div class="flex flex-col font-primary">
 				{#if $user !== undefined}
-					<UserMenu
+					<!-- <UserMenu
 						role={$user.role}
 						on:show={(e) => {
 							if (e.detail === 'archived-chat') {
@@ -907,7 +907,7 @@
 							</div>
 							<div class=" self-center font-medium">{$user.name}</div>
 						</button>
-					</UserMenu>
+					</UserMenu> -->
 				{/if}
 			</div>
 		</div>

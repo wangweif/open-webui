@@ -211,14 +211,14 @@
 							}}>{$i18n.t('Use Initials')}</button
 						>
 
-						<button
+						<!-- <button
 							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-full px-4 py-0.5 bg-gray-100 dark:bg-gray-850"
 							on:click={async () => {
 								const url = await getGravatarUrl(localStorage.token, $user.email);
 
 								profileImageUrl = url;
 							}}>{$i18n.t('Use Gravatar')}</button
-						>
+						> -->
 
 						<button
 							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg px-2 py-1"
@@ -245,7 +245,7 @@
 				</div>
 			</div>
 
-			<div class="pt-2">
+			<!-- <div class="pt-2">
 				<div class="flex flex-col w-full">
 					<div class=" mb-1 text-xs font-medium">{$i18n.t('Notification Webhook')}</div>
 
@@ -259,7 +259,7 @@
 						/>
 					</div>
 				</div>
-			</div>
+			</div> -->
 		</div>
 
 		<div class="py-0.5">
@@ -268,7 +268,7 @@
 
 		<hr class="border-gray-100 dark:border-gray-850 my-4" />
 
-		<div class="flex justify-between items-center text-sm">
+		<!-- <div class="flex justify-between items-center text-sm">
 			<div class="  font-medium">{$i18n.t('API keys')}</div>
 			<button
 				class=" text-xs font-medium text-gray-500"
@@ -277,7 +277,7 @@
 					showAPIKeys = !showAPIKeys;
 				}}>{showAPIKeys ? $i18n.t('Hide') : $i18n.t('Show')}</button
 			>
-		</div>
+		</div> -->
 
 		{#if showAPIKeys}
 			<div class="flex flex-col gap-4">

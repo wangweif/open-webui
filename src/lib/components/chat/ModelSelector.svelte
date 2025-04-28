@@ -54,7 +54,7 @@
 			</div>
 
 			{#if selectedModelIdx === 0}
-				<div
+				<!-- <div
 					class="  self-center mx-1 disabled:text-gray-600 disabled:hover:text-gray-600 -translate-y-[0.5px]"
 				>
 					<Tooltip content={$i18n.t('Add Model')}>
@@ -78,7 +78,7 @@
 							</svg>
 						</button>
 					</Tooltip>
-				</div>
+				</div> -->
 			{:else}
 				<div
 					class="  self-center mx-1 disabled:text-gray-600 disabled:hover:text-gray-600 -translate-y-[0.5px]"
@@ -112,6 +112,6 @@
 
 {#if showSetDefault}
 	<div class=" absolute text-left mt-[1px] ml-1 text-[0.7rem] text-gray-500 font-primary">
-		<button on:click={saveDefaultModel}> {$i18n.t('Set as default')}</button>
+		<!-- <button on:click={saveDefaultModel}> {$i18n.t('Set as default')}</button> -->
 	</div>
 {/if}
