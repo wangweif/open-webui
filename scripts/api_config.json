@@ -1,0 +1,343 @@
+{
+  "globals": {
+    "base_url": "http://localhost:8080",
+    "login_endpoint": "/api/v1/auths/signin",
+    "login_credentials": {
+      "email": "buct255@gmail.com",
+      "password": "admin"
+    }
+  },
+  "apis": {
+    "tools": {
+      "endpoint": "/api/v1/tools/list",
+      "method": "GET",
+      "description": "获取工具列表"
+    },
+    "create_tool": {
+      "endpoint": "/api/v1/configs/tool_servers",
+      "method": "POST",
+      "description": "配置工具",
+      "default_data": {
+        "TOOL_SERVER_CONNECTIONS": [
+            {
+              "url": "http://127.0.0.1:8000",
+              "path": "openapi.json",
+              "auth_type": "bearer",
+              "key": "top-secret",
+              "config": {
+                "enable": true,
+                "access_control": null
+              }
+            },
+            {
+              "url": "http://127.0.0.1:8001",
+              "path": "openapi.json",
+              "auth_type": "bearer",
+              "key": "123",
+              "config": {
+                "enable": true,
+                "access_control": null
+              }
+            }
+        ]
+      }
+    },
+    "update_openaiAPI": {
+      "endpoint": "/openai/config/update",
+      "method": "POST",
+      "description": "更新OpenAI配置（管道）",
+      "default_data": {
+        "ENABLE_OPENAI_API": true,
+        "OPENAI_API_BASE_URLS": [
+            "http://localhost:11434",
+            "http://localhost:8000"
+        ],
+        "OPENAI_API_KEYS": [
+            "123",
+            ""
+        ],
+        "OPENAI_API_CONFIGS": {
+            "0": {},
+            "1": {
+                "enable": true,
+                "prefix_id": "",
+                "model_ids": []
+            }
+        }
+      }
+    },
+    "update_ollamaAPI": {
+      "endpoint": "/ollama/config/update",
+      "method": "POST",
+      "description": "更新Ollama配置（模型）",
+      "default_data": {
+        "ENABLE_OLLAMA_API": true,
+        "OLLAMA_BASE_URLS": [
+            "http://192.168.8.250:11434",
+            "166666"
+        ],
+        "OLLAMA_API_CONFIGS": {
+            "0": {
+                "enable": true,
+                "tags": [],
+                "prefix_id": "",
+                "model_ids": [],
+                "key": ""
+            },
+            "1": {
+                "enable": true,
+                "prefix_id": "",
+                "model_ids": [],
+                "key": ""
+            }
+        }
+      }
+    },
+    "update_onlineSearch": {
+      "endpoint": "/api/v1/retrieval/config/update",
+      "method": "POST",
+      "description": "更新联网搜索配置",
+      "default_data": {
+        "web": {
+          "ENABLE_WEB_SEARCH": true,
+          "WEB_SEARCH_ENGINE": "google_pse",
+          "WEB_SEARCH_TRUST_ENV": null,
+          "WEB_SEARCH_RESULT_COUNT": "123",
+          "WEB_SEARCH_CONCURRENT_REQUESTS": "123",
+          "WEB_SEARCH_DOMAIN_FILTER_LIST": [],
+          "BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL": false,
+          "SEARXNG_QUERY_URL": null,
+          "GOOGLE_PSE_API_KEY": "123456789",
+          "GOOGLE_PSE_ENGINE_ID": "123",
+          "BRAVE_SEARCH_API_KEY": null,
+          "KAGI_SEARCH_API_KEY": null,
+          "MOJEEK_SEARCH_API_KEY": null,
+          "BOCHA_SEARCH_API_KEY": null,
+          "SERPSTACK_API_KEY": null,
+          "SERPSTACK_HTTPS": null,
+          "SERPER_API_KEY": null,
+          "SERPLY_API_KEY": null,
+          "TAVILY_API_KEY": null,
+          "SEARCHAPI_API_KEY": null,
+          "SEARCHAPI_ENGINE": null,
+          "SERPAPI_API_KEY": null,
+          "SERPAPI_ENGINE": null,
+          "JINA_API_KEY": null,
+          "BING_SEARCH_V7_ENDPOINT": null,
+          "BING_SEARCH_V7_SUBSCRIPTION_KEY": null,
+          "EXA_API_KEY": null,
+          "PERPLEXITY_API_KEY": null,
+          "SOUGOU_API_SID": null,
+          "SOUGOU_API_SK": null,
+          "WEB_LOADER_ENGINE": null,
+          "ENABLE_WEB_LOADER_SSL_VERIFICATION": null,
+          "PLAYWRIGHT_WS_URL": null,
+          "PLAYWRIGHT_TIMEOUT": null,
+          "FIRECRAWL_API_KEY": null,
+          "FIRECRAWL_API_BASE_URL": null,
+          "TAVILY_EXTRACT_DEPTH": null,
+          "YOUTUBE_LOADER_LANGUAGE": [],
+          "YOUTUBE_LOADER_PROXY_URL": null,
+          "YOUTUBE_LOADER_TRANSLATION": null
+        }
+      }
+    },
+    "create_model": {
+      "endpoint": "/api/v1/models/create",
+      "method": "POST",
+      "description": "添加模型（从Ollma中添加）",
+      "default_data": {
+        "meta": {
+          "profile_image_url": "/static/favicon.png",
+          "description": null,
+          "suggestion_prompts": null,
+          "tags": [],
+          "capabilities": {
+            "vision": true,
+            "citations": true
+          }
+        },
+        "id": "deepseek-r1:32b",
+        "name": "deepseek-r1:32b",
+        "base_model_id": null,
+        "params": {},
+        "access_control": null,
+        "object": "model",
+        "created": 1745911720,
+        "owned_by": "ollama",
+        "ollama": {
+          "name": "deepseek-r1:32b",
+          "model": "deepseek-r1:32b",
+          "modified_at": "2025-02-10T16:23:04.73444751+08:00",
+          "size": 19851337640,
+          "digest": "38056bbcbb2d068501ecb2d5ea9cea9dd4847465f1ab88c4d4a412a9f7792717",
+          "details": {
+            "parent_model": "",
+            "format": "gguf",
+            "family": "qwen2",
+            "families": ["qwen2"],
+            "parameter_size": "32.8B",
+            "quantization_level": "Q4_K_M"
+          },
+          "urls": [0]
+        },
+        "tags": [],
+        "is_active": true
+      }
+    },
+    "update_model": {
+      "endpoint": "/api/v1/models/model/update?id=deepseek-r1:32b",
+      "method": "POST",
+      "description": "更新模型配置",
+      "default_data": {
+        "id": "deepseek-r1:32b",
+        "base_model_id": null,
+        "name": "deepseek-r1:32b",
+        "meta": {
+          "profile_image_url": "/static/favicon.png",
+          "description": null,
+          "capabilities": {
+            "vision": true,
+            "citations": true
+          },
+          "suggestion_prompts": null,
+          "tags": [],
+          "hidden": false
+        },
+        "params": {
+          "system": "test__系统提示词"
+        },
+        "object": "model",
+        "created": 1745912027,
+        "owned_by": "ollama",
+        "ollama": {
+          "name": "deepseek-r1:32b",
+          "model": "deepseek-r1:32b",
+          "modified_at": "2025-02-10T16:23:04.73444751+08:00",
+          "size": 19851337640,
+          "digest": "38056bbcbb2d068501ecb2d5ea9cea9dd4847465f1ab88c4d4a412a9f7792717",
+          "details": {
+            "parent_model": "",
+            "format": "gguf",
+            "family": "qwen2",
+            "families": ["qwen2"],
+            "parameter_size": "32.8B",
+            "quantization_level": "Q4_K_M"
+          },
+          "urls": [0]
+        },
+        "tags": [],
+        "user_id": "bce901f0-7d6b-416a-a793-2e5b3116acee",
+        "access_control": {
+          "read": {
+            "group_ids": [],
+            "user_ids": []
+          },
+          "write": {
+            "group_ids": [],
+            "user_ids": []
+          }
+        },
+        "is_active": true,
+        "updated_at": 1745911968,
+        "created_at": 1745911968
+      }
+    },
+    "create_workModel": {
+      "endpoint": "/api/v1/models/create",
+      "method": "POST",
+      "description": "创建工作区模型",
+      "default_data": {
+        "id": "test123",
+        "base_model_id": "deepseek-r1:32b",
+        "name": "Test123",
+        "meta": {
+          "profile_image_url": "/static/favicon.png",
+          "description": "养猪",
+          "suggestion_prompts": null,
+          "tags": [],
+          "capabilities": {
+            "vision": true,
+            "citations": true
+          }
+        },
+        "knowledge": [
+          {
+            "id": "e652345b-523d-4a51-a8b1-c94f32f064b7",
+            "user_id": "bce901f0-7d6b-416a-a793-2e5b3116acee",
+            "name": "养猪 ",
+            "description": "养猪王",
+            "data": {
+              "file_ids": ["b3515d2b-f3e6-4b27-b48a-14d7abfbfd50"]
+            },
+            "meta": null,
+            "access_control": null,
+            "created_at": 1745910789,
+            "updated_at": 1745910843,
+            "user": {
+              "id": "bce901f0-7d6b-416a-a793-2e5b3116acee",
+              "name": "admin",
+              "email": "buct255@gmail.com",
+              "role": "admin",
+              "profile_image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAABJFJREFUeF7tnF1oFFccxc/M7GwmMdZajVWpvkSptR9BNEIqVSvVUrQgpQ/VF0FEUYoUqvStVV9EFPRBLJQgCEVfxA9saRtF+4H4kIIExNbSKGihrSIaTZPZzyk7Y0NmYtzNrppzy9m3Ze/snjm/Ofd///eGWPfbnwugF40DloDQsAiFCAgXDwEh4yEgAsLmAJke1RABIXOATI4SIiBkDpDJUUIEhMwBMjlKiICQOUAmRwkREDIHyOQoIQJC5gCZHCVEQMgcIJOjhAgImQNkcpQQASFzgEyOEiIgZA6QyVFCBITMATI5SoiAkDlAJkcJERAyB8jkGJ0Qb+mXSE1/Z8DSIPcPsp3bkPvlIJnNlcsxFogzaR68N9thNU6L3W3+Rgf8jlWVO0A20lgg6dZPkX5lE2C7MUuD/lvwf/wQhT/OkFldmRxjgdQv/wrO5LbwLoP+m7DSzwCOBwRF5K4cQub8lsocIBtlJJBU8/uoa9sFq+7Z0M789W/hTGyB1TAlfF+88yv6T72NINdLZnd5OUYCqVuwB+6LawDLBgoZZLv2wpn8OpypC6PEGFzcjQNij2uGt/Qw7HEzIvP7/oT/w0Y4TXORnrM1mrZKqTG0uBsHxJ29DunWz2ClGkLjC39dQP/XK5BcdZla3I0D4i07gtS0ZdFkXMwhe+kAsp07wrexvsTQ4m4UEGfqG/AWfT5QvIPeG/DPrUPh5s8hEPeltUi3boPljol49fwO//RqFHu6y1dTkhFGAUn2Hsk6kawvKPjIXtyNbNc+ErvLyzAKSMPKs7AntETFPN+HbOd25C63x+4ytgIzsLgbAyTZeww3HSXHmVbcjQHiLf4Cqeb3Sv8NpJQP5H47jMxPmx86B9Sv+AbO8/Ojzwwr7kYAGdJ7ZO4ic+ET5LuPPhRIstaYVNyNAJJu+SjW9BVvd6HvxJJhK+SQnWCDirsRQB7VewxHJXbNoAay/DpndEfQA3FeeAvewv2w6ptqcirI3EHm/MfIXztZ0/c86YvpgdTN3wH35Q2AnarNC0OKOzUQy21E/fJTsCe8VhuMB1ebUNypgbgzVyHdthOWOzZawfb9HW61B9meigDZY6bAfXXzwLmJCZ07NZB471Hdlvrg7r5E8b/d4YqIjsIgWiB20xx4Sw7Cbpwe2VLl0jXZkwRlephRYBD7SVogQ3qP3uvwz65F8dbFEXmW3CEudfn57mPwv18/ou95WoNpgQz+I4aSGfmrx8Ot9mpeyZ6keO8q/I4PKLflKYEke49az8iTp4zVTn/VPAwjvYYSSHILvdbl6pBzEuLiTgck7D3e/Q72+FkPHq5H7+xW+gQmIbMWdzogyWPYx2Vc8pyEtbjTAan0if+/jhMQMrICIiBkDpDJUUIEhMwBMjlKiICQOUAmRwkREDIHyOQoIQJC5gCZHCVEQMgcIJOjhAgImQNkcpQQASFzgEyOEiIgZA6QyVFCBITMATI5SoiAkDlAJkcJERAyB8jkKCECQuYAmRwlREDIHCCTo4QICJkDZHKUEAEhc4BMjhIiIGQOkMlRQgSEzAEyOUoIGZB/Abe4lAMJb2YBAAAAAElFTkSuQmCC"
+            }
+          }
+        ],
+        "files": [
+          {
+            "id": "b3515d2b-f3e6-4b27-b48a-14d7abfbfd50",
+            "meta": {
+              "name": "今日养猪业202301.pdf",
+              "content_type": "application/pdf",
+              "size": 14274922,
+              "data": {},
+              "collection_name": "e652345b-523d-4a51-a8b1-c94f32f064b7"
+            },
+            "created_at": 1745910805,
+            "updated_at": 1745910805
+          }
+        ],
+        "type": "collection",
+        "params": {},
+        "access_control": null
+      }
+    },
+    "update_workModel": {
+      "endpoint": "/api/v1/models/model/update?id=test",
+      "method": "POST",
+      "description": "更新工作区模型",
+      "default_data": {
+        "id": "test",
+        "base_model_id": "deepseek-r1:32b",
+        "name": "Test",
+        "meta": {
+          "profile_image_url": "/static/favicon.png",
+          "description": "养猪哈哈哈",
+          "capabilities": {
+            "vision": true,
+            "citations": true
+          },
+          "suggestion_prompts": null,
+          "tags": []
+        },
+        "params": {},
+        "user_id": "bce901f0-7d6b-416a-a793-2e5b3116acee",
+        "access_control": null,
+        "is_active": true,
+        "updated_at": 1745910878,
+        "created_at": 1745910878
+      }
+    },
+    "create_prompt": {
+      "endpoint": "/api/v1/prompts/create",
+      "method": "POST",
+      "description": "创建提示词",
+      "default_data": {
+        "command": "/fuyu",
+        "title": "哈喽",
+        "content": "hhhhhh",
+        "access_control": null
+      }
+    }
+  }
+} 
