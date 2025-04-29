@@ -15,9 +15,9 @@
 	import Chats from './Settings/Chats.svelte';
 	import User from '../icons/User.svelte';
 	import Personalization from './Settings/Personalization.svelte';
-	import SearchInput from '../layout/Sidebar/SearchInput.svelte';
 	import Search from '../icons/Search.svelte';
 	import Connections from './Settings/Connections.svelte';
+	import Tools from './Settings/Tools.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -126,6 +126,11 @@
 		{
 			id: 'connections',
 			title: 'Connections',
+			keywords: []
+		},
+		{
+			id: 'tools',
+			title: 'Tools',
 			keywords: []
 		},
 		{
@@ -603,7 +608,7 @@
 								<div class=" self-center">{$i18n.t('About')}</div>
 							</button> -->
 						{:else if tabId === 'admin'}
-							{#if $user.role === 'admin'}
+							{#if $user?.role === 'admin'}
 								<button
 									class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 									'admin'
@@ -657,6 +662,13 @@
 					/>
 				{:else if selectedTab === 'connections'}
 					<Connections
+						saveSettings={async (updated) => {
+							await saveSettings(updated);
+							toast.success($i18n.t('Settings saved successfully!'));
+						}}
+					/>
+				{:else if selectedTab === 'tools'}
+					<Tools
 						saveSettings={async (updated) => {
 							await saveSettings(updated);
 							toast.success($i18n.t('Settings saved successfully!'));
