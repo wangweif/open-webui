@@ -1,10 +1,10 @@
 {
   "globals": {
-    "base_url": "http://localhost:8080",
+    "base_url": "http://192.168.8.250:8080",
     "login_endpoint": "/api/v1/auths/signin",
     "login_credentials": {
-      "email": "buct255@gmail.com",
-      "password": "admin"
+      "email": "123@qq.com",
+      "password": "123456"
     }
   },
   "apis": {
@@ -20,20 +20,20 @@
       "default_data": {
         "TOOL_SERVER_CONNECTIONS": [
             {
-              "url": "http://127.0.0.1:8000",
+              "url": "http://127.0.0.1:9998/time",
               "path": "openapi.json",
               "auth_type": "bearer",
-              "key": "top-secret",
+              "key": "",
               "config": {
                 "enable": true,
                 "access_control": null
               }
             },
             {
-              "url": "http://127.0.0.1:8001",
+              "url": "http://127.0.0.1:9998/mcp-server-price",
               "path": "openapi.json",
               "auth_type": "bearer",
-              "key": "123",
+              "key": "",
               "config": {
                 "enable": true,
                 "access_control": null
