@@ -38,6 +38,16 @@
                 "enable": true,
                 "access_control": null
               }
+            },
+            {
+              "url": "http://127.0.0.1:9998/weather",
+              "path": "openapi.json",
+              "auth_type": "bearer",
+              "key": "",
+              "config": {
+                "enable": true,
+                "access_control": null
+              }
             }
         ]
       }
@@ -50,11 +60,11 @@
         "ENABLE_OPENAI_API": true,
         "OPENAI_API_BASE_URLS": [
             "http://localhost:11434",
-            "http://localhost:8000"
+            "http://192.168.8.250:9099"
         ],
         "OPENAI_API_KEYS": [
-            "123",
-            ""
+            "",
+            "0p3n-w3bu!"
         ],
         "OPENAI_API_CONFIGS": {
             "0": {},
@@ -73,19 +83,12 @@
       "default_data": {
         "ENABLE_OLLAMA_API": true,
         "OLLAMA_BASE_URLS": [
-            "http://192.168.8.250:11434",
-            "166666"
+            "http://localhost:11434"
         ],
         "OLLAMA_API_CONFIGS": {
             "0": {
                 "enable": true,
                 "tags": [],
-                "prefix_id": "",
-                "model_ids": [],
-                "key": ""
-            },
-            "1": {
-                "enable": true,
                 "prefix_id": "",
                 "model_ids": [],
                 "key": ""
@@ -204,9 +207,7 @@
           "tags": [],
           "hidden": false
         },
-        "params": {
-          "system": "test__系统提示词"
-        },
+        "params": {},
         "object": "model",
         "created": 1745912027,
         "owned_by": "ollama",
@@ -228,16 +229,6 @@
         },
         "tags": [],
         "user_id": "bce901f0-7d6b-416a-a793-2e5b3116acee",
-        "access_control": {
-          "read": {
-            "group_ids": [],
-            "user_ids": []
-          },
-          "write": {
-            "group_ids": [],
-            "user_ids": []
-          }
-        },
         "is_active": true,
         "updated_at": 1745911968,
         "created_at": 1745911968
@@ -248,57 +239,32 @@
       "method": "POST",
       "description": "创建工作区模型",
       "default_data": {
-        "id": "test123",
+        "id": "testttt",
         "base_model_id": "deepseek-r1:32b",
         "name": "Test123",
         "meta": {
           "profile_image_url": "/static/favicon.png",
           "description": "养猪",
-          "suggestion_prompts": null,
+          "suggestion_prompts": [
+            {
+              "content": "你是谁"
+            }
+          ],
           "tags": [],
           "capabilities": {
             "vision": true,
             "citations": true
-          }
+          },
+          "toolIds": [
+            "server:0",
+            "server:1",
+            "server:2"
+          ]
         },
-        "knowledge": [
-          {
-            "id": "e652345b-523d-4a51-a8b1-c94f32f064b7",
-            "user_id": "bce901f0-7d6b-416a-a793-2e5b3116acee",
-            "name": "养猪 ",
-            "description": "养猪王",
-            "data": {
-              "file_ids": ["b3515d2b-f3e6-4b27-b48a-14d7abfbfd50"]
-            },
-            "meta": null,
-            "access_control": null,
-            "created_at": 1745910789,
-            "updated_at": 1745910843,
-            "user": {
-              "id": "bce901f0-7d6b-416a-a793-2e5b3116acee",
-              "name": "admin",
-              "email": "buct255@gmail.com",
-              "role": "admin",
-              "profile_image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAABJFJREFUeF7tnF1oFFccxc/M7GwmMdZajVWpvkSptR9BNEIqVSvVUrQgpQ/VF0FEUYoUqvStVV9EFPRBLJQgCEVfxA9saRtF+4H4kIIExNbSKGihrSIaTZPZzyk7Y0NmYtzNrppzy9m3Ze/snjm/Ofd///eGWPfbnwugF40DloDQsAiFCAgXDwEh4yEgAsLmAJke1RABIXOATI4SIiBkDpDJUUIEhMwBMjlKiICQOUAmRwkREDIHyOQoIQJC5gCZHCVEQMgcIJOjhAgImQNkcpQQASFzgEyOEiIgZA6QyVFCBITMATI5SoiAkDlAJkcJERAyB8jkGJ0Qb+mXSE1/Z8DSIPcPsp3bkPvlIJnNlcsxFogzaR68N9thNU6L3W3+Rgf8jlWVO0A20lgg6dZPkX5lE2C7MUuD/lvwf/wQhT/OkFldmRxjgdQv/wrO5LbwLoP+m7DSzwCOBwRF5K4cQub8lsocIBtlJJBU8/uoa9sFq+7Z0M789W/hTGyB1TAlfF+88yv6T72NINdLZnd5OUYCqVuwB+6LawDLBgoZZLv2wpn8OpypC6PEGFzcjQNij2uGt/Qw7HEzIvP7/oT/w0Y4TXORnrM1mrZKqTG0uBsHxJ29DunWz2ClGkLjC39dQP/XK5BcdZla3I0D4i07gtS0ZdFkXMwhe+kAsp07wrexvsTQ4m4UEGfqG/AWfT5QvIPeG/DPrUPh5s8hEPeltUi3boPljol49fwO//RqFHu6y1dTkhFGAUn2Hsk6kawvKPjIXtyNbNc+ErvLyzAKSMPKs7AntETFPN+HbOd25C63x+4ytgIzsLgbAyTZeww3HSXHmVbcjQHiLf4Cqeb3Sv8NpJQP5H47jMxPmx86B9Sv+AbO8/Ojzwwr7kYAGdJ7ZO4ic+ET5LuPPhRIstaYVNyNAJJu+SjW9BVvd6HvxJJhK+SQnWCDirsRQB7VewxHJXbNoAay/DpndEfQA3FeeAvewv2w6ptqcirI3EHm/MfIXztZ0/c86YvpgdTN3wH35Q2AnarNC0OKOzUQy21E/fJTsCe8VhuMB1ebUNypgbgzVyHdthOWOzZawfb9HW61B9meigDZY6bAfXXzwLmJCZ07NZB471Hdlvrg7r5E8b/d4YqIjsIgWiB20xx4Sw7Cbpwe2VLl0jXZkwRlephRYBD7SVogQ3qP3uvwz65F8dbFEXmW3CEudfn57mPwv18/ou95WoNpgQz+I4aSGfmrx8Ot9mpeyZ6keO8q/I4PKLflKYEke49az8iTp4zVTn/VPAwjvYYSSHILvdbl6pBzEuLiTgck7D3e/Q72+FkPHq5H7+xW+gQmIbMWdzogyWPYx2Vc8pyEtbjTAan0if+/jhMQMrICIiBkDpDJUUIEhMwBMjlKiICQOUAmRwkREDIHyOQoIQJC5gCZHCVEQMgcIJOjhAgImQNkcpQQASFzgEyOEiIgZA6QyVFCBITMATI5SoiAkDlAJkcJERAyB8jkKCECQuYAmRwlREDIHCCTo4QICJkDZHKUEAEhc4BMjhIiIGQOkMlRQgSEzAEyOUoIGZB/Abe4lAMJb2YBAAAAAElFTkSuQmCC"
-            }
-          }
-        ],
-        "files": [
-          {
-            "id": "b3515d2b-f3e6-4b27-b48a-14d7abfbfd50",
-            "meta": {
-              "name": "今日养猪业202301.pdf",
-              "content_type": "application/pdf",
-              "size": 14274922,
-              "data": {},
-              "collection_name": "e652345b-523d-4a51-a8b1-c94f32f064b7"
-            },
-            "created_at": 1745910805,
-            "updated_at": 1745910805
-          }
-        ],
         "type": "collection",
-        "params": {},
+        "params": {
+          "system": "你是一个资深养猪人，负责为养猪户解决问题。"
+        },
         "access_control": null
       }
     },
@@ -309,18 +275,29 @@
       "default_data": {
         "id": "test",
         "base_model_id": "deepseek-r1:32b",
-        "name": "Test",
+        "name": "养猪人",
         "meta": {
           "profile_image_url": "/static/favicon.png",
-          "description": "养猪哈哈哈",
+          "description": "海淀养猪王",
           "capabilities": {
             "vision": true,
             "citations": true
           },
-          "suggestion_prompts": null,
-          "tags": []
+          "suggestion_prompts": [
+            {
+              "content": "你是谁？"
+            }
+          ],
+          "tags": [],
+          "toolIds": [
+            "server:0",
+            "server:1",
+            "server:2"
+          ]
         },
-        "params": {},
+        "params": {
+          "system": "你的身份是资深养猪专家，负责回答养殖户的问题"
+        },
         "user_id": "bce901f0-7d6b-416a-a793-2e5b3116acee",
         "access_control": null,
         "is_active": true,
@@ -328,14 +305,24 @@
         "created_at": 1745910878
       }
     },
+    "prompts": {
+      "endpoint": "/api/v1/prompts/list",
+      "method": "GET",
+      "description": "获取提示词列表"
+    },
+    "delete_prompt": {
+      "endpoint": "/api/v1/prompts/command/fuyu/delete",
+      "method": "DELETE",
+      "description": "删除提示词"
+    },
     "create_prompt": {
       "endpoint": "/api/v1/prompts/create",
       "method": "POST",
       "description": "创建提示词",
       "default_data": {
-        "command": "/fuyu",
-        "title": "哈喽",
-        "content": "hhhhhh",
+        "command": "/fuu",
+        "title": "嘿哈",
+        "content": "kkkkkk",
         "access_control": null
       }
     }

@@ -1,3 +1,11 @@
+#系统初始配置步骤：
+#1.设置api_config.json中的globals参数
+#2.更新Ollama配置
+#3.更新OpenAI配置
+#4.配置工具
+#5.添加模型（默认为deepseek-r1:32b）
+#6.创建工作区模型（默认base_model_id为deepseek-r1:32b）
+
 import requests
 import json
 import argparse
