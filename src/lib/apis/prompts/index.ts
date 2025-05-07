@@ -175,7 +175,7 @@ export const deletePromptByCommand = async (token: string, command: string) => {
 	command = command.charAt(0) === '/' ? command.slice(1) : command;
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/prompts/command/${command}/delete`, {
-		method: 'DELETE',
+		method: 'POST',
 		headers: {
 			Accept: 'application/json',
 			'Content-Type': 'application/json',

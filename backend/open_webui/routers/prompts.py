@@ -138,7 +138,7 @@ async def update_prompt_by_command(
 ############################
 
 
-@router.delete("/command/{command}/delete", response_model=bool)
+@router.post("/command/{command}/delete", response_model=bool)
 async def delete_prompt_by_command(command: str, user=Depends(get_verified_user)):
     prompt = Prompts.get_prompt_by_command(f"/{command}")
     if not prompt:
