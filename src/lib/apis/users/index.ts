@@ -300,8 +300,8 @@ export const getAndUpdateUserLocation = async (token: string) => {
 export const deleteUserById = async (token: string, userId: string) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/users/${userId}`, {
-		method: 'DELETE',
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/delete/${userId}`, {
+		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${token}`

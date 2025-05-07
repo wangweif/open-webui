@@ -240,8 +240,8 @@ export const updateFolderItemsById = async (token: string, id: string, items: Fo
 export const deleteFolderById = async (token: string, id: string) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/folders/${id}`, {
-		method: 'DELETE',
+	const res = await fetch(`${WEBUI_API_BASE_URL}/folders/delete/${id}`, {
+		method: 'POST',
 		headers: {
 			Accept: 'application/json',
 			'Content-Type': 'application/json',

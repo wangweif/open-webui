@@ -204,7 +204,7 @@ export const deleteModelById = async (token: string, id: string) => {
 	searchParams.append('id', id);
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/models/model/delete?${searchParams.toString()}`, {
-		method: 'DELETE',
+		method: 'POST',
 		headers: {
 			Accept: 'application/json',
 			'Content-Type': 'application/json',

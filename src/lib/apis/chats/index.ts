@@ -828,8 +828,8 @@ export const updateChatById = async (token: string, id: string, chat: object) =>
 export const deleteChatById = async (token: string, id: string) => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/${id}`, {
-		method: 'DELETE',
+	const res = await fetch(`${WEBUI_API_BASE_URL}/chats/delete/${id}`, {
+		method: 'POST',
 		headers: {
 			Accept: 'application/json',
 			'Content-Type': 'application/json',

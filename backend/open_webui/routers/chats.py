@@ -480,7 +480,7 @@ async def send_chat_message_event_by_id(
 ############################
 
 
-@router.delete("/{id}", response_model=bool)
+@router.post("/delete/{id}", response_model=bool)
 async def delete_chat_by_id(request: Request, id: str, user=Depends(get_verified_user)):
     if user.role == "admin":
         chat = Chats.get_chat_by_id(id)

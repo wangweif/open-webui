@@ -174,7 +174,7 @@ async def update_model_by_id(
 ############################
 
 
-@router.delete("/model/delete", response_model=bool)
+@router.post("/model/delete", response_model=bool)
 async def delete_model_by_id(id: str, user=Depends(get_verified_user)):
     model = Models.get_model_by_id(id)
     if not model:

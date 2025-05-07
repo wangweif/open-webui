@@ -229,7 +229,7 @@ async def update_folder_is_expanded_by_id(
 ############################
 
 
-@router.delete("/{id}")
+@router.post("/delete/{id}")
 async def delete_folder_by_id(
     request: Request, id: str, user=Depends(get_verified_user)
 ):
