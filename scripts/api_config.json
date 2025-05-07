@@ -1,10 +1,10 @@
 {
   "globals": {
-    "base_url": "http://192.168.8.250:8080",
+    "base_url": "http://127.0.0.1:8080",
     "login_endpoint": "/api/v1/auths/signin",
     "login_credentials": {
-      "email": "123@qq.com",
-      "password": "123456"
+      "email": "buct255@gmail.com",
+      "password": "admin"
     }
   },
   "apis": {
@@ -59,11 +59,9 @@
       "default_data": {
         "ENABLE_OPENAI_API": true,
         "OPENAI_API_BASE_URLS": [
-            "http://localhost:11434",
             "http://192.168.8.250:9099"
         ],
         "OPENAI_API_KEYS": [
-            "",
             "0p3n-w3bu!"
         ],
         "OPENAI_API_CONFIGS": {
@@ -83,7 +81,7 @@
       "default_data": {
         "ENABLE_OLLAMA_API": true,
         "OLLAMA_BASE_URLS": [
-            "http://localhost:11434"
+            "http://192.168.8.250:11434"
         ],
         "OLLAMA_API_CONFIGS": {
             "0": {
@@ -105,13 +103,13 @@
           "ENABLE_WEB_SEARCH": true,
           "WEB_SEARCH_ENGINE": "google_pse",
           "WEB_SEARCH_TRUST_ENV": null,
-          "WEB_SEARCH_RESULT_COUNT": "123",
-          "WEB_SEARCH_CONCURRENT_REQUESTS": "123",
+          "WEB_SEARCH_RESULT_COUNT": "10",
+          "WEB_SEARCH_CONCURRENT_REQUESTS": "10",
           "WEB_SEARCH_DOMAIN_FILTER_LIST": [],
           "BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL": false,
           "SEARXNG_QUERY_URL": null,
-          "GOOGLE_PSE_API_KEY": "123456789",
-          "GOOGLE_PSE_ENGINE_ID": "123",
+          "GOOGLE_PSE_API_KEY": "AIzaSyD7e9NGHEXU75KUV8vyYmZv_a0_CaQLyFU",
+          "GOOGLE_PSE_ENGINE_ID": "f7ef8b56c008646e2",
           "BRAVE_SEARCH_API_KEY": null,
           "KAGI_SEARCH_API_KEY": null,
           "MOJEEK_SEARCH_API_KEY": null,

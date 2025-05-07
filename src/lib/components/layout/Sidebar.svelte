@@ -20,7 +20,8 @@
 		channels,
 		socket,
 		config,
-		isApp
+		isApp,
+		models
 	} from '$lib/stores';
 	import { onMount, getContext, tick, onDestroy } from 'svelte';
 
@@ -58,6 +59,8 @@
 	import ChannelItem from './Sidebar/ChannelItem.svelte';
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import Home from '../icons/Home.svelte';
+	import ModelItem from './Sidebar/ModelItem.svelte';
+	import { getModels } from '$lib/apis/models';
 
 	const BREAKPOINT = 768;
 
@@ -163,6 +166,31 @@
 
 	const initChannels = async () => {
 		await channels.set(await getChannels(localStorage.token));
+	};
+
+	const initModels = async () => {
+		if ($models.length === 0) {
+			const modelList = await getModels(localStorage.token).catch((error) => {
+				toast.error(`${error}`);
+				return [];
+			});
+			models.set(modelList);
+			
+			// 在设置模型列表后，从localStorage加载默认选中的模型设置
+			const savedSettings = localStorage.getItem('modelSettings');
+			if (savedSettings) {
+				try {
+					const parsedSettings = JSON.parse(savedSettings);
+					if (parsedSettings.models && parsedSettings.models.length > 0) {
+						settings.update(s => {
+							return { ...s, models: parsedSettings.models };
+						});
+					}
+				} catch (e) {
+					console.error('Error parsing saved model settings:', e);
+				}
+			}
+		}
 	};
 
 	const initChatList = async () => {
@@ -391,6 +419,7 @@
 		});
 
 		await initChannels();
+		await initModels();
 		await initChatList();
 
 		window.addEventListener('keydown', onKeyDown);
@@ -606,6 +635,22 @@
 						<div class=" self-center font-medium text-sm font-primary">{$i18n.t('Workspace')}</div>
 					</div>
 				</a>
+			</div>
+		{/if}
+
+		<!-- 添加模型选择部分 -->
+		{#if $models && $models.length > 0}
+			<div class="px-1.5 mt-1">
+				<!-- 模型标题 -->
+				<div class="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-500 font-medium">
+					{"应用"}
+				</div>
+				<!-- 模型列表 -->
+				<div class="px-1.5 flex flex-col space-y-0.5">
+					{#each $models as model}
+						<ModelItem {model} />
+					{/each}
+				</div>
 			</div>
 		{/if}
 
