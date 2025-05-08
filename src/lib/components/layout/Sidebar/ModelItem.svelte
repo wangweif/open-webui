@@ -37,7 +37,7 @@
         });
         await updateUserSettings(localStorage.token, { ui: $settings });
         
-        
+        await goto('/', { replaceState: true });
         // 点击"新对话"按钮，触发与点击"新对话"按钮相同的逻辑
         const newChatButton = document.getElementById('new-chat-button');
         setTimeout(() => {
