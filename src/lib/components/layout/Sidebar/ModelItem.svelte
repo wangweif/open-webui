@@ -4,7 +4,7 @@
     import { getContext, onMount } from 'svelte';
     import { createNewChat } from '$lib/apis/chats';
     import { toast } from 'svelte-sonner';
-
+    import { updateUserSettings } from '$lib/apis/users';
     const i18n = getContext('i18n');
 
     export let model: Model;
@@ -31,14 +31,12 @@
     async function selectModel() {
         // 首先保存到localStorage确保持久化
         localStorage.setItem('modelSettings', JSON.stringify({ models: [model.id] }));
-        
         // 然后更新settings store
         settings.update(s => {
             return { ...s, models: [model.id] };
         });
+        await updateUserSettings(localStorage.token, { ui: $settings });
         
-        // 使用replaceState选项导航到首页，避免完全刷新页面
-        await goto('/', { replaceState: true });
         
         // 点击"新对话"按钮，触发与点击"新对话"按钮相同的逻辑
         const newChatButton = document.getElementById('new-chat-button');
