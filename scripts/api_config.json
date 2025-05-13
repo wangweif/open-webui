@@ -1,10 +1,10 @@
 {
   "globals": {
-    "base_url": "http://127.0.0.1:8080",
+    "base_url": "http://192.168.8.250:8080",
     "login_endpoint": "/api/v1/auths/signin",
     "login_credentials": {
-      "email": "buct255@gmail.com",
-      "password": "admin"
+      "email": "321@qq.com",
+      "password": "123456"
     }
   },
   "apis": {
@@ -159,7 +159,7 @@
           }
         },
         "id": "deepseek-r1:32b",
-        "name": "deepseek-r1:32b",
+        "name": "deepseek-r1",
         "base_model_id": null,
         "params": {},
         "access_control": null,
@@ -193,7 +193,7 @@
       "default_data": {
         "id": "deepseek-r1:32b",
         "base_model_id": null,
-        "name": "deepseek-r1:32b",
+        "name": "deepseek-r1",
         "meta": {
           "profile_image_url": "/static/favicon.png",
           "description": null,
@@ -237,64 +237,60 @@
       "method": "POST",
       "description": "创建工作区模型",
       "default_data": {
-        "id": "testttt",
-        "base_model_id": "deepseek-r1:32b",
-        "name": "Test123",
+        "id": "aiPrice",
+        "base_model_id": "qwen3:8b",
+        "name": "AI问价",
         "meta": {
           "profile_image_url": "/static/favicon.png",
-          "description": "养猪",
-          "suggestion_prompts": [
-            {
-              "content": "你是谁"
-            }
-          ],
-          "tags": [],
-          "capabilities": {
-            "vision": true,
-            "citations": true
-          },
-          "toolIds": [
-            "server:0",
-            "server:1",
-            "server:2"
-          ]
-        },
-        "type": "collection",
-        "params": {
-          "system": "你是一个资深养猪人，负责为养猪户解决问题。"
-        },
-        "access_control": null
-      }
-    },
-    "update_workModel": {
-      "endpoint": "/api/v1/models/model/update?id=test",
-      "method": "POST",
-      "description": "更新工作区模型",
-      "default_data": {
-        "id": "test",
-        "base_model_id": "deepseek-r1:32b",
-        "name": "养猪人",
-        "meta": {
-          "profile_image_url": "/static/favicon.png",
-          "description": "海淀养猪王",
-          "capabilities": {
-            "vision": true,
-            "citations": true
-          },
+          "description": "AI问价",
           "suggestion_prompts": [
             {
               "content": "你是谁？"
             }
           ],
           "tags": [],
+          "capabilities": {
+            "vision": true,
+            "citations": true
+          },
           "toolIds": [
             "server:0",
-            "server:1",
-            "server:2"
+            "server:1"
+          ]
+        },
+        "type": "collection",
+        "params": {
+          "system": "你是个价格查询的AI助手，严格遵守下面的要求：首先，你需要先从工具获取现在的时间，工具返回的日期就是当前的日期然后，通过工具查询用户询问的农产品的价格，最后，返回给用户"
+        },
+        "access_control": null
+      }
+    },
+    "update_workModel": {
+      "endpoint": "/api/v1/models/model/update?id=aiPrice",
+      "method": "POST",
+      "description": "更新工作区模型",
+      "default_data": {
+        "id": "aiPrice",
+        "base_model_id": "qwen3:8b",
+        "name": "AI问价",
+        "meta": {
+          "profile_image_url": "/static/favicon.png",
+          "description": "AI价格查询",
+          "capabilities": {
+            "vision": true,
+            "citations": true
+          },
+          "suggestion_prompts": [
+            
+          ],
+          "tags": [],
+          "toolIds": [
+            "server:0",
+            "server:1"
           ]
         },
         "params": {
-          "system": "你的身份是资深养猪专家，负责回答养殖户的问题"
+            "system": "你是AI问价助手，严格遵守下面的要求：首先，你需要先从工具获取现在的时间，工具返回的日期就是当前的日期然后，通过工具查询用户询问的农产品的价格，最后，返回给用户"
         },
         "user_id": "bce901f0-7d6b-416a-a793-2e5b3116acee",
         "access_control": null,
