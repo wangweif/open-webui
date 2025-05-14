@@ -510,6 +510,7 @@
 						<form
 							class="w-full flex gap-1.5"
 							on:submit|preventDefault={() => {
+								// 检查是否为模型输入，不需要在此处替换链接，因为在显示响应时会处理
 								// check if selectedModels support image input
 								dispatch('submit', prompt);
 							}}
