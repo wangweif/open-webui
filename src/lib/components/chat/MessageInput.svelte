@@ -72,6 +72,12 @@
 
 	$: isRagFlowModel = selectedModelIds.includes('rag_flow_webapi_pipeline_cs');
 
+	// 当选择rag_flow_webapi_pipeline_cs模型时，如果搜索功能已启用，则禁用它
+	$: if (isRagFlowModel && webSearchEnabled) {
+		webSearchEnabled = false;
+		toast.info($i18n.t('Web search has been disabled as it is not needed for this model'));
+	}
+
 	export let history;
 	export let taskIds = null;
 
@@ -1134,15 +1140,20 @@
 											{/if}
 
 											{#if $_user}
-												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel}
-													<Tooltip content={$i18n.t('Search the internet')} placement="top">
+												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search)}
+													<Tooltip content={isRagFlowModel ? $i18n.t('Search is not needed for this model') : $i18n.t('Search the internet')} placement="top">
 														<button
-															on:click|preventDefault={() => (webSearchEnabled = !webSearchEnabled)}
+															on:click|preventDefault={() => {
+																if (!isRagFlowModel) {
+																	webSearchEnabled = !webSearchEnabled;
+																}
+															}}
 															type="button"
 															class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {webSearchEnabled ||
 															($settings?.webSearch ?? false) === 'always'
 																? 'bg-blue-100 dark:bg-blue-500/20 border-blue-400/20 text-blue-500 dark:text-blue-400'
-																: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
+																: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'} {isRagFlowModel ? 'opacity-50 cursor-not-allowed' : ''}"
+															disabled={isRagFlowModel}
 														>
 															<GlobeAlt className="size-5" strokeWidth="1.75" />
 															<span
