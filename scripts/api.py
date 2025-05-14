@@ -133,7 +133,7 @@ def interactive_mode():
     api_names = list(apis.keys())
     for i, name in enumerate(api_names, 1):
         api = apis[name]
-        print(f"{i}. {name} - {api.get('description', '')} ({api.get('method', 'GET')} {api.get('url', '')}{api.get('endpoint', '')})")
+        print(f"{i}. {api.get('description', '')} ({api.get('method', 'GET')} {api.get('url', '')}{api.get('endpoint', '')})")
     print(f"{len(apis) + 1}. 退出")
     
     # 让用户选择

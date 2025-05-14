@@ -1,10 +1,10 @@
 {
   "globals": {
-    "base_url": "http://192.168.8.250:8080",
+    "base_url": "http://127.0.0.1:8080",
     "login_endpoint": "/api/v1/auths/signin",
     "login_credentials": {
-      "email": "321@qq.com",
-      "password": "123456"
+      "email": "buct255@gmail.com",
+      "password": "admin"
     }
   },
   "apis": {
@@ -103,7 +103,7 @@
           "ENABLE_WEB_SEARCH": true,
           "WEB_SEARCH_ENGINE": "google_pse",
           "WEB_SEARCH_TRUST_ENV": null,
-          "WEB_SEARCH_RESULT_COUNT": "10",
+          "WEB_SEARCH_RESULT_COUNT": "3",
           "WEB_SEARCH_CONCURRENT_REQUESTS": "10",
           "WEB_SEARCH_DOMAIN_FILTER_LIST": [],
           "BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL": false,
@@ -143,15 +143,19 @@
         }
       }
     },
-    "create_model": {
+    "create_model_deepseek": {
       "endpoint": "/api/v1/models/create",
       "method": "POST",
-      "description": "添加模型（从Ollma中添加）",
+      "description": "添加deepseek模型（从Ollama中添加）",
       "default_data": {
         "meta": {
           "profile_image_url": "/static/favicon.png",
           "description": null,
-          "suggestion_prompts": null,
+          "suggestion_prompts": [
+            {
+              "content": "你是谁？"
+            }
+          ],
           "tags": [],
           "capabilities": {
             "vision": true,
@@ -186,10 +190,10 @@
         "is_active": true
       }
     },
-    "update_model": {
+    "update_model_deepseek": {
       "endpoint": "/api/v1/models/model/update?id=deepseek-r1:32b",
       "method": "POST",
-      "description": "更新模型配置",
+      "description": "更新deepseek模型配置",
       "default_data": {
         "id": "deepseek-r1:32b",
         "base_model_id": null,
@@ -201,7 +205,11 @@
             "vision": true,
             "citations": true
           },
-          "suggestion_prompts": null,
+          "suggestion_prompts": [
+            {
+              "content": "你是谁？"
+            }
+          ],
           "tags": [],
           "hidden": false
         },
@@ -232,10 +240,187 @@
         "created_at": 1745911968
       }
     },
-    "create_workModel": {
+    "create_model_qwen3": {
       "endpoint": "/api/v1/models/create",
       "method": "POST",
-      "description": "创建工作区模型",
+      "description": "添加qwen3模型（从Ollama中添加）",
+      "default_data": {
+        "id": "qwen3:8b",
+        "base_model_id": null,
+        "name": "qwen3:8b",
+        "meta": {
+          "profile_image_url": "/static/favicon.png",
+          "description": null,
+          "capabilities": {
+            "vision": true,
+            "citations": true
+          },
+          "suggestion_prompts": [
+            {
+              "content": "你是谁？"
+            }
+          ]
+        },
+        "params": {},
+        "object": "model",
+        "created": 1747189148,
+        "owned_by": "ollama",
+        "ollama": {
+          "name": "qwen3:8b",
+          "model": "qwen3:8b",
+          "modified_at": "2025-05-12T10:21:23.027615148+08:00",
+          "size": 5225387923,
+          "digest": "e4b5fd7f8af048d3c02e0357274238a9e93da51936665599ccb957aa42bfe173",
+          "details": {
+            "parent_model": "",
+            "format": "gguf",
+            "family": "qwen3",
+            "families": [
+              "qwen3"
+            ],
+            "parameter_size": "8.2B",
+            "quantization_level": "Q4_K_M"
+          },
+          "urls": [
+            0
+          ]
+        },
+        "tags": [],
+        "user_id": "254a8a53-e074-4321-92b9-1f2503006b89",
+        "access_control": {
+          "read": {
+            "group_ids": [],
+            "user_ids": []
+          },
+          "write": {
+            "group_ids": [],
+            "user_ids": []
+          }
+        },
+        "is_active": true,
+        "updated_at": 1747017874,
+        "created_at": 1747017844
+      }
+
+    },
+    "update_model_qwen3": {
+      "endpoint": "/api/v1/models/model/update?id=qwen3:8b",
+      "method": "POST",
+      "description": "更新qwen3模型配置",
+      "default_data": {
+        "id": "qwen3:8b",
+        "base_model_id": null,
+        "name": "qwen3",
+        "meta": {
+          "profile_image_url": "/static/favicon.png",
+          "description": null,
+          "capabilities": {
+            "vision": true,
+            "citations": true
+          },
+          "suggestion_prompts": [
+            {
+              "content": "你是谁？"
+            }
+          ]
+        },
+        "params": {},
+        "object": "model",
+        "created": 1747189148,
+        "owned_by": "ollama",
+        "ollama": {
+          "name": "qwen3:8b",
+          "model": "qwen3:8b",
+          "modified_at": "2025-05-12T10:21:23.027615148+08:00",
+          "size": 5225387923,
+          "digest": "e4b5fd7f8af048d3c02e0357274238a9e93da51936665599ccb957aa42bfe173",
+          "details": {
+            "parent_model": "",
+            "format": "gguf",
+            "family": "qwen3",
+            "families": [
+              "qwen3"
+            ],
+            "parameter_size": "8.2B",
+            "quantization_level": "Q4_K_M"
+          },
+          "urls": [
+            0
+          ]
+        },
+        "tags": [],
+        "user_id": "254a8a53-e074-4321-92b9-1f2503006b89",
+        "access_control": {
+          "read": {
+            "group_ids": [],
+            "user_ids": []
+          },
+          "write": {
+            "group_ids": [],
+            "user_ids": []
+          }
+        },
+        "is_active": true,
+        "updated_at": 1747017874,
+        "created_at": 1747017844
+      }
+        
+    },
+    "create_workModel_aiOfficeWebViewer": {
+      "endpoint": "/api/v1/models/create",
+      "method": "POST",
+      "description": "创建AI办公",
+      "default_data": {
+        "id": "aiOfficeWebViewer",
+        "base_model_id": "dont care",
+        "name": "AI办公",
+        "meta": {
+          "profile_image_url": "/static/favicon.png",
+          "description": "AI办公",
+          "suggestion_prompts": null,
+          "tags": [],
+          "capabilities": {
+            "vision": true,
+            "citations": true
+          }
+        },
+        "type": "collection",
+        "params": {
+          "iframe_url": "https://www.baidu.com"
+        },
+        "access_control": null
+      }
+    },
+    "update_workModel_aiOfficeWebViewer": {
+      "endpoint": "/api/v1/models/model/update?id=aiOfficeWebViewer",
+      "method": "POST",
+      "description": "更新AI办公",
+      "default_data": {
+        "id": "aiOfficeWebViewer",
+        "base_model_id": "qwen3:8b",
+        "name": "AI办公",
+        "meta": {
+          "profile_image_url": "/static/favicon.png",
+          "description": "AI办公",
+          "suggestion_prompts": null,
+          "tags": [],
+          "capabilities": {
+            "vision": true,
+            "citations": true
+          }
+        },
+        "type": "collection",
+        "params": {
+          "type": "iframe",
+          "iframe_url": "http://know.bjzntd.com"
+        },
+        "access_control": null
+      }
+    },
+    "create_workModel_aiPrice": {
+      "endpoint": "/api/v1/models/create",
+      "method": "POST",
+      "description": "创建AI问价",
       "default_data": {
         "id": "aiPrice",
         "base_model_id": "qwen3:8b",
@@ -265,10 +450,10 @@
         "access_control": null
       }
     },
-    "update_workModel": {
+    "update_workModel_aiPrice": {
       "endpoint": "/api/v1/models/model/update?id=aiPrice",
       "method": "POST",
-      "description": "更新工作区模型",
+      "description": "更新AI问价",
       "default_data": {
         "id": "aiPrice",
         "base_model_id": "qwen3:8b",
