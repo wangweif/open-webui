@@ -188,7 +188,7 @@
 			align="start"
 			transition={flyAndScale}
 		>
-			<DropdownMenu.Item
+			<!-- <DropdownMenu.Item
 				class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
 				on:click={() => {
 					pinHandler();
@@ -201,7 +201,7 @@
 					<Bookmark strokeWidth="2" />
 					<div class="flex items-center">{$i18n.t('Pin')}</div>
 				{/if}
-			</DropdownMenu.Item>
+			</DropdownMenu.Item> -->
 
 			<DropdownMenu.Item
 				class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
@@ -213,7 +213,7 @@
 				<div class="flex items-center">{$i18n.t('Rename')}</div>
 			</DropdownMenu.Item>
 
-			<DropdownMenu.Item
+			<!-- <DropdownMenu.Item
 				class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
 				on:click={() => {
 					cloneChatHandler();
@@ -282,7 +282,7 @@
 						<div class="flex items-center line-clamp-1">{$i18n.t('PDF document (.pdf)')}</div>
 					</DropdownMenu.Item>
 				</DropdownMenu.SubContent>
-			</DropdownMenu.Sub>
+			</DropdownMenu.Sub> -->
 			<DropdownMenu.Item
 				class="flex  gap-2  items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
 				on:click={() => {
@@ -293,7 +293,7 @@
 				<div class="flex items-center">{$i18n.t('Delete')}</div>
 			</DropdownMenu.Item>
 
-			<hr class="border-gray-100 dark:border-gray-850 my-0.5" />
+			<!-- <hr class="border-gray-100 dark:border-gray-850 my-0.5" />
 
 			<div class="flex p-1">
 				<Tags
@@ -319,7 +319,7 @@
 						onClose();
 					}}
 				/>
-			</div>
+			</div> -->
 		</DropdownMenu.Content>
 	</div>
 </Dropdown>
