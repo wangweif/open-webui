@@ -18,10 +18,21 @@
 	import Search from '../icons/Search.svelte';
 	import Connections from './Settings/Connections.svelte';
 	import Tools from './Settings/Tools.svelte';
+	import Version from './Settings/Version.svelte';
 
 	const i18n = getContext('i18n');
 
 	export let show = false;
+
+	// 默认选中的选项卡
+	let selectedTab = 'account';
+	
+	// 导出设置选中选项卡的方法
+	export function setSelectedTab(tabId: string) {
+		if (searchData.some(tab => tab.id === tabId)) {
+			selectedTab = tabId;
+		}
+	}
 
 	interface SettingsTab {
 		id: string;
@@ -235,6 +246,22 @@
 			]
 		},
 		{
+			id: 'version',
+			title: 'Version',
+			keywords: [
+				'version',
+				'currentversion',
+				'appversion',
+				'softwareversion',
+				'release',
+				'buildversion',
+				'buildnumber',
+				'versioninfo',
+				'versiondetails',
+				'versionhistory'
+			]
+		},
+		{
 			id: 'admin',
 			title: 'Admin',
 			keywords: [
@@ -332,8 +359,6 @@
 			$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
 		);
 	};
-
-	let selectedTab = 'account';
 
 	// Function to handle sideways scrolling
 	const scrollHandler = (event) => {
@@ -581,6 +606,28 @@
 								</div>
 								<div class=" self-center">{$i18n.t('Account')}</div>
 							</button>
+						{:else if tabId === 'version'}
+							<button
+								class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
+								'version'
+									? ''
+									: ' text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'}"
+								on:click={() => {
+									selectedTab = 'version';
+								}}
+							>
+								<div class=" self-center mr-2">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 16 16"
+										fill="currentColor"
+										class="w-4 h-4"
+									>
+										<path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" />
+									</svg>
+								</div>
+								<div class=" self-center">{$i18n.t('Version')}</div>
+							</button>
 						{:else if tabId === 'about'}
 							<!-- <button
 								class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
@@ -695,6 +742,12 @@
 						{saveSettings}
 						saveHandler={() => {
 							toast.success($i18n.t('Settings saved successfully!'));
+						}}
+					/>
+				{:else if selectedTab === 'version'}
+					<Version
+						on:save={() => {
+							show = false;
 						}}
 					/>
 				{:else if selectedTab === 'about'}
