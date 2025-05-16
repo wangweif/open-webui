@@ -71,6 +71,7 @@
 	$: selectedModelIds = atSelectedModel !== undefined ? [atSelectedModel.id] : selectedModels;
 
 	$: isRagFlowModel = selectedModelIds.includes('rag_flow_webapi_pipeline_cs');
+	$: isAiPriceModel = selectedModelIds.includes('aiPrice');
 
 	// 当选择rag_flow_webapi_pipeline_cs模型时，如果搜索功能已启用，则禁用它
 	$: if (isRagFlowModel && webSearchEnabled) {
@@ -1053,6 +1054,7 @@
 											{screenCaptureHandler}
 											{inputFilesHandler}
 											{isRagFlowModel}
+											{isAiPriceModel}
 											uploadFilesHandler={() => {
 												filesInputElement.click();
 											}}

@@ -30,7 +30,8 @@
 	export let selectedToolIds: string[] = [];
 
 	export let isRagFlowModel: boolean = false;
-
+	export let isAiPriceModel: boolean = false;
+	
 	export let onClose: Function;
 
 	let tools = {};
@@ -103,7 +104,7 @@
 			align="start"
 			transition={flyAndScale}
 		>
-			{#if Object.keys(tools).length > 0 && !isRagFlowModel}
+			{#if Object.keys(tools).length > 0 && !isRagFlowModel && !isAiPriceModel}
 				<div class="  max-h-28 overflow-y-auto scrollbar-hidden">
 					{#each Object.keys(tools) as toolId}
 						<button
