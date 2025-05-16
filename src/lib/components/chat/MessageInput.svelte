@@ -1052,6 +1052,7 @@
 											bind:selectedToolIds
 											{screenCaptureHandler}
 											{inputFilesHandler}
+											{isRagFlowModel}
 											uploadFilesHandler={() => {
 												filesInputElement.click();
 											}}
@@ -1140,7 +1141,7 @@
 											{/if}
 
 											{#if $_user}
-												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search)}
+												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel}
 													<Tooltip content={isRagFlowModel ? $i18n.t('Search is not needed for this model') : $i18n.t('Search the internet')} placement="top">
 														<button
 															on:click|preventDefault={() => {
