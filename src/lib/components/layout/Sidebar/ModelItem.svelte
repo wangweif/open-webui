@@ -27,8 +27,14 @@
         }
     });
 
-    // 点击模型后设置默认模型并导航到聊天界面
+    // 点击模型后设置默认模型并导航到聊天界面，或显示iframe
     async function selectModel() {
+        // 检查模型params中是否有iframe_url (检查两个可能的位置)
+        const infoParams = model.info?.params as any;
+        
+        // 处理iframe_url
+        let iframeUrl = infoParams?.iframe_url;
+
         // 首先保存到localStorage确保持久化
         localStorage.setItem('modelSettings', JSON.stringify({ models: [model.id] }));
         // 然后更新settings store
@@ -36,12 +42,21 @@
             return { ...s, models: [model.id] };
         });
         await updateUserSettings(localStorage.token, { ui: $settings });
-        
-        // 点击"新对话"按钮，触发与点击"新对话"按钮相同的逻辑
-        const newChatButton = document.getElementById('sidebar-new-chat-button');
-        setTimeout(() => {
-            newChatButton?.click();
-        }, 0);
+        if (iframeUrl) {     
+            // 使用内部iframe页面
+            const modelName = model.name || model.id;   
+            goto(`/c/iframe?src=${encodeURIComponent(iframeUrl)}&title=${encodeURIComponent(modelName)}`);
+            // 如果是移动端，关闭侧边栏
+            if ($mobile) {
+                showSidebar.set(false);
+            }
+        } else {
+            // 点击"新对话"按钮，触发与点击"新对话"按钮相同的逻辑
+            const newChatButton = document.getElementById('sidebar-new-chat-button');
+            setTimeout(() => {
+                newChatButton?.click();
+            }, 0);
+        }
     }
 
     // 获取模型描述，兼容不同类型的模型
