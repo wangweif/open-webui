@@ -4,7 +4,7 @@ import { browser, dev } from '$app/environment';
 export const APP_NAME = '农科小智';
 
 export const WEBUI_HOSTNAME = browser ? (dev ? `${location.hostname}:8080` : ``) : '';
-export const WEBUI_BASE_URL = ``;
+export const WEBUI_BASE_URL = `http://${WEBUI_HOSTNAME}`;
 export const WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1`;
 
 export const OLLAMA_API_BASE_URL = `${WEBUI_BASE_URL}/ollama`;

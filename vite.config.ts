@@ -46,7 +46,17 @@ export default defineConfig({
             target: 'http://127.0.0.1:8080', // 后端地址
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, '/api')
-            }
+            },
+			'/openai': {
+				target: 'http://127.0.0.1:8080', // 后端地址
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/openai/, '/openai')
+			},
+			'/ollama': {
+				target: 'http://127.0.0.1:8080', // 后端地址
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/ollama/, '/ollama')
+			}
         }
     }
 });

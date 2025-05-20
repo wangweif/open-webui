@@ -3,7 +3,7 @@
     "base_url": "http://127.0.0.1:8080",
     "login_endpoint": "/api/v1/auths/signin",
     "login_credentials": {
-      "email": "buct255@gmail.com",
+      "email": "admin@bjzntd.com",
       "password": "admin"
     }
   },
@@ -460,7 +460,7 @@
         "base_model_id": "dont care",
         "name": "AI办公",
         "meta": {
-          "profile_image_url": "/static/favicon.png",
+          "profile_image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAACuElEQVR4nO2av2sUQRTH50REKxUsTKOdhShy8y4QRUk6JZU/GwUtgqVGq3RGi/ijEFIkIW/28Bq1EP8B06VVLFJYeKkMUWzc9zZc468bmZ252yUYNLu3e6vZLwwcb/fezGfezLybmROiVKlSqXX4hd4hFT8CRZ9Ase5bQf4okR+a9iQCMV/uK4BaX+hBIhDTE8ZBDYMToo8C9E92IpPMgesJUQBBmraUIBkIyogUTFCg+ZohyKTeBki3AWkZkNrpExe1jS+J/rjQupIbCBiIjJJXCGPrONtLv2IDkOWwUkXnetVzNaQLLgs3bR1r+/IAaYcPezkMtK50hll+Q0tlsxJk4Re2LIhEfxwUTwC2BrrvYWsgtCmeGFTBofX2zsQuFAgoXrR2/2pko7FoNeI7EYh/zdkXiweCNOUm60xk40YEQgsxwFn37lTxQLxg1C3Jr2MNbkrFgUR6L5HXhif1dmd/E/rwgtHigaC/WyL9AEXfhh6v7Bqcae13eeEVID8JIT2G4YbeCUhfQdHPYw3aUzgQI0BeslEJhgD5khs+d6Wi6y5at6rzwXFr5yXxB7/ZJ0S1AYiiOdvI4CYonraN59O1+pcj7vNLA+MiNVtYEKn4iovCU1D81mTpo3O8N/yRqZgl0meJ9NxF5PLf+k0jSAJSrfsH3bNVqeg7KHrXhURacFEJLIh/oLAgRhJ5JZY76rFhdy8W6g/iNyoYCNmhY+fBWMdeneczMfuzTVeaNwh4NGIO6MJDutjwMUtt1+7RyKYrzRskjUqQxBH5bzZWaLe6VY/O9wQmhKCLuW91pd176IzKjdwOH4TWFQtDzZ4dBxlfBiLP46B/SVCCiGL1AqRpSwmSgaCMiIguQ81lpOijpPJPuYisJnJgroMzTJgJCt1PBGIu6EOYTmT6V1YNROI/DJQqtYX1C8JXzkcrWkjUAAAAAElFTkSuQmCC",
           "description": "AI办公",
           "suggestion_prompts": null,
           "tags": [],
@@ -471,7 +471,7 @@
         },
         "type": "collection",
         "params": {
-          "iframe_url": "https://www.baidu.com"
+          "iframe_url": "http://llm-test.bjzntd.com/notify-server/web"
         },
         "access_control": null
       }
@@ -485,7 +485,7 @@
         "base_model_id": "qwen3:8b",
         "name": "AI办公",
         "meta": {
-          "profile_image_url": "/static/favicon.png",
+          "profile_image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAACuElEQVR4nO2av2sUQRTH50REKxUsTKOdhShy8y4QRUk6JZU/GwUtgqVGq3RGi/ijEFIkIW/28Bq1EP8B06VVLFJYeKkMUWzc9zZc468bmZ252yUYNLu3e6vZLwwcb/fezGfezLybmROiVKlSqXX4hd4hFT8CRZ9Ase5bQf4okR+a9iQCMV/uK4BaX+hBIhDTE8ZBDYMToo8C9E92IpPMgesJUQBBmraUIBkIyogUTFCg+ZohyKTeBki3AWkZkNrpExe1jS+J/rjQupIbCBiIjJJXCGPrONtLv2IDkOWwUkXnetVzNaQLLgs3bR1r+/IAaYcPezkMtK50hll+Q0tlsxJk4Re2LIhEfxwUTwC2BrrvYWsgtCmeGFTBofX2zsQuFAgoXrR2/2pko7FoNeI7EYh/zdkXiweCNOUm60xk40YEQgsxwFn37lTxQLxg1C3Jr2MNbkrFgUR6L5HXhif1dmd/E/rwgtHigaC/WyL9AEXfhh6v7Bqcae13eeEVID8JIT2G4YbeCUhfQdHPYw3aUzgQI0BeslEJhgD5khs+d6Wi6y5at6rzwXFr5yXxB7/ZJ0S1AYiiOdvI4CYonraN59O1+pcj7vNLA+MiNVtYEKn4iovCU1D81mTpo3O8N/yRqZgl0meJ9NxF5PLf+k0jSAJSrfsH3bNVqeg7KHrXhURacFEJLIh/oLAgRhJ5JZY76rFhdy8W6g/iNyoYCNmhY+fBWMdeneczMfuzTVeaNwh4NGIO6MJDutjwMUtt1+7RyKYrzRskjUqQxBH5bzZWaLe6VY/O9wQmhKCLuW91pd176IzKjdwOH4TWFQtDzZ4dBxlfBiLP46B/SVCCiGL1AqRpSwmSgaCMiIguQ81lpOijpPJPuYisJnJgroMzTJgJCt1PBGIu6EOYTmT6V1YNROI/DJQqtYX1C8JXzkcrWkjUAAAAAElFTkSuQmCC",
           "description": "AI办公",
           "suggestion_prompts": null,
           "tags": [],
@@ -497,7 +497,7 @@
         "type": "collection",
         "params": {
           "type": "iframe",
-          "iframe_url": "http://know.bjzntd.com"
+          "iframe_url": "http://llm-test.bjzntd.com/notify-server/web"
         },
         "access_control": null
       }
