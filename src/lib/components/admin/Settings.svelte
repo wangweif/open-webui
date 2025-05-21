@@ -121,7 +121,7 @@
 			<div class=" self-center">{$i18n.t('Models')}</div>
 		</button>
 
-		<button
+		<!-- <button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 			'evaluations'
 				? ''
@@ -134,7 +134,7 @@
 				<DocumentChartBar />
 			</div>
 			<div class=" self-center">{$i18n.t('Evaluations')}</div>
-		</button>
+		</button> -->
 
 		<button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
@@ -162,7 +162,7 @@
 			<div class=" self-center">{$i18n.t('Tools')}</div>
 		</button>
 
-		<button
+		<!-- <button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 			'documents'
 				? ''
@@ -190,7 +190,7 @@
 				</svg>
 			</div>
 			<div class=" self-center">{$i18n.t('Documents')}</div>
-		</button>
+		</button> -->
 
 		<button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
@@ -216,7 +216,7 @@
 			<div class=" self-center">{$i18n.t('Web Search')}</div>
 		</button>
 
-		<button
+		<!-- <button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 			'code-execution'
 				? ''
@@ -240,7 +240,7 @@
 				</svg>
 			</div>
 			<div class=" self-center">{$i18n.t('Code Execution')}</div>
-		</button>
+		</button> -->
 
 		<button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
@@ -295,7 +295,7 @@
 			<div class=" self-center">{$i18n.t('Audio')}</div>
 		</button>
 
-		<button
+		<!-- <button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 			'images'
 				? ''
@@ -319,7 +319,7 @@
 				</svg>
 			</div>
 			<div class=" self-center">{$i18n.t('Images')}</div>
-		</button>
+		</button> -->
 
 		<button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
