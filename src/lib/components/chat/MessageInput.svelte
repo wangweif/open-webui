@@ -74,14 +74,22 @@
 	$: isAiPriceModel = selectedModelIds.includes('aiPrice');
 	$: isDeepseekR1Model = selectedModelIds.includes('deepseek-r1:32b');
 
+	// 用于跟踪用户是否手动禁用了联网搜索
+	let manuallyDisabledWebSearch = false;
+
 	// 当选择rag_flow_webapi_pipeline_cs模型时，如果搜索功能已启用，则禁用它
-	$: if (isRagFlowModel && webSearchEnabled) {
+	$: if (isRagFlowModel && webSearchEnabled || isAiPriceModel && webSearchEnabled) {
 		webSearchEnabled = false;
 	}
 
-	// 当选择deepseek-r1模型时，如果搜索功能未启用，则启用它
-	$: if (isDeepseekR1Model && !webSearchEnabled) {
+	// 当选择deepseek-r1模型时，如果搜索功能未启用且未被手动禁用，则启用它
+	$: if (isDeepseekR1Model && !webSearchEnabled && !manuallyDisabledWebSearch) {
 		webSearchEnabled = true;
+	}
+
+	// 重置手动禁用标志，当模型改变时
+	$: if (!isDeepseekR1Model) {
+		manuallyDisabledWebSearch = false;
 	}
 
 	export let history;
@@ -1148,12 +1156,18 @@
 											{/if}
 
 											{#if $_user}
-												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel}
+												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel}
 													<Tooltip content={isRagFlowModel ? $i18n.t('Search is not needed for this model') : $i18n.t('Search the internet')} placement="top">
 														<button
 															on:click|preventDefault={() => {
-																if (!isRagFlowModel) {
-																	webSearchEnabled = !webSearchEnabled;
+																webSearchEnabled = !webSearchEnabled;
+																// 如果是deepseek-r1模型且用户关闭了搜索，标记为手动禁用
+																if (isDeepseekR1Model && !webSearchEnabled) {
+																	manuallyDisabledWebSearch = true;
+																}
+																// 如果用户重新开启了搜索，取消手动禁用标记
+																if (webSearchEnabled) {
+																	manuallyDisabledWebSearch = false;
 																}
 															}}
 															type="button"
