@@ -72,11 +72,16 @@
 
 	$: isRagFlowModel = selectedModelIds.includes('rag_flow_webapi_pipeline_cs');
 	$: isAiPriceModel = selectedModelIds.includes('aiPrice');
+	$: isDeepseekR1Model = selectedModelIds.includes('deepseek-r1:32b');
 
 	// 当选择rag_flow_webapi_pipeline_cs模型时，如果搜索功能已启用，则禁用它
 	$: if (isRagFlowModel && webSearchEnabled) {
 		webSearchEnabled = false;
-		toast.info($i18n.t('Web search has been disabled as it is not needed for this model'));
+	}
+
+	// 当选择deepseek-r1模型时，如果搜索功能未启用，则启用它
+	$: if (isDeepseekR1Model && !webSearchEnabled) {
+		webSearchEnabled = true;
 	}
 
 	export let history;
