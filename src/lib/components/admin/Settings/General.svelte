@@ -117,7 +117,7 @@
 	<div class="mt-0.5 space-y-3 overflow-y-scroll scrollbar-hidden h-full">
 		{#if adminConfig !== null}
 			<div class="">
-				<div class="mb-3.5">
+				<!-- <div class="mb-3.5">
 					<div class=" mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
 
 					<hr class=" border-gray-100 dark:border-gray-850 my-2" />
@@ -262,14 +262,14 @@
 								{/if}
 							</div>
 
-							<!-- <button
+							<button
 								class="flex-shrink-0 text-xs px-3 py-1.5 bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-lg font-medium"
 							>
 								{$i18n.t('Activate')}
-							</button> -->
+							</button>
 						</div>
 					</div>
-				</div>
+				</div> -->
 
 				<div class="mb-3">
 					<div class=" mb-2.5 text-base font-medium">{$i18n.t('Authentication')}</div>
