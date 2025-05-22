@@ -1294,23 +1294,23 @@ TITLE_GENERATION_PROMPT_TEMPLATE = PersistentConfig(
     os.environ.get("TITLE_GENERATION_PROMPT_TEMPLATE", ""),
 )
 
-DEFAULT_TITLE_GENERATION_PROMPT_TEMPLATE = """### Task:
-Generate a concise, 3-5 word title with an emoji summarizing the chat history.
-### Guidelines:
-- The title should clearly represent the main theme or subject of the conversation.
-- Use emojis that enhance understanding of the topic, but avoid quotation marks or special formatting.
-- Write the title in the chat's primary language; default to English if multilingual.
-- Prioritize accuracy over excessive creativity; keep it clear and simple.
-### Output:
-JSON format: { "title": "your concise title here" }
-### Examples:
-- { "title": "📉 Stock Market Trends" },
-- { "title": "🍪 Perfect Chocolate Chip Recipe" },
-- { "title": "Evolution of Music Streaming" },
-- { "title": "Remote Work Productivity Tips" },
-- { "title": "Artificial Intelligence in Healthcare" },
-- { "title": "🎮 Video Game Development Insights" }
-### Chat History:
+DEFAULT_TITLE_GENERATION_PROMPT_TEMPLATE = """### 任务：
+生成一个简洁的、带有表情符号的3-5个字的标题，概括聊天历史内容。
+### 指南：
+- 标题应清晰地表示对话的主题或主要内容。
+- 使用表情符号来增强对主题的理解，但避免使用引号或特殊格式。
+- 使用聊天的主要语言编写标题；如果是多语言的情况，则默认使用英语。
+- 优先考虑准确性而非过度创意；保持清晰简洁。
+### 输出：
+JSON格式：{ "title": "你的简洁标题" }
+### 示例：
+- { "title": "📉 股市趋势" },
+- { "title": "🍪 完美巧克力饼干配方" },
+- { "title": "音乐流媒体的演变" },
+- { "title": "远程工作效率技巧" },
+- { "title": "人工智能在医疗领域的应用" },
+- { "title": "🎮 视频游戏开发见解" }
+### 聊天历史：
 <chat_history>
 {{MESSAGES:END:2}}
 </chat_history>"""
