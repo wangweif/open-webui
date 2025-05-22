@@ -222,13 +222,13 @@
 							<div class="mb-1">
 								<div class=" text-2xl font-medium">
 									{#if $config?.onboarding ?? false}
-										{$i18n.t(`开始使用 农科小智`, { WEBUI_NAME: $WEBUI_NAME })}
+										{$i18n.t(`开始使用 {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
 									{:else if mode === 'ldap'}
-										{$i18n.t(`登录 农科小智 with LDAP`, { WEBUI_NAME: $WEBUI_NAME })}
+										{$i18n.t(`登录 {{WEBUI_NAME}} with LDAP`, { WEBUI_NAME: $WEBUI_NAME })}
 									{:else if mode === 'signin'}
-										{$i18n.t(`登录 农科小智`, { WEBUI_NAME: $WEBUI_NAME })}
+										{$i18n.t(`登录 {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
 									{:else}
-										{$i18n.t(`注册 农科小智`, { WEBUI_NAME: $WEBUI_NAME })}
+										{$i18n.t(`注册 {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
 									{/if}
 								</div>
 

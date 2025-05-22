@@ -16,11 +16,11 @@
 		/>
 		<meta name="theme-color" content="#171717" />
 		<meta name="robots" content="noindex,nofollow" />
-		<meta name="description" content="农科小智" />
+		<meta name="description" content="%sveltekit.env.PUBLIC_APP_NAME%" />
 		<link
 			rel="search"
 			type="application/opensearchdescription+xml"
-			title="农科小智"
+			title="%sveltekit.env.PUBLIC_APP_NAME%"
 			href="/opensearch.xml"
 		/>
 		<script src="/static/loader.js" defer></script>
@@ -101,7 +101,7 @@
 			})();
 		</script>
 
-		<title>农科小智</title>
+		<title>%sveltekit.env.PUBLIC_APP_NAME%</title>
 
 		%sveltekit.head%
 	</head>

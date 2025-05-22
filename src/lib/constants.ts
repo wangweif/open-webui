@@ -1,7 +1,17 @@
 import { browser, dev } from '$app/environment';
 // import { version } from '../../package.json';
 
-export const APP_NAME = '农科小智';
+// 使用 Vite 定义的全局变量，如果不存在则使用默认值
+declare global {
+  const APP_NAME: string;
+  const BUILD_TARGET: string;
+  const APP_VERSION: string;
+  const APP_BUILD_HASH: string;
+}
+
+// 导出应用名称，使用 Vite 定义的全局变量
+export const WEBUI_NAME = typeof APP_NAME !== 'undefined' ? APP_NAME : '农科小智';
+export const APP_BUILD_TARGET = typeof BUILD_TARGET !== 'undefined' ? BUILD_TARGET : 'default';
 
 export const WEBUI_HOSTNAME = browser ? (dev ? `${location.hostname}:8080` : ``) : '';
 

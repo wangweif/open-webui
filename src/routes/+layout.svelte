@@ -528,7 +528,7 @@
 		if (backendConfig) {
 			// Save Backend Status to Store
 			await config.set(backendConfig);
-			await WEBUI_NAME.set(backendConfig.name);
+			// 不从后端获取应用名称，使用前端环境变量配置
 
 			if ($config) {
 				await setupSocket($config.features?.enable_websocket ?? true);
