@@ -41,39 +41,39 @@
 
 			if (!contentContainerElement?.contains(event.target)) return;
 
-			let selection = window.getSelection();
+			//let selection = window.getSelection();
 
-			if (selection.toString().trim().length > 0) {
-				const range = selection.getRangeAt(0);
-				const rect = range.getBoundingClientRect();
+			// if (selection.toString().trim().length > 0) {
+			// 	const range = selection.getRangeAt(0);
+			// 	const rect = range.getBoundingClientRect();
 
-				const parentRect = contentContainerElement.getBoundingClientRect();
+			// 	const parentRect = contentContainerElement.getBoundingClientRect();
 
-				// Adjust based on parent rect
-				const top = rect.bottom - parentRect.top;
-				const left = rect.left - parentRect.left;
+			// 	// Adjust based on parent rect
+			// 	const top = rect.bottom - parentRect.top;
+			// 	const left = rect.left - parentRect.left;
 
-				if (buttonsContainerElement) {
-					buttonsContainerElement.style.display = 'block';
+			// 	if (buttonsContainerElement) {
+			// 		buttonsContainerElement.style.display = 'block';
 
-					// Calculate space available on the right
-					const spaceOnRight = parentRect.width - left;
-					let halfScreenWidth = $mobile ? window.innerWidth / 2 : window.innerWidth / 3;
+			// 		// Calculate space available on the right
+			// 		const spaceOnRight = parentRect.width - left;
+			// 		let halfScreenWidth = $mobile ? window.innerWidth / 2 : window.innerWidth / 3;
 
-					if (spaceOnRight < halfScreenWidth) {
-						const right = parentRect.right - rect.right;
-						buttonsContainerElement.style.right = `${right}px`;
-						buttonsContainerElement.style.left = 'auto'; // Reset left
-					} else {
-						// Enough space, position using 'left'
-						buttonsContainerElement.style.left = `${left}px`;
-						buttonsContainerElement.style.right = 'auto'; // Reset right
-					}
-					buttonsContainerElement.style.top = `${top + 5}px`; // +5 to add some spacing
-				}
-			} else {
-				closeFloatingButtons();
-			}
+			// 		if (spaceOnRight < halfScreenWidth) {
+			// 			const right = parentRect.right - rect.right;
+			// 			buttonsContainerElement.style.right = `${right}px`;
+			// 			buttonsContainerElement.style.left = 'auto'; // Reset left
+			// 		} else {
+			// 			// Enough space, position using 'left'
+			// 			buttonsContainerElement.style.left = `${left}px`;
+			// 			buttonsContainerElement.style.right = 'auto'; // Reset right
+			// 		}
+			// 		buttonsContainerElement.style.top = `${top + 5}px`; // +5 to add some spacing
+			// 	}
+			// } else {
+			// 	closeFloatingButtons();
+			// }
 		}, 0);
 	};
 
