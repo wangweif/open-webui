@@ -630,7 +630,7 @@
 	{/if}
 {/if}
 
-<Toaster
+<!-- <Toaster
 	theme={$theme.includes('dark')
 		? 'dark'
 		: $theme === 'system'
@@ -640,4 +640,4 @@
 			: 'light'}
 	richColors
 	position="top-right"
-/>
+/> -->

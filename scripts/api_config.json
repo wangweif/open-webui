@@ -589,6 +589,25 @@
         "content": "kkkkkk",
         "access_control": null
       }
+    },
+    "update_usersettings": {
+      "endpoint": "/api/v1/users/user/settings/update",
+      "method": "POST",
+      "description": "更新用户设置（关闭弹窗）",
+      "default_data": {
+        "ui": {
+          "version": "0.6.5",
+          "models": [
+              "rag_flow_webapi_pipeline_cs"
+          ],
+          "notifications": {
+              "webhook_url": ""
+          },
+          "showChangelog": true,
+          "showUpdateToast": false,
+          "notificationSound": false
+        }
+      }
     }
   }
 } 
