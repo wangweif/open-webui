@@ -222,19 +222,24 @@
 							<div class="mb-1">
 								<div class=" text-2xl font-medium">
 									{#if $config?.onboarding ?? false}
-										{$i18n.t(`开始使用 {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
+										<!-- {$i18n.t(`开始使用 {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })} -->
+										{$i18n.t(`开始使用`)}
 									{:else if mode === 'ldap'}
-										{$i18n.t(`登录 {{WEBUI_NAME}} with LDAP`, { WEBUI_NAME: $WEBUI_NAME })}
+										<!-- {$i18n.t(`登录 {{WEBUI_NAME}} with LDAP`, { WEBUI_NAME: $WEBUI_NAME })} -->
+										{$i18n.t(`登录 with LDAP`)}
 									{:else if mode === 'signin'}
-										{$i18n.t(`登录 {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
+										<!-- {$i18n.t(`登录 {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })} -->
+										{$i18n.t(`登录`)}
 									{:else}
-										{$i18n.t(`注册 {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
+										<!-- {$i18n.t(`注册 {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })} -->
+										{$i18n.t(`注册`)}
 									{/if}
 								</div>
 
 								{#if $config?.onboarding ?? false}
 									<div class=" mt-1 text-xs font-medium text-gray-500">
-										ⓘ {$WEBUI_NAME}
+										<!-- ⓘ {$WEBUI_NAME} -->
+										ⓘ
 										{$i18n.t(
 											'does not make any external connections, and your data stays securely on your locally hosted server.'
 										)}
