@@ -7,7 +7,7 @@
 		"dev:5050": "npm run pyodide:fetch && vite dev --port 5050 --mode development",
 		"dev:bjny": "npm run pyodide:fetch && vite dev --host --mode bjny",
 		"dev:nkxz": "npm run pyodide:fetch && vite dev --host --mode nkxz",
-		"build": "npm run pyodide:fetch && vite build",
+		"build": "npm run pyodide:fetch && vite build --mode bjny",
 		"build:bjny": "npm run pyodide:fetch && vite build --mode bjny",
 		"build:nkxz": "npm run pyodide:fetch && vite build --mode nkxz",
 		"build:all": "npm run build:bjny && npm run build:nkxz",
