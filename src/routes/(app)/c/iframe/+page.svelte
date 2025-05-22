@@ -20,7 +20,7 @@
 
 <div class="w-full h-full flex flex-col">
     <div class="flex items-center justify-between p-1  ">
-        <h1 class="text-lg font-medium text-gray-900 dark:text-white">{title}</h1>
+        <!-- <h1 class="text-lg font-medium text-gray-900 dark:text-white">{title}</h1> -->
     </div>
     
     <div class="flex-1 w-full">
