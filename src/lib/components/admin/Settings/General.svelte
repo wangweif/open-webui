@@ -369,7 +369,7 @@
 						</div>
 					</div>
 
-					<div class=" space-y-3">
+					<!-- <div class=" space-y-3">
 						<div class="mt-2 space-y-2 pr-1.5">
 							<div class="flex justify-between items-center text-sm">
 								<div class="  font-medium">{$i18n.t('LDAP')}</div>
@@ -580,9 +580,9 @@
 							{/if}
 						</div>
 					</div>
-				</div>
+				</div> -->
 
-				<div class="mb-3">
+				<!-- <div class="mb-3">
 					<div class=" mb-2.5 text-base font-medium">{$i18n.t('Features')}</div>
 
 					<hr class=" border-gray-100 dark:border-gray-850 my-2" />
@@ -615,9 +615,9 @@
 						</div>
 
 						<Switch bind:state={adminConfig.ENABLE_USER_WEBHOOKS} />
-					</div>
+					</div> -->
 
-					<div class="mb-2.5 w-full justify-between">
+					<!-- <div class="mb-2.5 w-full justify-between">
 						<div class="flex w-full justify-between">
 							<div class=" self-center text-xs font-medium">{$i18n.t('WebUI URL')}</div>
 						</div>
@@ -636,9 +636,9 @@
 								'Enter the public URL of your WebUI. This URL will be used to generate links in the notifications.'
 							)}
 						</div>
-					</div>
+					</div> -->
 
-					<div class=" w-full justify-between">
+					<!-- <div class=" w-full justify-between">
 						<div class="flex w-full justify-between">
 							<div class=" self-center text-xs font-medium">{$i18n.t('Webhook URL')}</div>
 						</div>
@@ -651,7 +651,7 @@
 								bind:value={webhookUrl}
 							/>
 						</div>
-					</div>
+					</div> -->
 				</div>
 			</div>
 		{/if}
