@@ -122,6 +122,10 @@
 
 				await chatId.set('');
 				await tick();
+				const newChatButton = document.getElementById('new-chat-button');
+				setTimeout(() => {
+					newChatButton?.click();
+				}, 0);
 			}
 
 			dispatch('change');
