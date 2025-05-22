@@ -607,7 +607,8 @@
 
 <svelte:head>
 	<title>{$WEBUI_NAME}</title>
-	<link crossorigin="anonymous" rel="icon" href="/favicon.png" />
+	<!-- 隐藏标签页图标 -->
+	<!-- <link crossorigin="anonymous" rel="icon" href="/favicon.png" /> -->
 
 	<!-- rosepine themes have been disabled as it's not up to date with our latest version. -->
 	<!-- feel free to make a PR to fix if anyone wants to see it return -->

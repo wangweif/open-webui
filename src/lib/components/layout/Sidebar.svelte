@@ -175,7 +175,7 @@
 				return [];
 			});
 			models.set(modelList);
-			
+
 			// 在设置模型列表后，从localStorage加载默认选中的模型设置
 			const savedSettings = localStorage.getItem('modelSettings');
 			if (savedSettings) {
@@ -538,7 +538,7 @@
 
 			<a
 				id="sidebar-new-chat-button"
-				class="flex justify-between items-center flex-1 rounded-lg px-2 py-1 h-full text-right hover:bg-gray-100 dark:hover:bg-gray-900 transition no-drag-region"
+				class="flex items-center flex-1 rounded-lg px-2 py-1 h-full gap-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition no-drag-region"
 				href="/"
 				draggable="false"
 				on:click={async () => {
@@ -553,20 +553,17 @@
 					}, 0);
 				}}
 			>
-				<div class="flex items-center">
-					<div class="self-center mx-1.5">
-						<img
-							crossorigin="anonymous"
-							src="/favicon.png"
-							class=" size-5 -translate-x-1.5 rounded-full"
-							alt="logo"
-						/>
-					</div>
-					<div class=" self-center font-medium text-sm text-gray-850 dark:text-white font-primary">
-						{$i18n.t('New Chat')}
-					</div>
+				<div class="self-center mx-1.5">
+					<!-- <img
+						crossorigin="anonymous"
+						src="/favicon.png"
+						class=" size-5 -translate-x-1.5 rounded-full"
+						alt="logo"
+					/> -->
 				</div>
-
+				<div class=" self-center font-medium text-sm text-gray-850 dark:text-white font-primary">
+					{$i18n.t('New Chat')}
+				</div>
 				<div>
 					<PencilSquare className=" size-5" strokeWidth="2" />
 				</div>
