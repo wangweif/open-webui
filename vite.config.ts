@@ -43,7 +43,9 @@ export default defineConfig(({ mode }) => {
 			APP_VERSION: JSON.stringify(process.env.npm_package_version),
 			APP_BUILD_HASH: JSON.stringify(process.env.APP_BUILD_HASH || 'dev-build'),
 			APP_NAME: JSON.stringify(APP_NAME),
-			BUILD_TARGET: JSON.stringify(env.PUBLIC_BUILD_TARGET || env.BUILD_TARGET || 'default')
+			BUILD_TARGET: JSON.stringify(env.PUBLIC_BUILD_TARGET || env.BUILD_TARGET || 'default'),
+			FOOTER_TEXT: JSON.stringify(env.FOOTER_TEXT || "内容由 AI大模型生成，请仔细甄别。技术支持:北京市农林科学院"),
+			FOOTER_TEXT_BJNY: JSON.stringify(env.FOOTER_TEXT_BJNY || "内容由 AI大模型生成，请仔细甄别。版权所有：北京市农业农村局 技术支持：北京市农村经济信息")
 		},
 		build: {
 			sourcemap: true,
