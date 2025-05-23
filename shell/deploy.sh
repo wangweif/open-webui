@@ -11,6 +11,8 @@ git fetch
 git reset --hard
 git rebase
 
+conda activate openwebui
+
 # 1. 杀死占用 8080 端口的旧进程
 echo "正在检查并杀死占用 ${PORT} 端口的旧进程..."
 OLD_PID=$(lsof -t -i :${PORT})
