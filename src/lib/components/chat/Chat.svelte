@@ -4,6 +4,13 @@
 	import mermaid from 'mermaid';
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge';
 
+	// 全局环境变量
+	declare global {
+		const BUILD_TARGET: string;
+		const FOOTER_TEXT: string;
+		const FOOTER_TEXT_BJNY: string;
+	}
+
 	import { getContext, onDestroy, onMount, tick } from 'svelte';
 	const i18n: Writable<i18nType> = getContext('i18n');
 
@@ -2119,7 +2126,11 @@
 					{/if}
 					<!-- 添加底部栏 -->
 					<div class="w-full py-2 px-4 text-center text-xs text-gray-500 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 mt-auto">
-						内容由 AI大模型生成，请仔细甄别。技术支持:北京市农林科学院
+						{#if BUILD_TARGET === 'bjny'}
+							{FOOTER_TEXT_BJNY}
+						{:else}
+							{FOOTER_TEXT || "内容由 AI大模型生成，请仔细甄别。技术支持:北京市农林科学院"}
+						{/if}
 					</div>
 				</div>
 			</Pane>
