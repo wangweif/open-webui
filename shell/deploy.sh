@@ -24,6 +24,8 @@ else
     echo "没有发现占用 ${PORT} 端口的旧进程"
 fi
 
+cd backend
+
 # 2. 启动新服务
 echo "正在启动新服务..."
 nohup bash start.sh &> /dev/null &
