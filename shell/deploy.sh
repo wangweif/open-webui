@@ -35,6 +35,8 @@ echo "服务启动中，正在监测 ${PORT} 端口..."
 START_TIME=$(date +%s)
 SUCCESS=0
 
+echo "[DEBUG] Current Conda Env: '$CONDA_DEFAULT_ENV'"
+
 while true; do
     # 检查端口是否被监听
     if lsof -i :${PORT} &> /dev/null; then
