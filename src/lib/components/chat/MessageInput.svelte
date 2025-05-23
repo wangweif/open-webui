@@ -1173,7 +1173,7 @@
 															type="button"
 															class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {webSearchEnabled ||
 															($settings?.webSearch ?? false) === 'always'
-																? 'bg-blue-100 dark:bg-blue-500/20 border-blue-400/20 text-blue-500 dark:text-blue-400'
+																? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
 																: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'} {isRagFlowModel ? 'opacity-50 cursor-not-allowed' : ''}"
 															disabled={isRagFlowModel}
 														>
@@ -1380,7 +1380,7 @@
 															id="send-message-button"
 															class="{!(prompt === '' && files.length === 0)
 																? webSearchEnabled || ($settings?.webSearch ?? false) === 'always'
-																	? 'bg-blue-500 text-white hover:bg-blue-400 '
+																	? 'bg-primary-500 text-white hover:bg-primary-400 '
 																	: 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100 '
 																: 'text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled'} transition rounded-full p-1.5 self-center"
 															type="submit"

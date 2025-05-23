@@ -310,14 +310,14 @@
 								{#if $config?.features.enable_login_form || $config?.features.enable_ldap}
 									{#if mode === 'ldap'}
 										<button
-											class="bg-[#1890ff] hover:bg-[#1890ff]/90 text-white transition w-full rounded-full font-medium text-sm py-2.5"
+											class="bg-primary-500 hover:bg-primary-600 text-white transition w-full rounded-full font-medium text-sm py-2.5"
 											type="submit"
 										>
 											{$i18n.t('Authenticate')}
 										</button>
 									{:else}
 										<button
-											class="bg-[#1890ff] hover:bg-[#1890ff]/90 text-white transition w-full rounded-full font-medium text-sm py-2.5"
+											class="bg-primary-500 hover:bg-primary-600 text-white transition w-full rounded-full font-medium text-sm py-2.5"
 											type="submit"
 										>
 											{mode === 'signin'
@@ -368,7 +368,7 @@
 							<div class="flex flex-col space-y-2">
 								{#if $config?.oauth?.providers?.google}
 									<button
-										class="flex justify-center items-center bg-[#1890ff] hover:bg-[#1890ff]/90 text-white transition w-full rounded-full font-medium text-sm py-2.5"
+										class="flex justify-center items-center bg-primary-500 hover:bg-primary-600 text-white transition w-full rounded-full font-medium text-sm py-2.5"
 										on:click={() => {
 											window.location.href = `${WEBUI_BASE_URL}/oauth/google/login`;
 										}}
@@ -393,7 +393,7 @@
 								{/if}
 								{#if $config?.oauth?.providers?.microsoft}
 									<button
-										class="flex justify-center items-center bg-[#1890ff] hover:bg-[#1890ff]/90 text-white transition w-full rounded-full font-medium text-sm py-2.5"
+										class="flex justify-center items-center bg-primary-500 hover:bg-primary-600 text-white transition w-full rounded-full font-medium text-sm py-2.5"
 										on:click={() => {
 											window.location.href = `${WEBUI_BASE_URL}/oauth/microsoft/login`;
 										}}
@@ -418,7 +418,7 @@
 								{/if}
 								{#if $config?.oauth?.providers?.github}
 									<button
-										class="flex justify-center items-center bg-[#1890ff] hover:bg-[#1890ff]/90 text-white transition w-full rounded-full font-medium text-sm py-2.5"
+										class="flex justify-center items-center bg-primary-500 hover:bg-primary-600 text-white transition w-full rounded-full font-medium text-sm py-2.5"
 										on:click={() => {
 											window.location.href = `${WEBUI_BASE_URL}/oauth/github/login`;
 										}}
@@ -434,7 +434,7 @@
 								{/if}
 								{#if $config?.oauth?.providers?.oidc}
 									<button
-										class="flex justify-center items-center bg-[#1890ff] hover:bg-[#1890ff]/90 text-white transition w-full rounded-full font-medium text-sm py-2.5"
+										class="flex justify-center items-center bg-primary-500 hover:bg-primary-600 text-white transition w-full rounded-full font-medium text-sm py-2.5"
 										on:click={() => {
 											window.location.href = `${WEBUI_BASE_URL}/oauth/oidc/login`;
 										}}

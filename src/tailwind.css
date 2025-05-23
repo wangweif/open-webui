@@ -21,6 +21,20 @@
 }
 
 @layer base {
+	:root {
+		--color-primary-50: #e6f7ff;
+		--color-primary-100: #bae7ff;
+		--color-primary-200: #91d5ff;
+		--color-primary-300: #69c0ff;
+		--color-primary-400: #40a9ff;
+		--color-primary-500: #1890ff;
+		--color-primary-600: #096dd9;
+		--color-primary-700: #0050b3;
+		--color-primary-800: #003a8c;
+		--color-primary-900: #002766;
+		--color-primary-950: #001529;
+	}
+
 	html,
 	pre {
 		font-family: -apple-system, BlinkMacSystemFont, 'Inter', ui-sans-serif, system-ui, 'Segoe UI',
