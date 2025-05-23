@@ -28,7 +28,7 @@ cd backend
 
 # 2. 启动新服务
 echo "正在启动新服务..."
-nohup bash start.sh </dev/null &>/dev/null &
+nohup bash start.sh > logs/backend.log 2>&1
 
 # 3. 监测端口是否启动成功
 echo "服务启动中，正在监测 ${PORT} 端口..."
