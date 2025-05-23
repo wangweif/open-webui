@@ -7,6 +7,7 @@ PORT=8080
 TIMEOUT=60    # 超时时间（秒）
 INTERVAL=5    # 检查间隔（秒）
 
+# 0. 更新代码（根据你的需求可选）
 git fetch
 git reset --hard
 git rebase
@@ -24,20 +25,20 @@ else
     echo "没有发现占用 ${PORT} 端口的旧进程"
 fi
 
-cd backend
-
+# 2. 进入 backend 目录
+echo "进入 backend 目录..."
+cd backend || { echo "无法进入 backend 目录"; exit 1; }
 echo "当前工作目录: $(pwd)"
+ls -l  # 调试用，显示目录内容
 
-# 2. 启动新服务
+# 3. 启动新服务（确保在 backend 目录下运行）
 echo "正在启动新服务..."
-nohup bash start.sh > logs/backend.log 2>&1
+nohup bash start.sh > logs/backend.log 2>&1 &
 
-# 3. 监测端口是否启动成功
+# 4. 监测端口是否启动成功
 echo "服务启动中，正在监测 ${PORT} 端口..."
 START_TIME=$(date +%s)
 SUCCESS=0
-
-echo "[DEBUG] Current Conda Env: '$CONDA_DEFAULT_ENV'"
 
 while true; do
     # 检查端口是否被监听
@@ -59,11 +60,16 @@ while true; do
     sleep $INTERVAL
 done
 
-# 4. 输出结果
+# 5. 输出结果
 if [ $SUCCESS -eq 1 ]; then
     echo "✅ 部署成功！${PORT} 端口服务已启动。"
+    # 实时打印最新日志（可选）
+    echo "=== 最新日志 ==="
+    tail -n 20 logs/backend.log
     exit 0
 else
     echo "❌ 启动失败：${TIMEOUT} 秒后仍未检测到 ${PORT} 端口服务。"
+    echo "=== 错误日志 ==="
+    tail -n 20 logs/backend.log
     exit 1
 fi
