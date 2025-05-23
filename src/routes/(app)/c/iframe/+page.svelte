@@ -1,5 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';    
+    import { showSidebar } from '$lib/stores';    
+    import MenuLines from '$lib/components/icons/MenuLines.svelte';
     
     let iframeElement: HTMLIFrameElement;
     let iframeSrc: string = '';
@@ -19,8 +21,22 @@
 </script>
 
 <div class="w-full h-full flex flex-col">
-    <div class="flex items-center justify-between p-1  ">
-        <!-- <h1 class="text-lg font-medium text-gray-900 dark:text-white">{title}</h1> -->
+    <div class="flex items-center justify-between p-1">
+        <div class="flex items-center">
+            <button
+                id="sidebar-toggle-button"
+                class="{$showSidebar ? 'md:hidden' : ''} cursor-pointer p-1.5 flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition mr-2"
+                on:click={() => {
+                    showSidebar.set(!$showSidebar);
+                }}
+                aria-label="Toggle Sidebar"
+            >
+                <div class="m-auto self-center">
+                    <MenuLines />
+                </div>
+            </button>
+            <!-- <h1 class="text-lg font-medium text-gray-900 dark:text-white">{title}</h1> -->
+        </div>
     </div>
     
     <div class="flex-1 w-full">

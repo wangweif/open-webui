@@ -1,10 +1,10 @@
 {
   "globals": {
-    "base_url": "http://127.0.0.1:8080",
+    "base_url": "http://192.168.8.88:8080",
     "login_endpoint": "/api/v1/auths/signin",
     "login_credentials": {
       "email": "admin@bjzntd.com",
-      "password": "admin"
+      "password": "123456"
     }
   },
   "apis": {
@@ -593,7 +593,7 @@
     "update_usersettings": {
       "endpoint": "/api/v1/users/user/settings/update",
       "method": "POST",
-      "description": "更新用户设置（关闭弹窗）",
+      "description": "更新用户设置（关闭弹窗）只针对当前登录用户",
       "default_data": {
         "ui": {
           "version": "0.6.5",
@@ -607,6 +607,37 @@
           "showUpdateToast": false,
           "notificationSound": false
         }
+      }
+    },
+    "close_evaluations": {
+      "endpoint": "/api/v1/evaluations/config",
+      "method": "POST",
+      "description": "关闭评估（模型竞技场）",
+      "default_data": {
+        "ENABLE_EVALUATION_ARENA_MODELS":false,
+        "EVALUATION_ARENA_MODELS":[]
+      }
+    },
+    "close_code_execution": {
+      "endpoint": "/api/v1/configs/code_execution",
+      "method": "POST",
+      "description": "关闭代码执行（解释器）",
+      "default_data": {
+        "ENABLE_CODE_EXECUTION": false,
+        "CODE_EXECUTION_ENGINE": "pyodide",
+        "CODE_EXECUTION_JUPYTER_URL": "",
+        "CODE_EXECUTION_JUPYTER_AUTH": "",
+        "CODE_EXECUTION_JUPYTER_AUTH_TOKEN": "",
+        "CODE_EXECUTION_JUPYTER_AUTH_PASSWORD": "",
+        "CODE_EXECUTION_JUPYTER_TIMEOUT": 60,
+        "ENABLE_CODE_INTERPRETER": false,
+        "CODE_INTERPRETER_ENGINE": "pyodide",
+        "CODE_INTERPRETER_PROMPT_TEMPLATE": "",
+        "CODE_INTERPRETER_JUPYTER_URL": "",
+        "CODE_INTERPRETER_JUPYTER_AUTH": "",
+        "CODE_INTERPRETER_JUPYTER_AUTH_TOKEN": "",
+        "CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD": "",
+        "CODE_INTERPRETER_JUPYTER_TIMEOUT": 60
       }
     }
   }

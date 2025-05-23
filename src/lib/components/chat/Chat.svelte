@@ -189,6 +189,11 @@
 
 	$: if (selectedModels) {
 		setToolIds();
+		// 检查选中的模型是否有 iframe_url
+		const selectedModel = $models.find(m => m.id === selectedModels[0]);
+		if (selectedModel?.info?.params?.iframe_url) {
+			goto("/c/iframe?src=" + selectedModel.info.params.iframe_url + "&title=" + selectedModel.name);
+		}
 	}
 
 	$: if (atSelectedModel || selectedModels) {
