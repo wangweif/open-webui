@@ -26,6 +26,8 @@ fi
 
 cd backend
 
+echo "当前工作目录: $(pwd)"
+
 # 2. 启动新服务
 echo "正在启动新服务..."
 nohup bash start.sh > logs/backend.log 2>&1
