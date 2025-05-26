@@ -46,6 +46,21 @@
 
 	let messages = [];
 
+	// 根据环境和name_1获取模型显示名称
+	function getModelDisplayName(model: any): string {
+		if (!model) return '';
+		// 检查是否为bjny环境且存在name_1
+		const isBjnyEnv = typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'bjny';
+		const modelMeta = model.info?.meta as any;
+		const hasName1 = modelMeta?.name_1;
+
+		if (isBjnyEnv && hasName1) {
+			return modelMeta.name_1;
+		}
+
+		return model.name;
+	}
+
 	const scrollToBottom = () => {
 		const element = messagesContainerElement;
 
@@ -238,7 +253,7 @@
 								bind:value={selectedModelId}
 							>
 								{#each $models as model}
-									<option value={model.id} class="bg-gray-50 dark:bg-gray-700">{model.name}</option>
+									<option value={model.id} class="bg-gray-50 dark:bg-gray-700">{getModelDisplayName(model)}</option>
 								{/each}
 							</select>
 						</div>

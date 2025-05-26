@@ -1442,9 +1442,15 @@
 					);
 
 					if (hasImages && !(model.info?.meta?.capabilities?.vision ?? true)) {
+						// 获取模型显示名称
+						const isBjnyEnv = typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'bjny';
+						const modelMeta = model.info?.meta as any;
+						const hasName1 = modelMeta?.name_1;
+						const displayName = (isBjnyEnv && hasName1) ? modelMeta.name_1 : model.name;
+
 						toast.error(
 							$i18n.t('Model {{modelName}} is not vision capable', {
-								modelName: model.name ?? model.id
+								modelName: displayName ?? model.id
 							})
 						);
 					}

@@ -15,6 +15,21 @@
 	let selectedIdx = 0;
 	let filteredItems = [];
 
+	// 根据环境和name_1获取模型显示名称
+	function getModelDisplayName(model: any): string {
+		if (!model) return '';
+		// 检查是否为bjny环境且存在name_1
+		const isBjnyEnv = typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'bjny';
+		const modelMeta = model.info?.meta as any;
+		const hasName1 = modelMeta?.name_1;
+
+		if (isBjnyEnv && hasName1) {
+			return modelMeta.name_1;
+		}
+
+		return model.name;
+	}
+
 	let fuse = new Fuse(
 		$models
 			.filter((model) => !model?.info?.meta?.hidden)
@@ -92,10 +107,10 @@
 							<div class="flex font-medium text-black dark:text-gray-100 line-clamp-1">
 								<img
 									src={model?.info?.meta?.profile_image_url ?? '/static/favicon.png'}
-									alt={model?.name ?? model.id}
+									alt={getModelDisplayName(model) ?? model.id}
 									class="rounded-full size-6 items-center mr-2"
 								/>
-								{model.name}
+								{getModelDisplayName(model)}
 							</div>
 						</button>
 					{/each}

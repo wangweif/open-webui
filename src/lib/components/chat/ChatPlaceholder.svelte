@@ -23,6 +23,21 @@
 	let mounted = false;
 	let selectedModelIdx = 0;
 
+	// 根据环境和name_1获取模型显示名称
+	function getModelDisplayName(model: any): string {
+		if (!model) return '';
+		// 检查是否为bjny环境且存在name_1
+		const isBjnyEnv = typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'bjny';
+		const modelMeta = model.info?.meta as any;
+		const hasName1 = modelMeta?.name_1;
+
+		if (isBjnyEnv && hasName1) {
+			return modelMeta.name_1;
+		}
+
+		return model.name;
+	}
+
 	$: if (modelIds.length > 0) {
 		selectedModelIdx = models.length - 1;
 	}
@@ -84,7 +99,7 @@
 			<div>
 				<div class=" capitalize line-clamp-1" in:fade={{ duration: 200 }}>
 					{#if models[selectedModelIdx]?.name}
-						{models[selectedModelIdx]?.name}
+						{getModelDisplayName(models[selectedModelIdx])}
 					{:else}
 						{$i18n.t('Hello, {{name}}', { name: $user?.name })}
 					{/if}

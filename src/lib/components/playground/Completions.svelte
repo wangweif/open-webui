@@ -24,6 +24,21 @@
 
 	let textCompletionAreaElement: HTMLTextAreaElement;
 
+	// 根据环境和name_1获取模型显示名称
+	function getModelDisplayName(model: any): string {
+		if (!model) return '';
+		// 检查是否为bjny环境且存在name_1
+		const isBjnyEnv = typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'bjny';
+		const modelMeta = model.info?.meta as any;
+		const hasName1 = modelMeta?.name_1;
+
+		if (isBjnyEnv && hasName1) {
+			return modelMeta.name_1;
+		}
+
+		return model.name;
+	}
+
 	const scrollToBottom = () => {
 		const element = textCompletionAreaElement;
 
@@ -132,7 +147,7 @@
 									placeholder={$i18n.t('Select a model')}
 									items={$models.map((model) => ({
 										value: model.id,
-										label: model.name,
+										label: getModelDisplayName(model),
 										model: model
 									}))}
 									bind:value={selectedModelId}
