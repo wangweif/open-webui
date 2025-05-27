@@ -42,7 +42,7 @@ class ERROR_MESSAGES(str, Enum):
     INVALID_TOKEN = (
         "Your session has expired or the token is invalid. Please sign in again."
     )
-    INVALID_CRED = "The email or password provided is incorrect. Please check for typos and try logging in again."
+    INVALID_CRED = "邮箱或密码错误，请检查后重试。"
     INVALID_EMAIL_FORMAT = "The email format you entered is invalid. Please double-check and make sure you're using a valid email address (e.g., yourname@example.com)."
     INVALID_PASSWORD = (
         "The password provided is incorrect. Please check for typos and try again."

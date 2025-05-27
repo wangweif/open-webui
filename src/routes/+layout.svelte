@@ -629,8 +629,8 @@
 		<slot />
 	{/if}
 {/if}
-
-<!-- <Toaster
+{#if $page.route.id === '/auth'}
+<Toaster
 	theme={$theme.includes('dark')
 		? 'dark'
 		: $theme === 'system'
@@ -640,4 +640,5 @@
 			: 'light'}
 	richColors
 	position="top-right"
-/> -->
+/>
+{/if}
