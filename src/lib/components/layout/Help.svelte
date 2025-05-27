@@ -10,7 +10,7 @@
 	let showShortcuts = false;
 </script>
 
-<div class=" hidden lg:flex fixed bottom-0 right-0 px-1 py-1 z-20">
+<!-- <div class=" hidden lg:flex fixed bottom-0 right-0 px-1 py-1 z-20">
 	<button
 		id="show-shortcuts-button"
 		class="hidden"
@@ -35,6 +35,6 @@
 			</button>
 		</Tooltip>
 	</HelpMenu>
-</div>
+</div> -->
 
 <ShortcutsModal bind:show={showShortcuts} />
