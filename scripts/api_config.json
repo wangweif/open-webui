@@ -471,7 +471,7 @@
         },
         "type": "collection",
         "params": {
-          "iframe_url": "http://llm-test.bjzntd.com/notify-server/web"
+          "iframe_url": "https://llm.bjzntd.com/notify-server/web"
         },
         "access_control": null
       }
