@@ -121,6 +121,83 @@
 
 	let isComposing = false;
 
+	// 自定义通知状态
+	let ragFlowErrorTimeout;
+
+	// 显示 RagFlow 模型文件类型错误通知
+	const showRagFlowFileTypeError = () => {
+		// 清除之前的定时器
+		if (ragFlowErrorTimeout) {
+			clearTimeout(ragFlowErrorTimeout);
+		}
+
+		// 创建全局通知元素
+		if (typeof document !== 'undefined') {
+			// 移除之前的通知（如果存在）
+			const existingNotification = document.getElementById('rag-flow-error-notification');
+			if (existingNotification) {
+				existingNotification.remove();
+			}
+
+			// 创建新的通知元素
+			const notification = document.createElement('div');
+			notification.id = 'rag-flow-error-notification';
+			notification.innerHTML = `
+				<div style="
+					position: fixed;
+					top: 16px;
+					left: 50%;
+					transform: translateX(-50%);
+					z-index: 99999;
+					background-color: #ef4444;
+					color: white;
+					padding: 12px 24px;
+					border-radius: 8px;
+					box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+					display: flex;
+					align-items: center;
+					gap: 12px;
+					max-width: 28rem;
+					margin: 0 auto;
+					transition: all 0.3s ease-in-out;
+					pointer-events: auto;
+				">
+					<svg xmlns="http://www.w3.org/2000/svg" style="height: 20px; width: 20px; flex-shrink: 0;" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+					</svg>
+					<span style="font-size: 14px; font-weight: 500;">此模型仅支持图像文件，请上传图片文件。</span>
+					<button onclick="this.parentElement.parentElement.remove()" style="
+						margin-left: auto;
+						background: transparent;
+						border: none;
+						color: white;
+						cursor: pointer;
+						padding: 4px;
+						border-radius: 50%;
+						transition: background-color 0.2s;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+					" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='transparent'" title="关闭">
+						<svg xmlns="http://www.w3.org/2000/svg" style="height: 16px; width: 16px;" viewBox="0 0 20 20" fill="currentColor">
+							<path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+						</svg>
+					</button>
+				</div>
+			`;
+
+			// 添加到 body
+			document.body.appendChild(notification);
+
+			// 3秒后自动移除
+			setTimeout(() => {
+				if (notification && notification.parentNode) {
+					notification.remove();
+				}
+			}, 3000);
+		}
+	};
+
 	let chatInputContainerElement;
 	let chatInputElement;
 
@@ -270,6 +347,12 @@
 				return;
 			}
 
+			// 检查 rag_flow_webapi_pipeline_cs 模型的文件类型限制
+			if (isRagFlowModel && !['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/avif'].includes(file['type'])) {
+				showRagFlowFileTypeError();
+				return;
+			}
+
 			if (
 				['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/avif'].includes(file['type'])
 			) {
@@ -378,6 +461,8 @@
 <FilesOverlay show={dragged} />
 
 <ToolServersModal bind:show={showTools} {selectedToolIds} />
+
+
 
 {#if loaded}
 	<div class="w-full font-primary">
