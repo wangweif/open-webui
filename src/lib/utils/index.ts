@@ -94,6 +94,7 @@ export const processResponseContent = (content: string, modelId?: string) => {
 	// 如果模型ID为rag_flow_webapi_pipeline_cs，替换链接
 	if (modelId === 'rag_flow_webapi_pipeline_cs') {
 		content = content.replace(/192\.168\.8\.250:9380/g, 'know.bjzntd.com');
+		content = content.replace(/192\.168\.8\.88:9380/g, 'know.baafs.net.cn');
 	}
 	return content.trim();
 };
