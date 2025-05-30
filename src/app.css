@@ -321,6 +321,45 @@ input[type='number'] {
 	pointer-events: none;
 }
 
+/* Reasoning content styles - smaller and grayer text */
+.reasoning-content {
+	font-size: 0.875rem; /* text-sm - smaller than normal text */
+	color: #8b8b8b !important; /* 思考文字的颜色 */
+}
+
+.dark .reasoning-content {
+	color: #8b8b8b !important; /* 在暗色模式下也使用相同的颜色 */
+}
+
+/* 确保思考内容中的所有文本元素都使用正确的颜色 */
+.reasoning-content p,
+.reasoning-content div,
+.reasoning-content span,
+.reasoning-content li,
+.reasoning-content h1,
+.reasoning-content h2,
+.reasoning-content h3,
+.reasoning-content h4,
+.reasoning-content h5,
+.reasoning-content h6 {
+	color: #8b8b8b !important;
+	font-size: 0.875rem !important;
+}
+
+.dark .reasoning-content p,
+.dark .reasoning-content div,
+.dark .reasoning-content span,
+.dark .reasoning-content li,
+.dark .reasoning-content h1,
+.dark .reasoning-content h2,
+.dark .reasoning-content h3,
+.dark .reasoning-content h4,
+.dark .reasoning-content h5,
+.dark .reasoning-content h6 {
+	color: #8b8b8b !important;
+	font-size: 0.875rem !important;
+}
+
 .tiptap > pre > code {
 	border-radius: 0.4rem;
 	font-size: 0.85rem;

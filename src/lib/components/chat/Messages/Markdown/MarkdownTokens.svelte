@@ -251,12 +251,12 @@
 	{:else if token.type === 'details'}
 		<Collapsible
 			title={token.summary}
-			open={$settings?.expandDetails ?? false}
+			open={token?.attributes?.type === 'reasoning' ? true : ($settings?.expandDetails ?? false)}
 			attributes={token?.attributes}
 			className="w-full space-y-1"
 			dir="auto"
 		>
-			<div class=" mb-1.5" slot="content">
+			<div class="mb-1.5 {token?.attributes?.type === 'reasoning' ? 'reasoning-content' : ''}" slot="content">
 				<svelte:self
 					id={`${id}-${tokenIdx}-d`}
 					tokens={marked.lexer(token.text)}
