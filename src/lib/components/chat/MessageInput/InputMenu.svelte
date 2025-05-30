@@ -31,7 +31,7 @@
 
 	export let isRagFlowModel: boolean = false;
 	export let isAiPriceModel: boolean = false;
-	
+
 	export let onClose: Function;
 
 	let tools = {};
@@ -191,7 +191,7 @@
 					}}
 				>
 					<DocumentArrowUpSolid />
-					<div class="line-clamp-1">{$i18n.t('Upload Files')}</div>
+					<div class="line-clamp-1">{isRagFlowModel ? '上传图片' : $i18n.t('Upload Files')}</div>
 				</DropdownMenu.Item>
 			</Tooltip>
 
