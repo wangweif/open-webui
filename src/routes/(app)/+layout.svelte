@@ -192,9 +192,9 @@
 				}
 			});
 
-			if ($user?.role === 'admin' && ($settings?.showChangelog ?? true)) {
-				showChangelog.set($settings?.version !== $config.version);
-			}
+			// if ($user?.role === 'admin' && ($settings?.showChangelog ?? true)) {
+			// 	showChangelog.set($settings?.version !== $config.version);
+			// }
 
 			if ($user?.permissions?.chat?.temporary ?? true) {
 				if ($page.url.searchParams.get('temporary-chat') === 'true') {
