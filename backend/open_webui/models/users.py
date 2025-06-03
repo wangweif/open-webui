@@ -32,6 +32,7 @@ class User(Base):
     api_key = Column(String, nullable=True, unique=True)
     settings = Column(JSONField, nullable=True)
     info = Column(JSONField, nullable=True)
+    assistant_id = Column(String, nullable=True)
 
     oauth_sub = Column(Text, unique=True)
 
