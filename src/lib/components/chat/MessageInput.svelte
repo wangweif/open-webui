@@ -79,8 +79,8 @@
 	$: isAiPriceModel = selectedModelIds.includes('aiPrice');
 	$: isDeepseekR1Model = selectedModelIds.includes('deepseek-r1:32b');
 
-	// 用于跟踪用户是否手动禁用了联网搜索
-	let manuallyDisabledWebSearch = false;
+	// 初始化时从localStorage加载状态
+	let manuallyDisabledWebSearch = localStorage.getItem('deepseekWebSearchDisabled') === 'true';
 
 	// 当选择rag_flow_webapi_pipeline_cs模型时，如果搜索功能已启用，则禁用它
 	$: if (isRagFlowModel && webSearchEnabled || isAiPriceModel && webSearchEnabled) {
@@ -88,7 +88,7 @@
 	}
 
 	// 当选择deepseek-r1模型时，如果搜索功能未启用且未被手动禁用，则启用它
-	$: if (isDeepseekR1Model && !webSearchEnabled && !manuallyDisabledWebSearch) {
+	$: if (isDeepseekR1Model && !manuallyDisabledWebSearch && !webSearchEnabled) {
 		webSearchEnabled = true;
 	}
 
@@ -888,6 +888,9 @@
 														console.log('Escape');
 														atSelectedModel = undefined;
 														selectedToolIds = [];
+														if (webSearchEnabled && isDeepseekR1Model) {
+															manuallyDisabledWebSearch = true;
+														}
 														webSearchEnabled = false;
 														imageGenerationEnabled = false;
 													}
@@ -1095,6 +1098,9 @@
 													console.log('Escape');
 													atSelectedModel = undefined;
 													selectedToolIds = [];
+													if (webSearchEnabled && isDeepseekR1Model) {
+														manuallyDisabledWebSearch = true;
+													}
 													webSearchEnabled = false;
 													imageGenerationEnabled = false;
 												}
@@ -1253,13 +1259,13 @@
 														<button
 															on:click|preventDefault={() => {
 																webSearchEnabled = !webSearchEnabled;
-																// 如果是deepseek-r1模型且用户关闭了搜索，标记为手动禁用
 																if (isDeepseekR1Model && !webSearchEnabled) {
 																	manuallyDisabledWebSearch = true;
+																	localStorage.setItem('deepseekWebSearchDisabled', 'true');
 																}
-																// 如果用户重新开启了搜索，取消手动禁用标记
 																if (webSearchEnabled) {
 																	manuallyDisabledWebSearch = false;
+																	localStorage.setItem('deepseekWebSearchDisabled', 'false');
 																}
 															}}
 															type="button"
