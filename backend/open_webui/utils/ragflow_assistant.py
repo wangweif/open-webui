@@ -1,7 +1,7 @@
 import requests
 from open_webui.config import TENANT_ID, KNOWLEDGE_BASE_URL
 
-def create_assistant(user_id, authorization, cookies):
+async def create_assistant(user_id, authorization, cookies):
     # 获取可以访问的知识库id列表
     api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/accessible?tenant_id={TENANT_ID}&user_id={user_id}"
     response = requests.get(api_url, headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})

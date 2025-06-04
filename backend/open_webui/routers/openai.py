@@ -661,6 +661,7 @@ async def generate_chat_completion(
             "id": user.id,
             "email": user.email,
             "role": user.role,
+            "assistant_id": user.assistant_id,
         }
 
     url = request.app.state.config.OPENAI_API_BASE_URLS[idx]

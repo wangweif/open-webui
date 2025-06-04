@@ -409,8 +409,22 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             user.id, request.app.state.config.USER_PERMISSIONS
         )
         if user.assistant_id == None:
-            assistant_id = await addUserToTeam(form_data.email,user.name,form_data.password)
+            # 先登录ragflow获取cookies和authorization
+            api_url = f"{KNOWLEDGE_BASE_URL}/v1/user/login"  
+            payload = {
+                "email": RAGFLOW_ADMIN_EMAIL,
+                "password": RAGFLOW_ADMIN_PASSWORD
+            }
+            response = requests.post(api_url, json=payload)
+            if response.status_code != 200:
+                return None
+            cookies = response.headers['Set-Cookie'].split(';')[0]
+            authorization = response.headers['Authorization']
+            # 创建聊天助手
+            assistant_id = await create_assistant(user.id,authorization,cookies)
             user.assistant_id = assistant_id
+            # 更新用户
+            Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
 
         return {
             "token": token,
@@ -592,7 +606,7 @@ async def addUserToTeam(email: str, nickname: str, password: str) -> str:
     if teamRes.status_code != 200:
         return None
     # 创建聊天助手
-    assistant_id = create_assistant(user_id, authorization, cookies)
+    assistant_id = await create_assistant(user_id, authorization, cookies)
     return assistant_id
 
 
