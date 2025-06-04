@@ -408,6 +408,9 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         user_permissions = get_permissions(
             user.id, request.app.state.config.USER_PERMISSIONS
         )
+        if user.assistant_id == None:
+            assistant_id = await addUserToTeam(form_data.email,user.name,form_data.password)
+            user.assistant_id = assistant_id
 
         return {
             "token": token,
