@@ -2693,3 +2693,22 @@ LDAP_CA_CERT_FILE = PersistentConfig(
 LDAP_CIPHERS = PersistentConfig(
     "LDAP_CIPHERS", "ldap.server.ciphers", os.environ.get("LDAP_CIPHERS", "ALL")
 )
+
+# -------------以下是知识库的配置-------------------
+#管理员的ID
+TENANT_ID = "74c6d454135511f093b141d43af2e6e2"
+# TENANT_ID = "14b973b82cb511f099b700155d04fd7d"
+#知识库的URL
+KNOWLEDGE_BASE_URL = "http://know.baafs.net.cn"
+# KNOWLEDGE_BASE_URL = "http://localhost:9222"
+#初始团队ID（小智3.0游客）
+BASE_TEAM_ID = "007f7536404811f0a58a09681006223d"
+# BASE_TEAM_ID = "6cfff39840e811f095d700155d22df70"
+#初始知识库ID（农科小智知识库）
+BASE_KB_ID = "c701d4ba1e7411f0900f5d9844683d0c"
+# BASE_KB_ID = "8e66fc54322711f0b37a00155d1225fd"
+# 管理员邮箱
+RAGFLOW_ADMIN_EMAIL = "admin@bjzntd.com"
+# 管理员密码
+RAGFLOW_ADMIN_PASSWORD = "Pg9WHt9UdxhoUiFVs8uZjWdQP9e66iAKFElOUV43Q4iWl4mfEPHgbVhrAc+GyAwGxPd8uPB97nb4jRaFp/V8Pr6zD1hpvJrk1gxi9/Na0m9rGaVZV04M8wSXnZhIfMgtr0wclSieneCvxeiA2WAalynFOMAVV+37H8lL/pkvIjyHrIyDZwY2Q4XzNa9NZBBl1UNoyw1eTbFKI5hWqwFNynUNJRkwVkezrfI5TdW5S71XziM9U8vckiDHU2iLwvHS73/l7L+YdrEKtNu98LJAWqxD4YxtgJKB6288l4LkjD9G6KFQZCYOnI1sgG0ZyikObv3SnDXNwZyx/brxPc5TWQ=="
+# RAGFLOW_ADMIN_PASSWORD = "gckyCut2u+kbS1zeOr3T3pxVJEKm9wyFTWCX1qN5yXf8VtFY1TQAKR27DKSDm3SjT2HiJLPmG+Lm6oHLgznCSTUsis7dtCBO/5gfuP4Qep+1Fmt1s1flPdaDqmrniaLi8rmIv3BhlftfqQoDjVok5beYwLmpbNqFlC1vbiQd0R8F/3vO05hcLEWMmkLEZntooVwchJjgkN99XIdxWRlFTR3WwS/k7mTiaaOhN3ruyNIbtsumTz3CZsv/Ugqvh8PE+Q68z7ozvUFPT9l37/RODfWuw6PSoT/xSboaslCqVioS1rEzOh8Njl41OZGpSNbpCph/Tn2YSkFfvypDYHCPjg=="

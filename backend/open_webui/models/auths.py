@@ -53,6 +53,7 @@ class UserResponse(BaseModel):
     name: str
     role: str
     profile_image_url: str
+    assistant_id: Optional[str] = None
 
 
 class SigninResponse(Token, UserResponse):
@@ -103,6 +104,7 @@ class AuthsTable:
         profile_image_url: str = "/user.png",
         role: str = "pending",
         oauth_sub: Optional[str] = None,
+        assistant_id: Optional[str] = None
     ) -> Optional[UserModel]:
         with get_db() as db:
             log.info("insert_new_auth")
@@ -116,7 +118,7 @@ class AuthsTable:
             db.add(result)
 
             user = Users.insert_new_user(
-                id, name, email, profile_image_url, role, oauth_sub
+                id, name, email, profile_image_url, role, oauth_sub, assistant_id
             )
 
             db.commit()

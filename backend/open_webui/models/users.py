@@ -59,6 +59,7 @@ class UserModel(BaseModel):
     info: Optional[dict] = None
 
     oauth_sub: Optional[str] = None
+    assistant_id: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -104,6 +105,7 @@ class UsersTable:
         profile_image_url: str = "/user.png",
         role: str = "pending",
         oauth_sub: Optional[str] = None,
+        assistant_id: Optional[str] = None
     ) -> Optional[UserModel]:
         with get_db() as db:
             user = UserModel(
@@ -117,6 +119,7 @@ class UsersTable:
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
                     "oauth_sub": oauth_sub,
+                    "assistant_id": assistant_id
                 }
             )
             result = User(**user.model_dump())

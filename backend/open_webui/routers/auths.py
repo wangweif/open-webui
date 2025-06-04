@@ -5,6 +5,8 @@ import datetime
 import logging
 from aiohttp import ClientSession
 import requests
+from open_webui.config import KNOWLEDGE_BASE_URL, BASE_TEAM_ID, BASE_KB_ID, RAGFLOW_ADMIN_EMAIL, RAGFLOW_ADMIN_PASSWORD
+from open_webui.utils.ragflow_assistant import create_assistant
 
 from open_webui.models.auths import (
     AddUserForm,
@@ -67,6 +69,7 @@ log.setLevel(SRC_LOG_LEVELS["MAIN"])
 class SessionUserResponse(Token, UserResponse):
     expires_at: Optional[int] = None
     permissions: Optional[dict] = None
+    assistant_id: Optional[str] = None
 
 
 @router.get("/", response_model=SessionUserResponse)
@@ -113,6 +116,7 @@ async def get_session_user(
         "role": user.role,
         "profile_image_url": user.profile_image_url,
         "permissions": user_permissions,
+        "assistant_id": user.assistant_id,
     }
 
 
@@ -316,6 +320,7 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
                     "role": user.role,
                     "profile_image_url": user.profile_image_url,
                     "permissions": user_permissions,
+                    "assistant_id": user.assistant_id,
                 }
             else:
                 raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
@@ -414,6 +419,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             "role": user.role,
             "profile_image_url": user.profile_image_url,
             "permissions": user_permissions,
+            "assistant_id": user.assistant_id,
         }
     else:
         raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
@@ -467,12 +473,14 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
             )
 
         hashed = get_password_hash(form_data.password)
+        assistant_id = await addUserToTeam(form_data.email,form_data.name,form_data.password)
         user = Auths.insert_new_auth(
             form_data.email.lower(),
             hashed,
             form_data.name,
             form_data.profile_image_url,
             role,
+            assistant_id=assistant_id
         )
 
         if user:
@@ -517,7 +525,7 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
             user_permissions = get_permissions(
                 user.id, request.app.state.config.USER_PERMISSIONS
             )
-            await addUserToTeam(user.email,user.name)
+
             return {
                 "token": token,
                 "token_type": "Bearer",
@@ -528,6 +536,7 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
                 "role": user.role,
                 "profile_image_url": user.profile_image_url,
                 "permissions": user_permissions,
+                "assistant_id": assistant_id
             }
         else:
             raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
@@ -535,50 +544,53 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
         log.error(f"Signup error: {str(err)}")
         raise HTTPException(500, detail="An internal error occurred during signup.")
 
-async def addUserToTeam(email: str, nickname: str):
+async def addUserToTeam(email: str, nickname: str, password: str) -> str:
     # 登录
-    api_url = "http://know.baafs.net.cn/v1/user/login"  # 替换为实际的注册API地址
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/user/login"  # 替换为实际的注册API地址
     payload = {
-        "email": "admin@bjzntd.com",
-        "password": "Pg9WHt9UdxhoUiFVs8uZjWdQP9e66iAKFElOUV43Q4iWl4mfEPHgbVhrAc+GyAwGxPd8uPB97nb4jRaFp/V8Pr6zD1hpvJrk1gxi9/Na0m9rGaVZV04M8wSXnZhIfMgtr0wclSieneCvxeiA2WAalynFOMAVV+37H8lL/pkvIjyHrIyDZwY2Q4XzNa9NZBBl1UNoyw1eTbFKI5hWqwFNynUNJRkwVkezrfI5TdW5S71XziM9U8vckiDHU2iLwvHS73/l7L+YdrEKtNu98LJAWqxD4YxtgJKB6288l4LkjD9G6KFQZCYOnI1sgG0ZyikObv3SnDXNwZyx/brxPc5TWQ=="
+        "email": RAGFLOW_ADMIN_EMAIL,
+        "password": RAGFLOW_ADMIN_PASSWORD
     }
     response = requests.post(api_url, json=payload)
     if response.status_code != 200:
-        return False
+        return None
     cookies = response.headers['Set-Cookie'].split(';')[0]
     authorization = response.headers['Authorization']
 
     # 添加用户到团队
-    api_url = "http://know.baafs.net.cn/v1/team/007f7536404811f0a58a09681006223d/member"
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/team/{BASE_TEAM_ID}/member"
     payload = {
         "email": email,
         "nickname": nickname,
+        "password": password,
         "role": "member"
     }
     teamRes = requests.post(api_url,json=payload,headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
     user_id = teamRes.json()['data']['user_id']
     if teamRes.status_code != 200:
-        return False
+        return None
     
     # 获取农科小智知识库权限列表
-    api_url = "http://know.baafs.net.cn/v1/permission/kb/c701d4ba1e7411f0900f5d9844683d0c/authorized_users"
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/{BASE_KB_ID}/authorized_users"
     teamRes = requests.get(api_url,headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
     teamRes = teamRes.json()
     data = teamRes['data']
     if data == None:
-        data = [{'user_id':user_id,'permission_types':'read'}]
+        data = [{'user_id':user_id,'permission_types':['read']}]
     else:
-        data.append({'user_id':user_id,'permission_types':'read'})
+        data.append({'user_id':user_id,'permission_types':['read']})
     payload = {
         "permissions": data
     }
 
     # 更新农科小智知识库权限列表
-    api_url = "http://know.baafs.net.cn/v1/permission/kb/c701d4ba1e7411f0900f5d9844683d0c/permissions"
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/{BASE_KB_ID}/permissions"
     teamRes = requests.post(api_url,json=payload,headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
     if teamRes.status_code != 200:
-        return False
-    return True
+        return None
+    # 创建聊天助手
+    assistant_id = create_assistant(user_id, authorization, cookies)
+    return assistant_id
 
 
 
