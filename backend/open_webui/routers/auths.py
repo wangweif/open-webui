@@ -408,7 +408,8 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         user_permissions = get_permissions(
             user.id, request.app.state.config.USER_PERMISSIONS
         )
-        if user.assistant_id == None:
+        if user.assistant_id == None or user.assistant_id == "":
+            print("用户没有助手，创建助手") 
             # 先登录ragflow获取cookies和authorization
             api_url = f"{KNOWLEDGE_BASE_URL}/v1/user/login"  
             payload = {
@@ -420,11 +421,25 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
                 return None
             cookies = response.headers['Set-Cookie'].split(';')[0]
             authorization = response.headers['Authorization']
-            # 创建聊天助手
-            assistant_id = await create_assistant(user.id,authorization,cookies)
-            user.assistant_id = assistant_id
-            # 更新用户
-            Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
+            # 获取ragflow中的用户id
+            api_url = f"{KNOWLEDGE_BASE_URL}/v1/user/get_user_info"
+            response = requests.post(api_url,json={"user_email":form_data.email},headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
+            # 如果用户不存在，则将用户添加到团队中并创建聊天助手
+            print("用户信息：",response.json())
+            if response.json().get('message') == "用户不存在!":
+                print("用户不存在，将用户添加到团队中并创建聊天助手")
+                assistant_id = await addUserToTeam(form_data.email,user.name,form_data.password)
+                user.assistant_id = assistant_id
+                # 更新用户
+                Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
+            # 如果用户存在，则创建聊天助手
+            else:
+                print("用户存在，创建聊天助手")
+                user_id = response.json()['data']['id']
+                assistant_id = await create_assistant(user_id,authorization,cookies)
+                user.assistant_id = assistant_id
+                # 更新用户
+                Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
 
         return {
             "token": token,
