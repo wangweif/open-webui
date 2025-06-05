@@ -426,7 +426,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             response = requests.post(api_url,json={"user_email":form_data.email},headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
             # 如果用户不存在，则将用户添加到团队中并创建聊天助手
             print("用户信息：",response.json())
-            if response.json().get('message') == "用户不存在!":
+            if response.json().get('message') == "用户不存在!" or response.json().get('data') == False or response.json().get('data') == None:
                 print("用户不存在，将用户添加到团队中并创建聊天助手")
                 assistant_id = await addUserToTeam(form_data.email,user.name,form_data.password)
                 user.assistant_id = assistant_id
