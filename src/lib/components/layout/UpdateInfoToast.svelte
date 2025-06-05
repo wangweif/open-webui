@@ -13,7 +13,7 @@
 	};
 </script>
 
-<div
+<!-- <div
 	class="flex items-start bg-primary-50 dark:bg-primary-950 border border-primary-500 dark:border-primary-800 text-primary-600 dark:text-primary-300 rounded-lg px-3.5 py-3 text-xs max-w-80 pr-2 w-full shadow-lg"
 >
 	<div class="flex-1 font-medium">
@@ -36,4 +36,4 @@
 			<XMark />
 		</button>
 	</div>
-</div>
+</div> -->
