@@ -598,9 +598,9 @@ async def addUserToTeam(email: str, nickname: str, password: str) -> str:
         "role": "member"
     }
     teamRes = requests.post(api_url,json=payload,headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
-    user_id = teamRes.json()['data']['user_id']
     if teamRes.status_code != 200:
         return None
+    user_id = teamRes.json()['data']['user_id']
     
     # 获取农科小智知识库权限列表
     api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/{BASE_KB_ID}/authorized_users"
