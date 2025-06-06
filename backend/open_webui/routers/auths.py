@@ -589,18 +589,24 @@ async def addUserToTeam(email: str, nickname: str, password: str) -> str:
     cookies = response.headers['Set-Cookie'].split(';')[0]
     authorization = response.headers['Authorization']
 
-    # 添加用户到团队
-    api_url = f"{KNOWLEDGE_BASE_URL}/v1/team/{BASE_TEAM_ID}/member"
-    payload = {
-        "email": email,
-        "nickname": nickname,
-        "password": password,
-        "role": "member"
-    }
-    teamRes = requests.post(api_url,json=payload,headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
-    if teamRes.status_code != 200:
-        return None
-    user_id = teamRes.json()['data']['user_id']
+    # 判断用户是否存在  
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/user/get_user_info"
+    response = requests.post(api_url,json={"user_email":email},headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
+    if response.json().get('message') == "用户不存在!" or response.json().get('data') == False or response.json().get('data') == None:
+        # 添加用户到团队
+        api_url = f"{KNOWLEDGE_BASE_URL}/v1/team/{BASE_TEAM_ID}/member"
+        payload = {
+            "email": email,
+            "nickname": nickname,
+            "password": password,
+            "role": "member"
+        }
+        teamRes = requests.post(api_url,json=payload,headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
+        if teamRes.status_code != 200 or teamRes.json().get('code') == 102:
+            return None
+        user_id = teamRes.json()['data']['user_id']
+    else:
+        user_id = response.json()['data']['id']
     
     # 获取农科小智知识库权限列表
     api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/{BASE_KB_ID}/authorized_users"
