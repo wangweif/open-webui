@@ -51,3 +51,29 @@ async def create_assistant(user_id, authorization, cookies):
     # print("创建assistant：",response.json())
     assistant_id = response.json()['data']['id']
     return assistant_id
+
+async def get_assistant(assistant_id):
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/dialog/get?dialog_id={assistant_id}"
+    response = requests.get(api_url, headers={'Content-Type': 'application/json'})
+    return response.json()
+
+async def update_assistant(payload):
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/dialog/set_assistant"
+    response = requests.post(api_url, json=payload, headers={'Content-Type': 'application/json'})
+    return response.json()
+    
+async def get_kbs(kb_ids):
+    if isinstance(kb_ids, list):
+        kb_ids_str = ','.join(kb_ids)
+    else:
+        kb_ids_str = kb_ids
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/kb/get?kb_ids={kb_ids_str}"
+    response = requests.get(api_url, headers={'Content-Type': 'application/json'})
+    return response.json()
+
+# 获取用户可以访问的知识库列表
+async def get_accessible_kbs(assistant_id):
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/assistant_accessible?assistant_id={assistant_id}"
+    response = requests.get(api_url, headers={'Content-Type': 'application/json'})
+    return response.json()
+    

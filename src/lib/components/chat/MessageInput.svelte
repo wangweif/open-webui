@@ -58,6 +58,7 @@
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 	import ToolServersModal from './ToolServersModal.svelte';
 	import Wrench from '../icons/Wrench.svelte';
+	import KnowledgeBaseSelector from './KnowledgeBaseSelector.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -1157,7 +1158,7 @@
 								</div>
 
 								<div class=" flex justify-between mt-1 mb-2.5 mx-0.5 max-w-full" dir="ltr">
-									<div class="ml-1 self-end flex items-center flex-1 max-w-[80%] gap-0.5">
+									<div class="ml-1 self-end flex items-start flex-1 max-w-[80%] gap-0.5">
 										{#if !(isRagFlowModel && typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'bjny') && !isAiPriceModel}
 											<InputMenu
 												bind:selectedToolIds
@@ -1282,6 +1283,14 @@
 															>
 														</button>
 													</Tooltip>
+												{/if}
+
+												<!-- 知识库选择器 - 只在选择 rag_flow_webapi_pipeline_cs 模型时显示 -->
+												{#if isRagFlowModel}
+													<KnowledgeBaseSelector 
+														selectedModelId="rag_flow_webapi_pipeline_cs"
+														assistantId={$_user.assistant_id}
+													/>
 												{/if}
 
 												{#if $config?.features?.enable_image_generation && ($_user.role === 'admin' || $_user?.permissions?.features?.image_generation)}

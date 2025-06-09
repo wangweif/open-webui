@@ -232,4 +232,5 @@ type SessionUser = {
 	name: string;
 	role: string;
 	profile_image_url: string;
+	assistant_id: string;
 };
