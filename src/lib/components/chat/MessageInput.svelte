@@ -79,7 +79,7 @@
 	$: isRagFlowModel = selectedModelIds.includes('rag_flow_webapi_pipeline_cs');
 	$: isAiPriceModel = selectedModelIds.includes('aiPrice');
 	$: isDeepseekR1Model = selectedModelIds.includes('deepseek-r1:32b');
-	$: isNongJingSanziModel = selectedModelIds.includes('Nongjing-sanzi');
+	$: isNongJingSanziModel = selectedModelIds.includes('NongJing-sanzi');
 
 	// 初始化时从localStorage加载状态
 	let manuallyDisabledWebSearch = localStorage.getItem('deepseekWebSearchDisabled') === 'true';
