@@ -85,7 +85,7 @@
 	let manuallyDisabledWebSearch = localStorage.getItem('deepseekWebSearchDisabled') === 'true';
 
 	// 当选择rag_flow_webapi_pipeline_cs模型时，如果搜索功能已启用，则禁用它
-	$: if (isRagFlowModel && webSearchEnabled || isAiPriceModel && webSearchEnabled) {
+	$: if (isRagFlowModel && webSearchEnabled || isAiPriceModel && webSearchEnabled || isNongJingSanziModel && webSearchEnabled) {
 		webSearchEnabled = false;
 	}
 
