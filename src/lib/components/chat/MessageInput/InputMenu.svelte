@@ -36,6 +36,7 @@
 
 	export let isRagFlowModel: boolean = false;
 	export let isAiPriceModel: boolean = false;
+	export let files: any[] = []; // 传入当前已上传的文件列表
 
 	export let onClose: Function;
 
@@ -48,6 +49,10 @@
 
 	let fileUploadEnabled = true;
 	$: fileUploadEnabled = $user?.role === 'admin' || $user?.permissions?.chat?.file_upload;
+
+	// 检查RagFlowModel是否已经上传了图片
+	$: hasRagFlowImage = isRagFlowModel && files.some(file => file.type === 'image');
+	$: ragFlowUploadDisabled = isRagFlowModel && hasRagFlowImage;
 
 	const init = async () => {
 		if ($_tools === null) {
@@ -73,7 +78,20 @@
 		const inputFiles = Array.from(event.target?.files);
 		if (inputFiles && inputFiles.length > 0) {
 			console.log(inputFiles);
-			inputFilesHandler(inputFiles);
+			
+			// 对于RagFlowModel，检查是否已经有图片
+			if (isRagFlowModel && hasRagFlowImage) {
+				// 如果已经有图片，则不允许再上传
+				console.log('RagFlowModel already has an image, upload blocked');
+				return;
+			}
+			
+			// 对于RagFlowModel，只取第一张图片
+			if (isRagFlowModel && inputFiles.length > 1) {
+				inputFilesHandler([inputFiles[0]]);
+			} else {
+				inputFilesHandler(inputFiles);
+			}
 		}
 	}
 </script>
@@ -84,6 +102,15 @@
 	type="file"
 	accept="image/*"
 	capture="environment"
+	on:change={handleFileChange}
+	style="display: none;"
+/>
+
+<!-- Hidden file input for RagFlowModel single image upload -->
+<input
+	id="ragflow-image-input"
+	type="file"
+	accept="image/*"
 	on:change={handleFileChange}
 	style="display: none;"
 />
@@ -182,16 +209,28 @@
 			</Tooltip> -->
 
 				<Tooltip
-					content={!fileUploadEnabled ? $i18n.t('You do not have permission to upload files') : ''}
+					content={!fileUploadEnabled 
+						? $i18n.t('You do not have permission to upload files') 
+						: ragFlowUploadDisabled 
+							? '已上传图片，无法再次上传' 
+							: ''}
 					className="w-full"
 				>
 					<DropdownMenu.Item
-						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
-							? 'opacity-50'
-							: ''}"
+						class="flex gap-2 items-center px-3 py-2 text-sm font-medium rounded-xl {!fileUploadEnabled || ragFlowUploadDisabled
+							? 'opacity-50 cursor-not-allowed'
+							: 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'}"
 						on:click={() => {
-							if (fileUploadEnabled) {
-								uploadFilesHandler();
+							if (fileUploadEnabled && !ragFlowUploadDisabled) {
+								if (isRagFlowModel) {
+									// 对于RagFlowModel，使用专门的单图片上传输入框
+									const ragflowInputElement = document.getElementById('ragflow-image-input');
+									if (ragflowInputElement) {
+										ragflowInputElement.click();
+									}
+								} else {
+									uploadFilesHandler();
+								}
 							}
 						}}
 					>

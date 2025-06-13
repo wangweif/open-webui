@@ -1167,6 +1167,7 @@
 												{inputFilesHandler}
 												{isRagFlowModel}
 												{isAiPriceModel}
+												{files}
 												uploadFilesHandler={() => {
 													filesInputElement.click();
 												}}
