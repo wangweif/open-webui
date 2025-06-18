@@ -80,12 +80,13 @@
 	$: isAiPriceModel = selectedModelIds.includes('aiPrice');
 	$: isDeepseekR1Model = selectedModelIds.includes('deepseek-r1:32b');
 	$: isNongJingSanziModel = selectedModelIds.includes('NongJing-sanzi');
+	$: isIdentificationModel = selectedModelIds.includes('identification_webapi_pipeline_cs');
 
 	// 初始化时从localStorage加载状态
 	let manuallyDisabledWebSearch = localStorage.getItem('deepseekWebSearchDisabled') === 'true';
 
 	// 当选择rag_flow_webapi_pipeline_cs模型时，如果搜索功能已启用，则禁用它
-	$: if (isRagFlowModel && webSearchEnabled || isAiPriceModel && webSearchEnabled || isNongJingSanziModel && webSearchEnabled) {
+	$: if (isRagFlowModel && webSearchEnabled || isAiPriceModel && webSearchEnabled || isNongJingSanziModel && webSearchEnabled || isIdentificationModel && webSearchEnabled) {
 		webSearchEnabled = false;
 	}
 
@@ -1167,6 +1168,7 @@
 												{inputFilesHandler}
 												{isRagFlowModel}
 												{isAiPriceModel}
+												{isIdentificationModel}
 												{files}
 												uploadFilesHandler={() => {
 													filesInputElement.click();
@@ -1257,7 +1259,7 @@
 											{/if}
 
 											{#if $_user}
-												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel}
+												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isIdentificationModel}
 													<Tooltip content={isRagFlowModel ? $i18n.t('Search is not needed for this model') : $i18n.t('Search the internet')} placement="top">
 														<button
 															on:click|preventDefault={() => {

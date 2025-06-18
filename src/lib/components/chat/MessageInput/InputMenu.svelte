@@ -36,6 +36,7 @@
 
 	export let isRagFlowModel: boolean = false;
 	export let isAiPriceModel: boolean = false;
+	export let isIdentificationModel: boolean = false;
 	export let files: any[] = []; // 传入当前已上传的文件列表
 
 	export let onClose: Function;
@@ -51,7 +52,7 @@
 	$: fileUploadEnabled = $user?.role === 'admin' || $user?.permissions?.chat?.file_upload;
 
 	// 检查RagFlowModel是否已经上传了图片
-	$: hasRagFlowImage = isRagFlowModel && files.some(file => file.type === 'image');
+	$: hasRagFlowImage = isRagFlowModel && files.some(file => file.type === 'image') || isIdentificationModel && files.some(file => file.type === 'image');
 	$: ragFlowUploadDisabled = isRagFlowModel && hasRagFlowImage;
 
 	const init = async () => {
@@ -136,7 +137,7 @@
 			align="start"
 			transition={flyAndScale}
 		>
-			{#if Object.keys(tools).length > 0 && !isRagFlowModel && !isAiPriceModel}
+			{#if Object.keys(tools).length > 0 && !isRagFlowModel && !isAiPriceModel && !isIdentificationModel}
 				<div class="  max-h-28 overflow-y-auto scrollbar-hidden">
 					{#each Object.keys(tools) as toolId}
 						<button
@@ -222,7 +223,7 @@
 							: 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'}"
 						on:click={() => {
 							if (fileUploadEnabled && !ragFlowUploadDisabled) {
-								if (isRagFlowModel) {
+								if (isRagFlowModel || isIdentificationModel) {
 									// 对于RagFlowModel，使用专门的单图片上传输入框
 									const ragflowInputElement = document.getElementById('ragflow-image-input');
 									if (ragflowInputElement) {
@@ -235,7 +236,7 @@
 						}}
 					>
 						<DocumentArrowUpSolid />
-						<div class="line-clamp-1">{isRagFlowModel ? '上传图片' : $i18n.t('Upload Files')}</div>
+						<div class="line-clamp-1">{isRagFlowModel || isIdentificationModel ? '上传图片' : $i18n.t('Upload Files')}</div>
 					</DropdownMenu.Item>
 				</Tooltip>
 
