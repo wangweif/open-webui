@@ -20,7 +20,7 @@
 	};
 
 	let fuse;
-	let filteredPrompts = [];
+	let filteredPrompts: string | any[] = [];
 
 	// Initialize Fuse
 	$: fuse = new Fuse(sortedPrompts, fuseOptions);
@@ -71,11 +71,11 @@
 	{:else}
 		<!-- Keine Vorschläge -->
 
-		<div
+		<!-- <div
 			class="flex w-full text-center items-center justify-center self-start text-gray-400 dark:text-gray-600"
 		>
 			{$WEBUI_NAME} ‧ v{WEBUI_VERSION}
-		</div>
+		</div> -->
 	{/if}
 </div>
 
