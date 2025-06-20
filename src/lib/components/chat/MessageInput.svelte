@@ -78,7 +78,7 @@
 
 	$: isRagFlowModel = selectedModelIds.includes('rag_flow_webapi_pipeline_cs');
 	$: isAiPriceModel = selectedModelIds.includes('aiPrice');
-	$: isDeepseekR1Model = selectedModelIds.includes('deepseek-r1:32b');
+	$: isWebSearchModel = selectedModelIds.includes('Qwen3:32B');
 	$: isNongJingSanziModel = selectedModelIds.includes('NongJing-sanzi');
 	$: isIdentificationModel = selectedModelIds.includes('identification_webapi_pipeline_cs');
 
@@ -91,12 +91,12 @@
 	}
 
 	// 当选择deepseek-r1模型时，如果搜索功能未启用且未被手动禁用，则启用它
-	$: if (isDeepseekR1Model && !manuallyDisabledWebSearch && !webSearchEnabled) {
+	$: if (isWebSearchModel && !manuallyDisabledWebSearch && !webSearchEnabled) {
 		webSearchEnabled = true;
 	}
 
 	// 重置手动禁用标志，当模型改变时
-	$: if (!isDeepseekR1Model) {
+	$: if (!isWebSearchModel) {
 		manuallyDisabledWebSearch = false;
 	}
 
@@ -891,7 +891,7 @@
 														console.log('Escape');
 														atSelectedModel = undefined;
 														selectedToolIds = [];
-														if (webSearchEnabled && isDeepseekR1Model) {
+														if (webSearchEnabled && isWebSearchModel) {
 															manuallyDisabledWebSearch = true;
 														}
 														webSearchEnabled = false;
@@ -1101,7 +1101,7 @@
 													console.log('Escape');
 													atSelectedModel = undefined;
 													selectedToolIds = [];
-													if (webSearchEnabled && isDeepseekR1Model) {
+													if (webSearchEnabled && isWebSearchModel) {
 														manuallyDisabledWebSearch = true;
 													}
 													webSearchEnabled = false;
@@ -1264,7 +1264,7 @@
 														<button
 															on:click|preventDefault={() => {
 																webSearchEnabled = !webSearchEnabled;
-																if (isDeepseekR1Model && !webSearchEnabled) {
+																if (isWebSearchModel && !webSearchEnabled) {
 																	manuallyDisabledWebSearch = true;
 																	localStorage.setItem('deepseekWebSearchDisabled', 'true');
 																}
