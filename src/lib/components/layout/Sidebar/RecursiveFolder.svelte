@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { getContext, createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
 
 	const i18n = getContext('i18n');
@@ -36,6 +36,7 @@
 
 	export let folders;
 	export let folderId;
+	export let handleChatClick: (chatId: string) => Promise<void>;
 
 	export let className = '';
 
@@ -495,6 +496,9 @@
 							<ChatItem
 								id={chat.id}
 								title={chat.title}
+								on:select={() => {
+									handleChatClick(chat.id);
+								}}
 								on:change={(e) => {
 									dispatch('change', e.detail);
 								}}

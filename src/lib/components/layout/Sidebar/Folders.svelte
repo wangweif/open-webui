@@ -4,6 +4,7 @@
 	const dispatch = createEventDispatcher();
 	import RecursiveFolder from './RecursiveFolder.svelte';
 	export let folders = {};
+	export let handleChatClick: (chatId: string) => Promise<void>;
 
 	let folderList = [];
 	// Get the list of folders that have no parent, sorted by name alphabetically
@@ -22,6 +23,7 @@
 		className=""
 		{folders}
 		{folderId}
+		{handleChatClick}
 		on:import={(e) => {
 			dispatch('import', e.detail);
 		}}

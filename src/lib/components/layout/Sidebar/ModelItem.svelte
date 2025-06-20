@@ -1,5 +1,3 @@
-
-
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { settings, mobile, showSidebar, type Model, chatId, temporaryChatEnabled } from '$lib/stores';
@@ -133,6 +131,11 @@
 
     // 检查模型是否被选中
     $: isSelected = $settings?.models?.includes(model.id) || false;
+    
+    // 监听settings变化，同步到服务器
+    $: if ($settings?.models && $settings.models.length > 0) {
+        updateUserSettings(localStorage.token, { ui: $settings }).catch(console.error);
+    }
 </script>
 
 {#if !shouldHideModel(model)}

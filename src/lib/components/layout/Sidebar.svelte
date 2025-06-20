@@ -193,6 +193,54 @@
 		}
 	};
 
+	// 新增：处理聊天记录点击，自动选择对应的模型
+	const handleChatClick = async (chatId: string) => {
+		try {
+			// 获取聊天详情
+			const chat = await getChatById(localStorage.token, chatId);
+			
+			let modelId = null;
+			
+			// 尝试从不同位置获取模型ID
+			if (chat?.chat?.models && chat.chat.models.length > 0) {
+				modelId = chat.chat.models[0];
+			} else if (chat?.models && chat.models.length > 0) {
+				modelId = chat.models[0];
+			} else if (chat?.chat?.history?.messages) {
+				// 尝试从消息历史中找到模型信息
+				const messages = Object.values(chat.chat.history.messages);
+				const assistantMessage = messages.find((msg: any) => msg.role === 'assistant' && msg.model);
+				if (assistantMessage) {
+					modelId = (assistantMessage as any).model;
+				}
+			}
+			
+			if (modelId) {
+				
+				// 检查该模型是否存在于当前模型列表中
+				const modelExists = $models.find(m => m.id === modelId);
+				
+				if (modelExists) {
+					// 保存到localStorage确保持久化
+					const modelSettings = { models: [modelId] };
+					localStorage.setItem('modelSettings', JSON.stringify(modelSettings));
+					
+					// 更新settings store
+					settings.update(s => {
+						const newSettings = { ...s, models: [modelId] };
+						return newSettings;
+					});
+					
+					// 强制触发ModelItem重新渲染
+					await tick();
+					
+				} 
+			} 
+		} catch (error) {
+			console.error('Error handling chat click:', error);
+		}
+	};
+
 	const initChatList = async () => {
 		// Reset pagination variables
 		tags.set(await getAllTags(localStorage.token));
@@ -816,6 +864,7 @@
 										selected={selectedChatId === chat.id}
 										on:select={() => {
 											selectedChatId = chat.id;
+											handleChatClick(chat.id);
 										}}
 										on:unselect={() => {
 											selectedChatId = null;
@@ -837,6 +886,7 @@
 				{#if !search && folders}
 					<Folders
 						{folders}
+						{handleChatClick}
 						on:import={(e) => {
 							const { folderId, items } = e.detail;
 							importChatHandler(items, false, folderId);
@@ -891,6 +941,7 @@
 									selected={selectedChatId === chat.id}
 									on:select={() => {
 										selectedChatId = chat.id;
+										handleChatClick(chat.id);
 									}}
 									on:unselect={() => {
 										selectedChatId = null;
