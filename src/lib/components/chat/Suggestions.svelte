@@ -27,7 +27,7 @@
 
 	// Update the filteredPrompts if inputValue changes
 	// Only increase version if something wirklich geändert hat
-	$: getFilteredPrompts(inputValue);
+	// $: getFilteredPrompts(inputValue);
 
 	// Helper function to check if arrays are the same
 	// (based on unique IDs oder content)
@@ -59,8 +59,9 @@
 	};
 
 	$: if (suggestionPrompts) {
-		sortedPrompts = [...(suggestionPrompts ?? [])].sort(() => Math.random() - 0.5);
-		getFilteredPrompts(inputValue);
+		// sortedPrompts = [...(suggestionPrompts ?? [])].sort(() => Math.random() - 0.5);
+		// getFilteredPrompts(inputValue);
+		filteredPrompts = suggestionPrompts;
 	}
 </script>
 
