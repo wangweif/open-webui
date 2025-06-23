@@ -3,6 +3,7 @@ import logging
 import sys
 import os
 import base64
+from datetime import datetime, timezone, timedelta
 
 import asyncio
 from aiocache import cached
@@ -97,6 +98,30 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])
 
 
+def get_current_time(tz: str = 'Asia/Shanghai') -> str:
+    """
+    获取当前时间的可读字符串。
+    """
+    #
+    try:
+        from zoneinfo import ZoneInfo
+        now = datetime.now(ZoneInfo(tz))
+    except ImportError:
+        if '+' in tz or '-' in tz:
+            offset_str = tz.split('UTC')[1]
+            sign = offset_str[0]
+            hours = int(offset_str[1:])
+            offset = timedelta(hours=hours if sign == '+' else -hours)
+        else:
+            offset = timedelta(hours=8)
+        now = datetime.now(timezone(offset))
+
+
+    current_time = now.strftime("%I:%M:%S %p")  # 12小时制，带AM/PM
+    current_date = now.strftime("%A, %B %d, %Y")  # 星期、月、日、年
+    return f"{current_date}, {current_time}"
+
+
 async def chat_completion_tools_handler(
     request: Request, body: dict, extra_params: dict, user: UserModel, models, tools
 ) -> tuple[dict, dict]:
@@ -121,7 +146,8 @@ async def chat_completion_tools_handler(
             for message in messages[::-1][:4]
         )
 
-        prompt = f"History:\n{history}\nQuery: {user_message}"
+        current_time_str = get_current_time()
+        prompt = f"当前的时间是：{current_time_str}\nHistory:\n{history}\nQuery: {user_message}"
 
         return {
             "model": task_model_id,
@@ -217,6 +243,7 @@ async def chat_completion_tools_handler(
                     else:
                         tool_function = tool["callable"]
                         tool_result = await tool_function(**tool_function_params)
+                        log.debug(f"{tool_result=}")
 
                 except Exception as e:
                     tool_result = str(e)
