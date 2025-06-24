@@ -50,7 +50,7 @@ async def create_assistant(user_id, authorization, cookies):
             "empty_response": "",
             "prologue": "你好！ 我是你的助理，有什么可以帮到你的吗？",
             "quote": True,
-            "keyword": False,
+            "keyword": True,
             "tts": False,
             "system": "你是一个智能助手，请总结知识库的内容来回答问题，请列举知识库中的数据详细回答。当所有知识库内容都与问题无关时，你的回答必须包括\"知识库中未找到您要的答案！\"这句话。回答需要考虑聊天历史。\n        以下是知识库：\n        {knowledge}\n        以上是知识库。",
             "refine_multiturn": False,
@@ -73,7 +73,8 @@ async def create_assistant(user_id, authorization, cookies):
         },
         "similarity_threshold": 0.2,
         "vector_similarity_weight": 0.3,
-        "top_n": 8,
+        "rerank_id": "bge-reranker-v2-m3___VLLM@VLLM",
+        "top_n": 14,
         "user_id": user_id
     }
     
