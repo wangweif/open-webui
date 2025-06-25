@@ -299,6 +299,7 @@ input[type='number'] {
 
 .ProseMirror {
 	@apply h-full min-h-fit max-h-full whitespace-pre-wrap;
+	min-height: 2.8rem; /* 设置初始高度约为两行的高度 */
 }
 
 .ProseMirror:focus {
