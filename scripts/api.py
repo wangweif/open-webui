@@ -85,11 +85,14 @@ def load_api_config(config_file: str = "api_config.json") -> Dict[str, Any]:
         print("请选择配置文件：")
         print("1. api_config_8.250_prod.json")
         print("2. api_config_8.88_prod.json")
+        print("3. api_config_dev.json")
         i = input()
         if i == "1":
             config_file = "api_config_8.250_prod.json"
         elif i == "2":
             config_file = "api_config_8.88_prod.json"
+        elif i == "3":
+            config_file = "api_config_dev.json"
         else:
             print("无效的选择，将退出")
             exit()
