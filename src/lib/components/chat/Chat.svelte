@@ -788,6 +788,34 @@
 
 		const chatInput = document.getElementById('chat-input');
 		setTimeout(() => chatInput?.focus(), 0);
+
+		// 检查当前选中的模型是否为 aiOfficeWebViewer，如果是则导航到 iframe 页面
+		checkAndNavigateToAiOfficeWebViewer();
+	};
+
+	// 检查当前模型是否为 aiOfficeWebViewer 并导航到 iframe 页面
+	const checkAndNavigateToAiOfficeWebViewer = () => {
+		try {
+			// 检查选中的模型是否包含 aiOfficeWebViewer
+			if (selectedModels.includes('aiOfficeWebViewer')) {
+				const selectedModel = $models.find(m => m.id === 'aiOfficeWebViewer');
+				
+				if (selectedModel?.info?.params?.iframe_url) {
+					let iframeUrl = selectedModel.info.params.iframe_url;
+					
+					// 如果有用户信息，添加user_id查询参数
+					if ($user?.id) {
+						const separator = iframeUrl.includes('?') ? '&' : '?';
+						iframeUrl = `${iframeUrl}${separator}user_id=${encodeURIComponent($user.id)}`;
+					}
+					
+					console.log('检测到 aiOfficeWebViewer 模型，导航到 iframe 页面');
+					goto(`/c/iframe?src=${encodeURIComponent(iframeUrl)}&title=${encodeURIComponent(selectedModel.name)}`);
+				}
+			}
+		} catch (error) {
+			console.error('检测 aiOfficeWebViewer 模型时发生错误:', error);
+		}
 	};
 
 	const loadChat = async () => {
