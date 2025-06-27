@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { settings, mobile, showSidebar, type Model, chatId, temporaryChatEnabled } from '$lib/stores';
+    import { settings, mobile, showSidebar, type Model, chatId, temporaryChatEnabled, user } from '$lib/stores';
     import { getContext, onMount } from 'svelte';
     import { createNewChat } from '$lib/apis/chats';
     import { toast } from 'svelte-sonner';
@@ -34,6 +34,13 @@
 
         // 处理iframe_url
         let iframeUrl = infoParams?.iframe_url;
+
+        // 如果有iframe_url且有用户信息，添加user_id查询参数
+        if (iframeUrl && $user?.id) {
+            // 检查URL是否已经包含查询参数
+            const separator = iframeUrl.includes('?') ? '&' : '?';
+            iframeUrl = `${iframeUrl}${separator}user_id=${encodeURIComponent($user.id)}`;
+        }
 
         // 首先保存到localStorage确保持久化
         localStorage.setItem('modelSettings', JSON.stringify({ models: [model.id] }));
