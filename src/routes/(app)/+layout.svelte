@@ -18,6 +18,7 @@
 	import { getTools } from '$lib/apis/tools';
 	import { getBanners } from '$lib/apis/configs';
 	import { getUserSettings } from '$lib/apis/users';
+	import { PageViewTracker } from '$lib/apis/page-views';
 
 	import { WEBUI_VERSION } from '$lib/constants';
 	import { compareVersion } from '$lib/utils';
@@ -221,6 +222,14 @@
 				}
 			}
 			await tick();
+		}
+
+		// 启动页面访问跟踪
+		try {
+			const tracker = PageViewTracker.getInstance();
+			tracker.startTracking();
+		} catch (error) {
+			console.warn('页面访问跟踪启动失败:', error);
 		}
 
 		loaded = true;

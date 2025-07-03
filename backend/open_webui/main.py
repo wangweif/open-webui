@@ -77,6 +77,7 @@ from open_webui.routers import (
     users,
     utils,
     ragflow,
+    page_views,
 )
 
 from open_webui.routers.retrieval import (
@@ -91,6 +92,7 @@ from open_webui.models.functions import Functions
 from open_webui.models.models import Models
 from open_webui.models.users import UserModel, Users
 from open_webui.models.chats import Chats
+from open_webui.models.page_views import PageViews
 
 from open_webui.config import (
     LICENSE_KEY,
@@ -972,6 +974,7 @@ app.include_router(
 )
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 app.include_router(ragflow.router, prefix="/api/v1/ragflow", tags=["ragflow"])
+app.include_router(page_views.router, prefix="/api/v1/page-views", tags=["page-views"])
 
 
 try:
