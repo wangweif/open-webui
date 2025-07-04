@@ -75,7 +75,7 @@ async def create_assistant(user_id, authorization, cookies):
         "vector_similarity_weight": 0.3,
         "rerank_id": "bge-reranker-v2-m3___VLLM@VLLM",
         "top_n": 30,
-        "top_k": 1536,
+        "top_k": 2048,
         "user_id": user_id
     }
     
