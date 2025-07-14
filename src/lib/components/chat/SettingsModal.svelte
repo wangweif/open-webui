@@ -23,6 +23,11 @@
 	const i18n = getContext('i18n');
 
 	export let show = false;
+	
+	// Base64 编码函数
+	const base64Encode = (str: string): string => {
+		return btoa(unescape(encodeURIComponent(str)));
+	};
 
 	// 默认选中的选项卡
 	let selectedTab = 'account';
@@ -243,6 +248,26 @@
 				'accountpreferences',
 				'securitysettings',
 				'privacysettings'
+			]
+		},
+		{
+			id: 'knowledge',
+			title: 'Knowledge',
+			keywords: [
+				'knowledge',
+				'知识库',
+				'knowledgebase',
+				'documents',
+				'files',
+				'reference',
+				'information',
+				'database',
+				'library',
+				'resources',
+				'content',
+				'documentation',
+				'data',
+				'repository'
 			]
 		},
 		{
@@ -605,6 +630,31 @@
 									</svg>
 								</div>
 								<div class=" self-center">{$i18n.t('Account')}</div>
+							</button>
+						{:else if tabId === 'knowledge'}
+							<button
+								class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
+								'knowledge'
+									? ''
+									: ' text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'}"
+								on:click={() => {
+									const email = base64Encode($user?.email || 'email');
+									goto(`/c/iframe?src=http://know.baafs.net.cn/knowledge?id=${email}`);
+								}}
+							>
+								<div class=" self-center mr-2">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 24 24"
+										fill="currentColor"
+										class="size-4"
+									>
+										<path
+											d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A8.237 8.237 0 016 18.75c1.995 0 3.823.707 5.25 1.886V4.533zM12.75 20.636A8.214 8.214 0 0118 18.75c.966 0 1.89.166 2.75.47a.75.75 0 001-.708V4.262a.75.75 0 00-.5-.707A9.735 9.735 0 0018 3a9.707 9.707 0 00-5.25 1.533v16.103z"
+										/>
+									</svg>
+								</div>
+								<div class=" self-center">知识库</div>
 							</button>
 						{:else if tabId === 'version'}
 							<button
