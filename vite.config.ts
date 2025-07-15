@@ -45,7 +45,8 @@ export default defineConfig(({ mode }) => {
 			APP_NAME: JSON.stringify(APP_NAME),
 			BUILD_TARGET: JSON.stringify(env.PUBLIC_BUILD_TARGET || env.BUILD_TARGET || 'default'),
 			FOOTER_TEXT: JSON.stringify(env.FOOTER_TEXT || "内容由 AI大模型生成，请仔细甄别。技术支持:北京市农林科学院"),
-			FOOTER_TEXT_BJNY: JSON.stringify(env.FOOTER_TEXT_BJNY || "内容由 AI大模型生成，请仔细甄别。版权所有：北京市农业农村局 技术支持：北京市农村经济信息")
+			FOOTER_TEXT_BJNY: JSON.stringify(env.FOOTER_TEXT_BJNY || "内容由 AI大模型生成，请仔细甄别。版权所有：北京市农业农村局 技术支持：北京市农村经济信息"),
+			KNOWLEDGE_BASE_URL: JSON.stringify(env.KNOWLEDGE_BASE_URL || "http://know.baafs.net.cn/knowledge")
 		},
 		build: {
 			sourcemap: true,
@@ -54,24 +55,24 @@ export default defineConfig(({ mode }) => {
 		worker: {
 			format: 'es'
 		},
-	server: {
-        proxy: {
-          '/api': {
-            target: 'http://127.0.0.1:8080', // 后端地址
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api/, '/api')
-            },
-			'/openai': {
+		server: {
+			proxy: {
+			'/api': {
 				target: 'http://127.0.0.1:8080', // 后端地址
-				changeOrigin: true,
-				rewrite: (path) => path.replace(/^\/openai/, '/openai')
-			},
-			'/ollama': {
-				target: 'http://127.0.0.1:8080', // 后端地址
-				changeOrigin: true,
-				rewrite: (path) => path.replace(/^\/ollama/, '/ollama')
+					changeOrigin: true,
+					rewrite: (path) => path.replace(/^\/api/, '/api')
+				},
+				'/openai': {
+					target: 'http://127.0.0.1:8080', // 后端地址
+					changeOrigin: true,
+					rewrite: (path) => path.replace(/^\/openai/, '/openai')
+				},
+				'/ollama': {
+					target: 'http://127.0.0.1:8080', // 后端地址
+					changeOrigin: true,
+					rewrite: (path) => path.replace(/^\/ollama/, '/ollama')
+				}
 			}
-        }
-    }
+		}
 	};
 });

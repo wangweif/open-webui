@@ -639,7 +639,8 @@
 									: ' text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'}"
 								on:click={() => {
 									const email = base64Encode($user?.email || 'email');
-									goto(`/c/iframe?src=http://know.baafs.net.cn/knowledge?id=${email}`);
+									goto(`/c/iframe?src=${KNOWLEDGE_BASE_URL}?id=${email}`);
+									show = false;
 								}}
 							>
 								<div class=" self-center mr-2">
