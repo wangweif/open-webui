@@ -616,6 +616,10 @@ async def addUserToTeam(email: str, nickname: str, password: str) -> str:
     if data == None:
         data = [{'user_id':user_id,'permission_types':['read']}]
     else:
+        # 统一将permission_type转换为permission_types
+        for item in data:
+            if 'permission_type' in item:
+                item['permission_types'] = [item.pop('permission_type')]
         data.append({'user_id':user_id,'permission_types':['read']})
     payload = {
         "permissions": data
