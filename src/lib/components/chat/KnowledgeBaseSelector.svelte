@@ -152,7 +152,7 @@
 
 			<div slot="content">
 				<DropdownMenu.Content
-					class="w-full max-w-[200px] rounded-xl px-1 py-1 border border-gray-300/30 dark:border-gray-700/50 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-sm"
+					class="w-full max-w-[250px] rounded-xl px-1 py-1 border border-gray-300/30 dark:border-gray-700/50 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-sm"
 					sideOffset={10}
 					alignOffset={-8}
 					side="top"
@@ -164,7 +164,7 @@
 							<p class="text-gray-500 dark:text-gray-400 text-sm">暂无可用知识库</p>
 						</div>
 					{:else if assistantInfo}
-						<div class="max-h-28 overflow-y-auto scrollbar-hidden">
+						<div class="max-h-48 overflow-y-auto scrollbar-hidden">
 							{#each assistantInfo.knowledge_bases as kb}
 								<button
 									class="flex w-full justify-between gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800"
