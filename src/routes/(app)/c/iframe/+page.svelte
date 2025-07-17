@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount, getContext } from 'svelte';
     import { showSidebar } from '$lib/stores';
+    import { page } from '$app/stores';
     import Navbar from '$lib/components/chat/Navbar.svelte';
 
     // 全局环境变量
@@ -20,16 +21,22 @@
     let selectedModels: any[] = [];
     let history = { currentId: null };
 
-    onMount(() => {
-        // 从URL参数中获取iframe src和标题
-        const urlParams = new URLSearchParams(window.location.search);
-        iframeSrc = urlParams.get('src') || '';
-        title = urlParams.get('title') || '外部应用';
-
-        if (!iframeSrc) {
-            console.error('无效的iframe URL');
+    // 监听URL参数变化并更新iframe内容
+    $: {
+        if ($page.url.searchParams) {
+            const newSrc = $page.url.searchParams.get('src') || '';
+            const newTitle = $page.url.searchParams.get('title') || '外部应用';
+            
+            if (newSrc !== iframeSrc || newTitle !== title) {
+                iframeSrc = newSrc;
+                title = newTitle;
+                
+                if (!iframeSrc) {
+                    console.error('无效的iframe URL');
+                }
+            }
         }
-    });
+    }
 
     // 空函数，用于满足Navbar组件要求
     const initNewChat = () => {};
