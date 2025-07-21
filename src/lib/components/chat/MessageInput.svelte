@@ -1161,7 +1161,7 @@
 
 								<div class=" flex justify-between mt-1 mb-2.5 mx-0.5 max-w-full" dir="ltr">
 									<div class="ml-1 self-end flex items-start flex-1 max-w-[80%] gap-0.5">
-										{#if !(isRagFlowModel && typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'bjny') && !isAiPriceModel && !isNongJingSanziModel}
+										{#if !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel}
 											<InputMenu
 												bind:selectedToolIds
 												{screenCaptureHandler}
