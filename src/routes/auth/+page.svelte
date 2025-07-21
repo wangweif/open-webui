@@ -222,7 +222,7 @@
 							<div class="mb-8 flex items-center justify-center">
 								<div class="flex-shrink-0">
 									<img 
-										src="/login.png" 
+										src="/login.jpg" 
 										alt="农科小智" 
 										class="w-20 h-20 object-contain"
 									/>
