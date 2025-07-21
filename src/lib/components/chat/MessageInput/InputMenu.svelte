@@ -37,6 +37,7 @@
 	export let isRagFlowModel: boolean = false;
 	export let isAiPriceModel: boolean = false;
 	export let isIdentificationModel: boolean = false;
+	export let isWebSearchModel: boolean = false;
 	export let files: any[] = []; // 传入当前已上传的文件列表
 
 	export let onClose: Function;
@@ -137,7 +138,7 @@
 			align="start"
 			transition={flyAndScale}
 		>
-			{#if Object.keys(tools).length > 0 && !isRagFlowModel && !isAiPriceModel && !isIdentificationModel}
+			{#if Object.keys(tools).length > 0 && !isRagFlowModel && !isAiPriceModel && !isIdentificationModel && !isWebSearchModel}
 				<div class="  max-h-28 overflow-y-auto scrollbar-hidden">
 					{#each Object.keys(tools) as toolId}
 						<button

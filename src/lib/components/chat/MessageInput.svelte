@@ -1169,6 +1169,7 @@
 												{isRagFlowModel}
 												{isAiPriceModel}
 												{isIdentificationModel}
+												{isWebSearchModel}
 												{files}
 												uploadFilesHandler={() => {
 													filesInputElement.click();
