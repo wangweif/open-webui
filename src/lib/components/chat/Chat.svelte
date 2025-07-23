@@ -908,7 +908,7 @@
 			session_id: $socket?.id,
 			id: responseMessageId
 		}).catch((error) => {
-			toast.error(`${error}`);
+			toast.error('服务器繁忙，请稍后再试');
 			messages.at(-1).error = { content: error };
 
 			return null;
@@ -969,7 +969,7 @@
 			session_id: $socket?.id,
 			id: responseMessageId
 		}).catch((error) => {
-			toast.error(`${error}`);
+			toast.error('服务器繁忙，请稍后再试');
 			messages.at(-1).error = { content: error };
 			return null;
 		});
@@ -1695,10 +1695,10 @@
 			},
 			`${WEBUI_BASE_URL}/api`
 		).catch(async (error) => {
-			toast.error(`${error}`);
+			toast.error('服务器繁忙，请稍后再试');
 
 			responseMessage.error = {
-				content: error
+				content: '服务器繁忙，请稍后再试'
 			};
 			responseMessage.done = true;
 
