@@ -81,16 +81,18 @@
 	$: isWebSearchModel = selectedModelIds.includes('Qwen3:32B');
 	$: isNongJingSanziModel = selectedModelIds.includes('NongJing-sanzi');
 	$: isIdentificationModel = selectedModelIds.includes('identification_webapi_pipeline_cs');
+	$: isAgriculturePriceModel= selectedModelIds.includes('data_query_analysis_pipeline');
+	$: isPlantingModel= selectedModelIds.includes('chatbi_query_analasis_pipeline');
 
 	// 初始化时从localStorage加载状态
 	let manuallyDisabledWebSearch = localStorage.getItem('deepseekWebSearchDisabled') === 'true';
 
-	// 当选择rag_flow_webapi_pipeline_cs模型时，如果搜索功能已启用，则禁用它
-	$: if (isRagFlowModel && webSearchEnabled || isAiPriceModel && webSearchEnabled || isNongJingSanziModel && webSearchEnabled || isIdentificationModel && webSearchEnabled) {
+	// 当选择非联网搜索模型时，如果搜索功能已启用，则禁用它
+	$: if (isRagFlowModel && webSearchEnabled || isAiPriceModel && webSearchEnabled || isNongJingSanziModel && webSearchEnabled || isIdentificationModel && webSearchEnabled || isAgriculturePriceModel && webSearchEnabled || isPlantingModel && webSearchEnabled) {
 		webSearchEnabled = false;
 	}
 
-	// 当选择deepseek-r1模型时，如果搜索功能未启用且未被手动禁用，则启用它
+	// 当选择联网搜索模型时，如果搜索功能未启用且未被手动禁用，则启用它
 	$: if (isWebSearchModel && !manuallyDisabledWebSearch && !webSearchEnabled) {
 		webSearchEnabled = true;
 	}
@@ -1161,15 +1163,14 @@
 
 								<div class=" flex justify-between mt-1 mb-2.5 mx-0.5 max-w-full" dir="ltr">
 									<div class="ml-1 self-end flex items-start flex-1 max-w-[80%] gap-0.5">
-										{#if !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel}
+										{#if !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isAgriculturePriceModel && !isPlantingModel}
 											<InputMenu
 												bind:selectedToolIds
 												{screenCaptureHandler}
 												{inputFilesHandler}
-												{isRagFlowModel}
-												{isAiPriceModel}
 												{isIdentificationModel}
 												{isWebSearchModel}
+												{isRagFlowModel}
 												{files}
 												uploadFilesHandler={() => {
 													filesInputElement.click();
@@ -1260,7 +1261,7 @@
 											{/if}
 
 											{#if $_user}
-												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isIdentificationModel}
+												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isIdentificationModel && !isAgriculturePriceModel && !isPlantingModel}
 													<Tooltip content={isRagFlowModel ? $i18n.t('Search is not needed for this model') : $i18n.t('Search the internet')} placement="top">
 														<button
 															on:click|preventDefault={() => {
