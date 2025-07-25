@@ -958,7 +958,9 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         f"🔥堆栈: \n{tb}"
     )
     log.info("--------------------发送飞书--------------------")
-    send_to_feishu(info)
+    # 只发送5开头的错误
+    if exc.status_code >= 500:
+        send_to_feishu(info)
 
     return JSONResponse(
         status_code=exc.status_code,
