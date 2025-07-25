@@ -8,6 +8,7 @@ import shutil
 import sys
 import time
 import random
+import traceback
 
 from contextlib import asynccontextmanager
 from urllib.parse import urlencode, parse_qs, urlparse
@@ -325,6 +326,7 @@ from open_webui.config import (
     AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH,
     AppConfig,
     reset_config,
+    FEISHU_WEBHOOK,
 )
 from open_webui.env import (
     AUDIT_EXCLUDED_PATHS,
@@ -407,7 +409,17 @@ class SPAStaticFiles(StaticFiles):
                     return await super().get_response("index.html", scope)
             else:
                 raise ex
-
+       
+def send_to_feishu(message: str):
+    requests.post(
+        FEISHU_WEBHOOK,
+        json={
+            "msg_type": "text",
+            "content": {
+                "text": f"🚨 小智3.0异常通知：\n{message}"
+            }
+        }
+    )
 
 print(
     rf"""
@@ -886,14 +898,72 @@ class RedirectMiddleware(BaseHTTPMiddleware):
 app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
+def remove_field(obj, field_name):
+    """
+    递归删除obj中所有层级的field_name字段
+    :param obj: dict 或 list，待处理的对象
+    :param field_name: str，要删除的字段名
+    """
+    if isinstance(obj, dict):
+        if field_name in obj:
+            obj.pop(field_name)
+        for key, val in obj.items():
+            remove_field(val, field_name)
+    elif isinstance(obj, list):
+        for item in obj:
+            remove_field(item, field_name)
+    # 其他类型不处理
+
 
 @app.middleware("http")
 async def commit_session_after_request(request: Request, call_next):
-    response = await call_next(request)
-    # log.debug("Commit session after request")
-    Session.commit()
+    try:
+        response = await call_next(request)
+        # log.debug("Commit session after request")
+        Session.commit()
+    except Exception as e:
+        tb = traceback.format_exc()
+        info = (
+            f"🚀请求路径: {request.url}\n"
+            f"🍳方法: {request.method}\n"
+            f"💻客户端: {request.client.host}\n"
+            f"🔥请求参数: {request.query_params}\n"
+            f"🔥异常: {str(e)}\n"
+            f"🔥堆栈: \n{tb}"
+        )
+        log.info("--------------------发送飞书--------------------")
+        send_to_feishu(info)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal Server Error"},
+        )
     return response
 
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    tb = traceback.format_exc()
+    body = await request.body()
+    body_data = body.decode("utf-8")
+    body_data = json.loads(body_data)
+    remove_field(body_data, "profile_image_url")
+    # body_data = json.dumps(body_data)
+    info = (
+        f"🚀请求路径: {request.url}\n"
+        f"🍳方法: {request.method}\n"
+        f"💻客户端: {request.client.host}\n"
+        f"🔥请求参数: {request.query_params}\n"
+        f"🔥请求体: {body_data}\n"
+        f"🔥HTTP状态码: {exc.status_code}\n"
+        f"🔥异常: {str(exc.detail)}\n"
+        f"🔥堆栈: \n{tb}"
+    )
+    log.info("--------------------发送飞书--------------------")
+    send_to_feishu(info)
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
 
 @app.middleware("http")
 async def check_url(request: Request, call_next):

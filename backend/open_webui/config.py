@@ -2725,3 +2725,6 @@ RAGFLOW_ADMIN_PASSWORD = "Pg9WHt9UdxhoUiFVs8uZjWdQP9e66iAKFElOUV43Q4iWl4mfEPHgbV
 
 # 联网搜索 key
 RAGFLOW_TAVILY_API_KEY = "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"
+
+# 飞书机器人(异常监控)
+FEISHU_WEBHOOK = "https://open.feishu.cn/open-apis/bot/v2/hook/859eddaf-ed59-4e6c-83b9-8722121c094f"
