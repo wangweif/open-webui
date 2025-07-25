@@ -944,7 +944,6 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     tb = traceback.format_exc()
     body = await request.body()
     body_data = body.decode("utf-8")
-    body_data = json.loads(body_data)
     remove_field(body_data, "profile_image_url")
     # body_data = json.dumps(body_data)
     info = (
