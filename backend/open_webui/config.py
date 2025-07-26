@@ -1859,7 +1859,7 @@ RAG_EMBEDDING_ENGINE = PersistentConfig(
 PDF_EXTRACT_IMAGES = PersistentConfig(
     "PDF_EXTRACT_IMAGES",
     "rag.pdf_extract_images",
-    os.environ.get("PDF_EXTRACT_IMAGES", "False").lower() == "true",
+    os.environ.get("PDF_EXTRACT_IMAGES", "True").lower() == "true",
 )
 
 RAG_EMBEDDING_MODEL = PersistentConfig(
