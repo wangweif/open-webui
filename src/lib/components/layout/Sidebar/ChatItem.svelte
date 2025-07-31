@@ -354,7 +354,7 @@
 					</button>
 				</Tooltip>
 			</div>
-		{:else if shiftKey && mouseOver}
+		<!-- {:else if shiftKey && mouseOver}
 			<div class=" flex items-center self-center space-x-1.5">
 				<Tooltip content={$i18n.t('Archive')} className="flex items-center">
 					<button
@@ -379,7 +379,7 @@
 						<GarbageBin strokeWidth="2" />
 					</button>
 				</Tooltip>
-			</div>
+			</div> -->
 		{:else}
 			<div class="flex self-center space-x-1 z-10">
 				<ChatMenu
