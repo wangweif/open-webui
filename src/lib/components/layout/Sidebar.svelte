@@ -864,7 +864,7 @@
 										selected={selectedChatId === chat.id}
 										on:select={() => {
 											selectedChatId = chat.id;
-											handleChatClick(chat.id);
+											// handleChatClick(chat.id);
 										}}
 										on:unselect={() => {
 											selectedChatId = null;
@@ -886,7 +886,6 @@
 				{#if !search && folders}
 					<Folders
 						{folders}
-						{handleChatClick}
 						on:import={(e) => {
 							const { folderId, items } = e.detail;
 							importChatHandler(items, false, folderId);
@@ -941,7 +940,7 @@
 									selected={selectedChatId === chat.id}
 									on:select={() => {
 										selectedChatId = chat.id;
-										handleChatClick(chat.id);
+										// handleChatClick(chat.id);
 									}}
 									on:unselect={() => {
 										selectedChatId = null;

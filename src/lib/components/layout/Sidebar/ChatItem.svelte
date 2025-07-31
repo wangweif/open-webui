@@ -17,6 +17,7 @@
 		getPinnedChatList,
 		updateChatById
 	} from '$lib/apis/chats';
+	import { updateUserSettings } from '$lib/apis/users';
 	import {
 		chatId,
 		chatTitle as _chatTitle,
@@ -25,7 +26,8 @@
 		pinnedChats,
 		showSidebar,
 		currentChatPage,
-		tags
+		tags,
+		settings
 	} from '$lib/stores';
 
 	import ChatMenu from './ChatMenu.svelte';
@@ -277,8 +279,14 @@
 					? 'bg-gray-100 dark:bg-gray-950'
 					: ' group-hover:bg-gray-100 dark:group-hover:bg-gray-950'}  whitespace-nowrap text-ellipsis"
 			href="/c/{id}"
-			on:click={() => {
+			on:click={async () => {
 				dispatch('select');
+				// 获取当前选中模型的id，并更新settings
+				if (chat && chat.chat && chat.chat.models) {
+					// 从聊天对象中获取模型ID列表并更新settings
+					settings.set({ ...$settings, models: chat.chat.models });
+				}
+				await updateUserSettings(localStorage.token, { ui: $settings });
 
 				if ($mobile) {
 					showSidebar.set(false);
