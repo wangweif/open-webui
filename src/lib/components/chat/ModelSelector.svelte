@@ -28,14 +28,6 @@
 		return model.name;
 	}
 
-	// 检查是否应该隐藏模型（nkxz环境下隐藏制式报告生成）
-	function shouldHideModel(model: any): boolean {
-		const isNkxzEnv = typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'nkxz';
-		const isReportGenerationModel = model.name === '制式报告生成' || model.id === 'aiOfficeWebViewer';
-
-		return isNkxzEnv && isReportGenerationModel;
-	}
-
 	const saveDefaultModel = async () => {
 		const hasEmptyModel = selectedModels.filter((it) => it === '');
 		if (hasEmptyModel.length) {
@@ -63,7 +55,7 @@
 					<Selector
 						id={`${selectedModelIdx}`}
 						placeholder={$i18n.t('Select a model')}
-						items={$models.filter(model => !shouldHideModel(model)).map((model) => ({
+						items={$models.map((model) => ({
 							value: model.id,
 							label: getModelDisplayName(model),
 							model: model

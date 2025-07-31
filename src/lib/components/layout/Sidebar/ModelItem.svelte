@@ -90,14 +90,6 @@
         return model.name;
     }
 
-    // 检查是否应该隐藏模型（nkxz环境下隐藏制式报告生成）
-    function shouldHideModel(model: Model): boolean {
-        const isNkxzEnv = typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'nkxz';
-        const isReportGenerationModel = model.name === '制式报告生成' || model.id === 'aiOfficeWebViewer';
-
-        return isNkxzEnv && isReportGenerationModel;
-    }
-
     // 根据模型类型返回不同的图标
     function getModelIcon(model: Model) {
         const displayName = getModelDisplayName(model);
@@ -145,7 +137,6 @@
     }
 </script>
 
-{#if !shouldHideModel(model)}
 <button
     class="w-full flex items-center rounded-lg px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 transition {isSelected ? 'bg-gray-100 dark:bg-gray-800' : ''}"
     on:click={selectModel}
@@ -173,4 +164,3 @@
         {/if}
     </div>
 </button>
-{/if}

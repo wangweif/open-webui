@@ -50,17 +50,9 @@
 	let showConfigModal = false;
 	let showManageModal = false;
 
-	// 检查是否应该隐藏模型（nkxz环境下隐藏制式报告生成）
-	function shouldHideModel(model: any): boolean {
-		const isNkxzEnv = typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'nkxz';
-		const isReportGenerationModel = model.name === '制式报告生成' || model.id === 'aiOfficeWebViewer';
-
-		return isNkxzEnv && isReportGenerationModel;
-	}
-
 	$: if (models) {
 		filteredModels = models
-			.filter((m) => (searchValue === '' || m.name.toLowerCase().includes(searchValue.toLowerCase())) && !shouldHideModel(m))
+			.filter((m) => (searchValue === '' || m.name.toLowerCase().includes(searchValue.toLowerCase())))
 			.sort((a, b) => {
 				// // Check if either model is inactive and push them to the bottom
 				// if ((a.is_active ?? true) !== (b.is_active ?? true)) {
