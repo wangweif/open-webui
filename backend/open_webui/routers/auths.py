@@ -110,11 +110,11 @@ async def get_session_user(
 
     # 检查用户是否属于农业局组
     is_bjny = False
-    if AGRICULTURE_BUREAU_GROUP_IDS.value:
+    if len(AGRICULTURE_BUREAU_GROUP_IDS) > 0:
         user_groups = Groups.get_groups_by_member_id(user.id)
         user_group_ids = [group.id for group in user_groups]
         # 检查用户的任何组是否在农业局组列表中
-        is_bjny = any(group_id in AGRICULTURE_BUREAU_GROUP_IDS.value for group_id in user_group_ids)
+        is_bjny = any(group_id in AGRICULTURE_BUREAU_GROUP_IDS for group_id in user_group_ids)
 
     return {
         "token": token,
