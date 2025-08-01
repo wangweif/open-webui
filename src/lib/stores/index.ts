@@ -233,4 +233,5 @@ type SessionUser = {
 	role: string;
 	profile_image_url: string;
 	assistant_id: string;
+	is_bjny?: boolean;
 };

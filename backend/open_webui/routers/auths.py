@@ -5,7 +5,7 @@ import datetime
 import logging
 from aiohttp import ClientSession
 import requests
-from open_webui.config import KNOWLEDGE_BASE_URL, BASE_TEAM_ID, BASE_KB_ID, RAGFLOW_ADMIN_EMAIL, RAGFLOW_ADMIN_PASSWORD
+from open_webui.config import KNOWLEDGE_BASE_URL, BASE_TEAM_ID, BASE_KB_ID, RAGFLOW_ADMIN_EMAIL, RAGFLOW_ADMIN_PASSWORD, AGRICULTURE_BUREAU_GROUP_IDS
 from open_webui.utils.ragflow_assistant import create_assistant
 
 from open_webui.models.auths import (
@@ -22,6 +22,7 @@ from open_webui.models.auths import (
     UserResponse,
 )
 from open_webui.models.users import Users
+from open_webui.models.groups import Groups
 
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from open_webui.env import (
@@ -70,6 +71,7 @@ class SessionUserResponse(Token, UserResponse):
     expires_at: Optional[int] = None
     permissions: Optional[dict] = None
     assistant_id: Optional[str] = None
+    is_bjny: Optional[bool] = False
 
 
 @router.get("/", response_model=SessionUserResponse)
@@ -106,6 +108,14 @@ async def get_session_user(
         user.id, request.app.state.config.USER_PERMISSIONS
     )
 
+    # 检查用户是否属于农业局组
+    is_bjny = False
+    if AGRICULTURE_BUREAU_GROUP_IDS.value:
+        user_groups = Groups.get_groups_by_member_id(user.id)
+        user_group_ids = [group.id for group in user_groups]
+        # 检查用户的任何组是否在农业局组列表中
+        is_bjny = any(group_id in AGRICULTURE_BUREAU_GROUP_IDS.value for group_id in user_group_ids)
+
     return {
         "token": token,
         "token_type": "Bearer",
@@ -117,6 +127,7 @@ async def get_session_user(
         "profile_image_url": user.profile_image_url,
         "permissions": user_permissions,
         "assistant_id": user.assistant_id,
+        "is_bjny": is_bjny,
     }
 
 
@@ -441,6 +452,18 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
                 # 更新用户
                 Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
 
+        # 检查用户是否属于农业局组
+        is_bjny = False
+        if len(AGRICULTURE_BUREAU_GROUP_IDS) > 0:
+            try:
+                user_groups = Groups.get_groups_by_member_id(user.id)
+                user_group_ids = [group.id for group in user_groups]
+                # 检查用户的任何组是否在农业局组列表中
+                is_bjny = any(group_id in AGRICULTURE_BUREAU_GROUP_IDS for group_id in user_group_ids)
+            except Exception as e:
+                log.error(f"检查用户是否属于农业局组错误: {str(e)}", exc_info=True)
+                is_bjny = False
+
         return {
             "token": token,
             "token_type": "Bearer",
@@ -452,6 +475,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             "profile_image_url": user.profile_image_url,
             "permissions": user_permissions,
             "assistant_id": user.assistant_id,
+            "is_bjny": is_bjny,
         }
     else:
         raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)

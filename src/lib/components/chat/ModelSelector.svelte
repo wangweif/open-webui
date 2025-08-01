@@ -13,15 +13,15 @@
 
 	export let showSetDefault = true;
 
-	// 根据环境和name_1获取模型显示名称
+	// 根据用户状态和name_1获取模型显示名称
 	function getModelDisplayName(model: any): string {
 		if (!model) return '';
-		// 检查是否为bjny环境且存在name_1
-		const isBjnyEnv = typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'bjny';
+		// 检查用户是否为bjny用户且存在name_1
+		const isBjnyUser = $user?.is_bjny || false;
 		const modelMeta = model.info?.meta as any;
 		const hasName1 = modelMeta?.name_1;
 
-		if (isBjnyEnv && hasName1) {
+		if (isBjnyUser && hasName1) {
 			return modelMeta.name_1;
 		}
 

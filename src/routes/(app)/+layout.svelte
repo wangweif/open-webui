@@ -37,7 +37,8 @@
 		showSettings,
 		showChangelog,
 		temporaryChatEnabled,
-		toolServers
+		toolServers,
+		WEBUI_NAME
 	} from '$lib/stores';
 
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
@@ -60,6 +61,15 @@
 		if ($user === undefined || $user === null) {
 			await goto('/auth');
 		} else if (['user', 'admin'].includes($user?.role)) {
+			// 根据用户的is_bjny状态动态设置应用名称
+			if ($user?.is_bjny) {
+				WEBUI_NAME.set('北京市农业农村局');
+				// 动态设置页面标题
+				document.title = '北京市农业农村局';
+			} else {
+				WEBUI_NAME.set('农科小智');
+				document.title = '农科小智';
+			}
 			try {
 				// Check if IndexedDB exists
 				DB = await openDB('Chats', 1);
