@@ -286,6 +286,7 @@
 					// 从聊天对象中获取模型ID列表并更新settings
 					settings.set({ ...$settings, models: chat.chat.models });
 				}
+				localStorage.setItem('modelSettings', JSON.stringify({ models: chat.chat.models }));
 				await updateUserSettings(localStorage.token, { ui: $settings });
 
 				if ($mobile) {

@@ -44,6 +44,7 @@
 
         // 首先保存到sessionStorage确保持久化
         sessionStorage.setItem('selectedModels', JSON.stringify([model.id]));
+        localStorage.setItem('modelSettings', JSON.stringify({ models: [model.id] }));
         // 然后更新settings store
         settings.update(s => {
             return { ...s, models: [model.id] };
