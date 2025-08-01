@@ -42,8 +42,8 @@
             iframeUrl = `${iframeUrl}${separator}user_id=${encodeURIComponent($user.id)}`;
         }
 
-        // 首先保存到localStorage确保持久化
-        localStorage.setItem('modelSettings', JSON.stringify({ models: [model.id] }));
+        // 首先保存到sessionStorage确保持久化
+        sessionStorage.setItem('selectedModels', JSON.stringify([model.id]));
         // 然后更新settings store
         settings.update(s => {
             return { ...s, models: [model.id] };
@@ -113,7 +113,7 @@
         // 如果store中没有models设置，先检查localStorage
         if (!$settings?.models || $settings.models.length === 0) {
             try {
-                const savedSettings = localStorage.getItem('modelSettings');
+                const savedSettings = sessionStorage.getItem('modelSettings');
                 if (savedSettings) {
                     const parsedSettings = JSON.parse(savedSettings);
                     if (parsedSettings.models && parsedSettings.models.length > 0) {
