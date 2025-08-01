@@ -1,5 +1,5 @@
 import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
-import { convertOpenApiToToolPayload } from '$lib/utils';
+import { convertOpenApiToToolPayload, sortModels } from '$lib/utils';
 import { getOpenAIModelsDirect } from './openai';
 
 import { parse } from 'yaml';
@@ -146,6 +146,7 @@ export const getModels = async (
 		models = Object.values(modelsMap);
 	}
 
+	models = sortModels(models);
 	return models;
 };
 

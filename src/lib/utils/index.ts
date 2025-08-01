@@ -1303,3 +1303,42 @@ export const convertOpenApiToToolPayload = (openApiSpec) => {
 
 	return toolPayload;
 };
+
+// 模型排序函数
+export const sortModels = (modelList: any[]) => {
+	// 定义模型排序顺序
+	const modelOrder = [
+		'rag_flow_webapi_pipeline_cs',
+		'Qwen3:32B', 
+		'identification_webapi_pipeline_cs',
+		'chatbi_query_analasis_pipeline',
+		'aiPrice',
+		'NongJing-sanzi',
+		'aiOfficeWebViewer'
+	];
+	
+	// 对模型列表进行排序
+	return modelList.sort((a, b) => {
+		const aIndex = modelOrder.findIndex(order => 
+			a.name?.includes(order) || a.id?.includes(order)
+		);
+		const bIndex = modelOrder.findIndex(order => 
+			b.name?.includes(order) || b.id?.includes(order)
+		);
+		
+		// 如果都找到了匹配项，按照预定义顺序排序
+		if (aIndex !== -1 && bIndex !== -1) {
+			return aIndex - bIndex;
+		}
+		// 如果只有a找到匹配项，a排在前面
+		if (aIndex !== -1 && bIndex === -1) {
+			return -1;
+		}
+		// 如果只有b找到匹配项，b排在前面
+		if (aIndex === -1 && bIndex !== -1) {
+			return 1;
+		}
+		// 如果都没找到匹配项，保持原顺序
+		return 0;
+	});
+};
