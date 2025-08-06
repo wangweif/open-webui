@@ -5,8 +5,8 @@ import datetime
 import logging
 from aiohttp import ClientSession
 import requests
-from open_webui.config import KNOWLEDGE_BASE_URL, BASE_TEAM_ID, BASE_KB_ID, RAGFLOW_ADMIN_EMAIL, RAGFLOW_ADMIN_PASSWORD, AGRICULTURE_BUREAU_GROUP_IDS
-from open_webui.utils.ragflow_assistant import create_assistant
+from open_webui.config import KNOWLEDGE_BASE_URL, BASE_TEAM_ID, BASE_KB_ID, RAGFLOW_ADMIN_EMAIL, RAGFLOW_ADMIN_PASSWORD, AGRICULTURE_BUREAU_GROUP_IDS, TENANT_ID
+from open_webui.utils.ragflow_assistant import create_assistant, assign_base_kb_permission
 
 from open_webui.models.auths import (
     AddUserForm,
@@ -529,16 +529,23 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
             )
 
         hashed = get_password_hash(form_data.password)
-        assistant_id = await addUserToTeam(form_data.email,form_data.name,form_data.password)
         user = Auths.insert_new_auth(
             form_data.email.lower(),
             hashed,
             form_data.name,
             form_data.profile_image_url,
             role,
-            assistant_id=assistant_id
+            team_id=BASE_TEAM_ID,
+            tenant_id=TENANT_ID,
         )
+        # 如果是直接注册的，则分配默认知识库，否则不分配
+        if not request.headers.get('Authorization'):
+            log.info("-------------直接注册，开始分配知识库")
+            await assign_base_kb_permission(user.ragflow_user_id)
 
+        assistant_id = await create_assistant(user.ragflow_user_id)
+
+        Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
         if user:
             expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
             expires_at = None
@@ -599,65 +606,6 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
     except Exception as err:
         log.error(f"Signup error: {str(err)}")
         raise HTTPException(500, detail="An internal error occurred during signup.")
-
-async def addUserToTeam(email: str, nickname: str, password: str) -> str:
-    # 登录
-    api_url = f"{KNOWLEDGE_BASE_URL}/v1/user/login"  # 替换为实际的注册API地址
-    payload = {
-        "email": RAGFLOW_ADMIN_EMAIL,
-        "password": RAGFLOW_ADMIN_PASSWORD
-    }
-    response = requests.post(api_url, json=payload)
-    if response.status_code != 200:
-        return None
-    cookies = response.headers['Set-Cookie'].split(';')[0]
-    authorization = response.headers['Authorization']
-
-    # 判断用户是否存在  
-    api_url = f"{KNOWLEDGE_BASE_URL}/v1/user/get_user_info"
-    response = requests.post(api_url,json={"user_email":email},headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
-    if response.json().get('message') == "用户不存在!" or response.json().get('data') == False or response.json().get('data') == None:
-        # 添加用户到团队
-        api_url = f"{KNOWLEDGE_BASE_URL}/v1/team/{BASE_TEAM_ID}/member"
-        payload = {
-            "email": email,
-            "nickname": nickname,
-            "password": password,
-            "role": "member"
-        }
-        teamRes = requests.post(api_url,json=payload,headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
-        if teamRes.status_code != 200 or teamRes.json().get('code') == 102:
-            return None
-        user_id = teamRes.json()['data']['user_id']
-    else:
-        user_id = response.json()['data']['id']
-    
-    # 获取农科小智知识库权限列表
-    api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/{BASE_KB_ID}/authorized_users"
-    teamRes = requests.get(api_url,headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
-    teamRes = teamRes.json()
-    data = teamRes['data']
-    if data == None:
-        data = [{'user_id':user_id,'permission_types':['read']}]
-    else:
-        # 统一将permission_type转换为permission_types
-        for item in data:
-            if 'permission_type' in item:
-                item['permission_types'] = [item.pop('permission_type')]
-        data.append({'user_id':user_id,'permission_types':['read']})
-    payload = {
-        "permissions": data
-    }
-
-    # 更新农科小智知识库权限列表
-    api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/{BASE_KB_ID}/permissions"
-    teamRes = requests.post(api_url,json=payload,headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
-    if teamRes.status_code != 200:
-        return None
-    # 创建聊天助手
-    assistant_id = await create_assistant(user_id, authorization, cookies)
-    return assistant_id
-
 
 
 @router.get("/signout")

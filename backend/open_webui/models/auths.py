@@ -104,12 +104,15 @@ class AuthsTable:
         profile_image_url: str = "/user.png",
         role: str = "pending",
         oauth_sub: Optional[str] = None,
-        assistant_id: Optional[str] = None
+        assistant_id: Optional[str] = None,
+        team_id: Optional[str] = None,
+        tenant_id: Optional[str] = None
     ) -> Optional[UserModel]:
         with get_db() as db:
             log.info("insert_new_auth")
 
             id = str(uuid.uuid4())
+            ragflow_user_id = id
 
             auth = AuthModel(
                 **{"id": id, "email": email, "password": password, "active": True}
@@ -118,7 +121,7 @@ class AuthsTable:
             db.add(result)
 
             user = Users.insert_new_user(
-                id, name, email, profile_image_url, role, oauth_sub, assistant_id
+                id, name, email, profile_image_url, role, oauth_sub, assistant_id, ragflow_user_id, team_id, tenant_id
             )
 
             db.commit()

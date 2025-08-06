@@ -33,6 +33,9 @@ class User(Base):
     settings = Column(JSONField, nullable=True)
     info = Column(JSONField, nullable=True)
     assistant_id = Column(String, nullable=True)
+    ragflow_user_id = Column(String, nullable=True)
+    team_id = Column(String, nullable=True)
+    tenant_id = Column(String, nullable=True)
 
     oauth_sub = Column(Text, unique=True)
 
@@ -60,6 +63,9 @@ class UserModel(BaseModel):
 
     oauth_sub: Optional[str] = None
     assistant_id: Optional[str] = None
+    ragflow_user_id: Optional[str] = None
+    team_id: Optional[str] = None
+    tenant_id: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -105,7 +111,10 @@ class UsersTable:
         profile_image_url: str = "/user.png",
         role: str = "pending",
         oauth_sub: Optional[str] = None,
-        assistant_id: Optional[str] = None
+        assistant_id: Optional[str] = None,
+        ragflow_user_id: Optional[str] = None,
+        team_id: Optional[str] = None,
+        tenant_id: Optional[str] = None
     ) -> Optional[UserModel]:
         with get_db() as db:
             user = UserModel(
@@ -119,7 +128,10 @@ class UsersTable:
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
                     "oauth_sub": oauth_sub,
-                    "assistant_id": assistant_id
+                    "assistant_id": assistant_id,
+                    "ragflow_user_id": ragflow_user_id,
+                    "team_id": team_id,
+                    "tenant_id": tenant_id
                 }
             )
             result = User(**user.model_dump())
