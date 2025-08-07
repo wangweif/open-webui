@@ -6,7 +6,7 @@ import logging
 from aiohttp import ClientSession
 import requests
 from open_webui.config import KNOWLEDGE_BASE_URL, BASE_TEAM_ID, BASE_KB_ID, RAGFLOW_ADMIN_EMAIL, RAGFLOW_ADMIN_PASSWORD, AGRICULTURE_BUREAU_GROUP_IDS, TENANT_ID
-from open_webui.utils.ragflow_assistant import create_assistant, assign_base_kb_permission
+from open_webui.utils.ragflow_assistant import create_assistant, assign_base_kb_permission, add_user_to_user_tenant
 
 from open_webui.models.auths import (
     AddUserForm,
@@ -421,36 +421,10 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         )
         if user.assistant_id == None or user.assistant_id == "":
             print("用户没有助手，创建助手") 
-            # 先登录ragflow获取cookies和authorization
-            api_url = f"{KNOWLEDGE_BASE_URL}/v1/user/login"  
-            payload = {
-                "email": RAGFLOW_ADMIN_EMAIL,
-                "password": RAGFLOW_ADMIN_PASSWORD
-            }
-            response = requests.post(api_url, json=payload)
-            if response.status_code != 200:
-                return None
-            cookies = response.headers['Set-Cookie'].split(';')[0]
-            authorization = response.headers['Authorization']
-            # 获取ragflow中的用户id
-            api_url = f"{KNOWLEDGE_BASE_URL}/v1/user/get_user_info"
-            response = requests.post(api_url,json={"user_email":form_data.email},headers={'Content-Type': 'application/json','Authorization': authorization,'Cookie': cookies})
-            # 如果用户不存在，则将用户添加到团队中并创建聊天助手
-            print("用户信息：",response.json())
-            if response.json().get('message') == "用户不存在!" or response.json().get('data') == False or response.json().get('data') == None:
-                print("用户不存在，将用户添加到团队中并创建聊天助手")
-                assistant_id = await addUserToTeam(form_data.email,user.name,form_data.password)
-                user.assistant_id = assistant_id
-                # 更新用户
-                Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
-            # 如果用户存在，则创建聊天助手
-            else:
-                print("用户存在，创建聊天助手")
-                user_id = response.json()['data']['id']
-                assistant_id = await create_assistant(user_id,authorization,cookies)
-                user.assistant_id = assistant_id
-                # 更新用户
-                Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
+            assistant_id = await create_assistant(user.ragflow_user_id)
+            user.assistant_id = assistant_id
+            # 更新用户
+            Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
 
         # 检查用户是否属于农业局组
         is_bjny = False
@@ -542,6 +516,8 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
         if not request.headers.get('Authorization'):
             log.info("-------------直接注册，开始分配知识库")
             await assign_base_kb_permission(user.ragflow_user_id)
+            # 将用户添加到UserTenant表
+            await add_user_to_user_tenant(TENANT_ID,user.email)
 
         assistant_id = await create_assistant(user.ragflow_user_id)
 

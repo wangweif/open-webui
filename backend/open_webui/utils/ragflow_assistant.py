@@ -153,11 +153,16 @@ async def get_accessible_kbs(assistant_id):
     async with session.get(api_url, headers=headers) as response:
         return await response.json()
 
-# 清理全局 session 的函数（用于应用关闭时调用）
-async def cleanup_session():
-    """清理全局 aiohttp session"""
-    global _session
-    if _session and not _session.closed:
-        await _session.close()
-        _session = None
-    
+# 将用户添加到UserTenant表
+async def add_user_to_user_tenant(tenant_id,email):
+    token = create_token(data={"id": tenant_id})
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/tenant/{tenant_id}/user"
+    payload = {
+        "email": email
+    }
+    response = requests.post(api_url,json=payload,headers={'Content-Type': 'application/json','Cookie': 'token=' + token})
+    response_data = response.json()
+    if response_data.get('code') != 0:
+        log.error(f"将用户添加到UserTenant表失败，状态码: {response_data.get('code')},消息: {response_data.get('message')}")
+        return False
+    return True
