@@ -2726,8 +2726,9 @@ RAGFLOW_ADMIN_PASSWORD = "Pg9WHt9UdxhoUiFVs8uZjWdQP9e66iAKFElOUV43Q4iWl4mfEPHgbV
 # 联网搜索 key
 RAGFLOW_TAVILY_API_KEY = "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"
 
-# 飞书机器人(异常监控)
+# 飞书机器人(异常监控) & 通知开关
 FEISHU_WEBHOOK = "https://open.feishu.cn/open-apis/bot/v2/hook/859eddaf-ed59-4e6c-83b9-8722121c094f"
+ENABLE_FEISHU_NOTIFICATIONS = False
 
 # 农业局组ID列表，用于判断用户是否属于农业局
 AGRICULTURE_BUREAU_GROUP_IDS = ["1b2d9c89-6327-4b96-b72d-5270290b651a","041e5877-2a8c-4156-9771-a0044f83d8c2"]
