@@ -207,5 +207,33 @@ class GroupTable:
             except Exception:
                 return False
 
+    def get_group_by_name(self, names: list[str] | str) -> Optional[GroupModel]:
+        if isinstance(names, str):
+            names = [names]
+        with get_db() as db:
+            group = db.query(Group).filter(Group.name.in_(names)).first()
+            return GroupModel.model_validate(group) if group else None
+
+    def add_user_to_group(self, user_id: str, group_id: str) -> bool:
+        try:
+            with get_db() as db:
+                group = db.query(Group).filter_by(id=group_id).first()
+                if group:
+                    if user_id not in group.user_ids:
+                        group.user_ids.append(user_id)
+                        db.query(Group).filter_by(id=group_id).update(
+                            {
+                                "user_ids": group.user_ids,
+                                "updated_at": int(time.time()),
+                            }
+                        )
+                        db.commit()
+                        return True
+                    else:
+                        return False
+                return False
+        except Exception as e:
+            log.error(f"添加用户到权限组失败: {e}")
+            return False
 
 Groups = GroupTable()

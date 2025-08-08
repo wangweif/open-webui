@@ -48,6 +48,7 @@ from open_webui.utils.auth import (
 )
 from open_webui.utils.webhook import post_webhook
 from open_webui.utils.access_control import get_permissions
+from open_webui.routers.groups import add_user_to_tourist_group
 
 from typing import Optional, List
 
@@ -518,6 +519,8 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
             await assign_base_kb_permission(user.ragflow_user_id)
             # 将用户添加到UserTenant表
             await add_user_to_user_tenant(TENANT_ID,user.email)
+            # 将用户添加到游客权限组
+            await add_user_to_tourist_group(user.id)
 
         assistant_id = await create_assistant(user.ragflow_user_id)
 

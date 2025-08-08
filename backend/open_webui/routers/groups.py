@@ -129,3 +129,16 @@ async def delete_group_by_id(id: str, user=Depends(get_admin_user)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.DEFAULT(e),
         )
+
+async def add_user_to_tourist_group(user_id: str):
+    # 获取游客权限组
+    tourist_group = Groups.get_group_by_name(["游客","游客组"])
+    if tourist_group:
+        # 将用户添加到游客权限组
+        Groups.add_user_to_group(user_id, tourist_group.id)
+    else:
+        return
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.DEFAULT("Error adding user to tourist group"),
+        )
