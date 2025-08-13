@@ -35,9 +35,10 @@
 	export let selectedToolIds: string[] = [];
 
 	export let isRagFlowModel: boolean = false;
-	export let isAiPriceModel: boolean = false;
-	export let isIdentificationModel: boolean = false;
-	export let isWebSearchModel: boolean = false;
+export let isAiPriceModel: boolean = false;
+export let isIdentificationModel: boolean = false;
+export let isWebSearchModel: boolean = false;
+export let isDocSummaryModel: boolean = false;
 	export let files: any[] = []; // 传入当前已上传的文件列表
 
 	export let onClose: Function;
@@ -138,7 +139,7 @@
 			align="start"
 			transition={flyAndScale}
 		>
-			{#if Object.keys(tools).length > 0 && !isRagFlowModel && !isAiPriceModel && !isIdentificationModel && !isWebSearchModel}
+			{#if Object.keys(tools).length > 0 && !isRagFlowModel && !isAiPriceModel && !isIdentificationModel && !isWebSearchModel && !isDocSummaryModel}
 				<div class="  max-h-28 overflow-y-auto scrollbar-hidden">
 					{#each Object.keys(tools) as toolId}
 						<button
@@ -241,7 +242,7 @@
 					</DropdownMenu.Item>
 				</Tooltip>
 
-			{#if $config?.features?.enable_google_drive_integration}
+			{#if $config?.features?.enable_google_drive_integration && !isDocSummaryModel}
 				<DropdownMenu.Item
 					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
 					on:click={() => {
@@ -278,7 +279,7 @@
 				</DropdownMenu.Item>
 			{/if}
 
-			{#if $config?.features?.enable_onedrive_integration}
+			{#if $config?.features?.enable_onedrive_integration && !isDocSummaryModel}
 				<DropdownMenu.Item
 					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
 					on:click={() => {

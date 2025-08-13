@@ -84,7 +84,6 @@
 	$: isAgriculturePriceModel= selectedModelIds.includes('data_query_analysis_pipeline');
 	$: isPlantingModel= selectedModelIds.includes('chatbi_query_analasis_pipeline');
 	$: isDocSummaryModel= selectedModelIds.includes('n8n_summary');
-	$: isDocGenerateModel= selectedModelIds.includes('n8n_generate');
 
 	// 初始化时从localStorage加载状态
 	let manuallyDisabledWebSearch = localStorage.getItem('deepseekWebSearchDisabled') === 'true';
@@ -1173,6 +1172,7 @@
 												{isIdentificationModel}
 												{isWebSearchModel}
 												{isRagFlowModel}
+												{isDocSummaryModel}
 												{files}
 												uploadFilesHandler={() => {
 													filesInputElement.click();
@@ -1263,7 +1263,7 @@
 											{/if}
 
 											{#if $_user}
-												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isIdentificationModel && !isAgriculturePriceModel && !isPlantingModel && !isDocSummaryModel && !isDocGenerateModel}
+												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isIdentificationModel && !isAgriculturePriceModel && !isPlantingModel && !isDocSummaryModel }
 													<Tooltip content={isRagFlowModel ? $i18n.t('Search is not needed for this model') : $i18n.t('Search the internet')} placement="top">
 														<button
 															on:click|preventDefault={() => {
