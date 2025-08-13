@@ -55,6 +55,52 @@ export default defineConfig(({ mode }) => {
 		worker: {
 			format: 'es'
 		},
+		// 支持本地ws调试
+		// server: {
+		// 	proxy: {
+		// 		'/api': {
+		// 			target: 'http://127.0.0.1:8080',
+		// 			changeOrigin: true,
+		// 			ws: true, // 支持WebSocket
+		// 			configure: (proxy) => {
+		// 				proxy.on('error', (err) => {
+		// 					console.log('proxy error', err);
+		// 				});
+		// 				proxy.on('proxyReq', (proxyReq, req) => {
+		// 					console.log('Sending Request to the Target:', req.method, req.url);
+		// 				});
+		// 				proxy.on('proxyRes', (proxyRes, req) => {
+		// 					console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+		// 				});
+		// 			},
+		// 		},
+		// 	'/openai': {
+		// 			target: 'http://127.0.0.1:8080',
+		// 			changeOrigin: true,
+		// 			ws: true,
+		// 			configure: (proxy) => {
+		// 				proxy.on('error', (err) => {
+		// 					console.log('openai proxy error', err);
+		// 				});
+		// 			},
+		// 	},
+		// 	'/ollama': {
+		// 			target: 'http://127.0.0.1:8080',
+		// 			changeOrigin: true,
+		// 			ws: true,
+		// 			configure: (proxy) => {
+		// 				proxy.on('error', (err) => {
+		// 					console.log('ollama proxy error', err);
+		// 				});
+		// 			},
+		// 	},
+		// 	'/ws': {
+		// 			target: 'http://127.0.0.1:8080',
+		// 			changeOrigin: true,
+		// 			ws: true, // WebSocket支持
+		// 	}
+		// 	}
+		// }
 		server: {
 			proxy: {
 			'/api': {
