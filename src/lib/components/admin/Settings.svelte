@@ -162,7 +162,7 @@
 			<div class=" self-center">{$i18n.t('Tools')}</div>
 		</button>
 
-		<!-- <button
+		<button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 			'documents'
 				? ''
@@ -190,7 +190,7 @@
 				</svg>
 			</div>
 			<div class=" self-center">{$i18n.t('Documents')}</div>
-		</button> -->
+		</button>
 
 		<button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
