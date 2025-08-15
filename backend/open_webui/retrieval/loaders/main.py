@@ -141,7 +141,7 @@ class DoclingLoader:
                 "table_mode": "accurate",
             }
 
-            endpoint = f"{self.url}/v1alpha/convert/file"
+            endpoint = f"{self.url}/v1/convert/file"
             r = requests.post(endpoint, files=files, data=params)
 
         if r.ok:
