@@ -299,6 +299,23 @@
 
 		files = [...files, fileItem];
 
+		if (
+			($config?.file?.max_count ?? null) !== null &&
+			files.length > ($config?.file?.max_count ?? 0)
+		) {
+			console.log('File exceeds max count limit:', {
+				maxCount: ($config?.file?.max_count ?? 0)
+			});
+			// 缩减files规模
+			files = files.slice(0, $config?.file?.max_count ?? 0);
+			toast.warning(
+				$i18n.t(`File count should not exceed {{maxCount}} 个.`, {
+					maxCount: $config?.file?.max_count
+				})
+			);
+			return;
+		}
+
 		try {
 			// During the file upload, file content is automatically extracted.
 			const uploadedFile = await uploadFile(localStorage.token, file);
@@ -312,7 +329,9 @@
 
 				if (uploadedFile.error) {
 					console.warn('File upload warning:', uploadedFile.error);
-					toast.warning(uploadedFile.error);
+					// toast.warning(uploadedFile.error);
+					toast.warning($i18n.t(`Failed to parse file.`));
+					files = files.filter((item) => item?.itemId !== tempItemId);
 				}
 
 				fileItem.status = 'uploaded';
@@ -350,7 +369,7 @@
 					fileSize: file.size,
 					maxSize: ($config?.file?.max_size ?? 0) * 1024 * 1024
 				});
-				toast.error(
+				toast.warning(
 					$i18n.t(`File size should not exceed {{maxSize}} MB.`, {
 						maxSize: $config?.file?.max_size
 					})

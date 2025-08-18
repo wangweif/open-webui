@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
+	import { toast, Toaster } from 'svelte-sonner';
 	import { onMount, tick, getContext } from 'svelte';
 	import { openDB, deleteDB } from 'idb';
 	import fileSaver from 'file-saver';
@@ -38,7 +38,8 @@
 		showChangelog,
 		temporaryChatEnabled,
 		toolServers,
-		WEBUI_NAME
+		WEBUI_NAME,
+		theme
 	} from '$lib/stores';
 
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
@@ -385,3 +386,15 @@
 		background-color: #bcbabb;
 	}
 </style>
+
+<Toaster
+	theme={$theme.includes('dark')
+		? 'dark'
+		: $theme === 'system'
+			? window.matchMedia('(prefers-color-scheme: dark)').matches
+				? 'dark'
+				: 'light'
+			: 'light'}
+	richColors
+	position="top-right"
+/>
