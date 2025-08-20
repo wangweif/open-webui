@@ -258,7 +258,7 @@
 	};
 
 	const chatEventHandler = async (event, cb) => {
-		console.log(event);
+		// console.log(event);
 
 		if (event.chat_id === $chatId) {
 			await tick();
@@ -1274,7 +1274,7 @@
 			);
 		}
 
-		console.log(data);
+		// console.log(data);
 		if (autoScroll) {
 			scrollToBottom();
 		}
@@ -1347,12 +1347,22 @@
 		}
 
 		const _files = JSON.parse(JSON.stringify(files));
-		chatFiles.push(..._files.filter((item) => ['doc', 'file', 'collection'].includes(item.type)));
-		chatFiles = chatFiles.filter(
-			// Remove duplicates
-			(item, index, array) =>
-				array.findIndex((i) => JSON.stringify(i) === JSON.stringify(item)) === index
-		);
+		
+		// 检查是否为 n8n_summary 模型
+		const isDocSummaryModel = selectedModels.includes('n8n_summary');
+		
+		if (isDocSummaryModel) {
+			// 对于文档摘要模型，只使用当前上传的文件，不累积历史文件
+			chatFiles = _files.filter((item) => ['doc', 'file', 'collection'].includes(item.type));
+		} else {
+			// 对于其他模型，保持原有的累积逻辑
+			chatFiles.push(..._files.filter((item) => ['doc', 'file', 'collection'].includes(item.type)));
+			chatFiles = chatFiles.filter(
+				// Remove duplicates
+				(item, index, array) =>
+					array.findIndex((i) => JSON.stringify(i) === JSON.stringify(item)) === index
+			);
+		}
 
 		files = [];
 		prompt = '';
