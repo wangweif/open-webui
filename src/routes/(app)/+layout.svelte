@@ -68,8 +68,8 @@
 				// 动态设置页面标题
 				document.title = '北京市农业农村局';
 			} else {
-				WEBUI_NAME.set('农科小智');
-				document.title = '农科小智';
+				WEBUI_NAME.set('农科小智大模型');
+				document.title = '农科小智大模型';
 			}
 			try {
 				// Check if IndexedDB exists

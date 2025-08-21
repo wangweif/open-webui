@@ -10,7 +10,7 @@ declare global {
 }
 
 // 导出应用名称，使用 Vite 定义的全局变量
-export const WEBUI_NAME = typeof APP_NAME !== 'undefined' ? APP_NAME : '农科小智';
+export const WEBUI_NAME = typeof APP_NAME !== 'undefined' ? APP_NAME : '农科小智大模型';
 export const APP_BUILD_TARGET = typeof BUILD_TARGET !== 'undefined' ? BUILD_TARGET : 'default';
 
 export const WEBUI_HOSTNAME = browser ? (dev ? `${location.hostname}:8080` : ``) : '';
