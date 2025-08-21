@@ -177,19 +177,19 @@
 			models.set(modelList);
 
 			// 在设置模型列表后，从localStorage加载默认选中的模型设置
-			const savedSettings = localStorage.getItem('modelSettings');
-			if (savedSettings) {
-				try {
-					const parsedSettings = JSON.parse(savedSettings);
-					if (parsedSettings.models && parsedSettings.models.length > 0) {
-						settings.update(s => {
-							return { ...s, models: parsedSettings.models };
-						});
-					}
-				} catch (e) {
-					console.error('Error parsing saved model settings:', e);
-				}
-			}
+			// const savedSettings = localStorage.getItem('modelSettings');
+			// if (savedSettings) {
+			// 	try {
+			// 		const parsedSettings = JSON.parse(savedSettings);
+			// 		if (parsedSettings.models && parsedSettings.models.length > 0) {
+			// 			settings.update(s => {
+			// 				return { ...s, models: parsedSettings.models };
+			// 			});
+			// 		}
+			// 	} catch (e) {
+			// 		console.error('Error parsing saved model settings:', e);
+			// 	}
+			// }
 		}
 	};
 

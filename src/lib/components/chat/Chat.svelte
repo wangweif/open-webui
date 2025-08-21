@@ -689,16 +689,15 @@
 				selectedModels = urlModels;
 			}
 		} else {
-			if (sessionStorage.selectedModels) {
+			// 优先使用后端获取的用户设置
+			if ($settings?.models && $settings.models.length > 0) {
+				selectedModels = $settings?.models;
+			} else if (sessionStorage.selectedModels) {
 				selectedModels = JSON.parse(sessionStorage.selectedModels);
 				sessionStorage.removeItem('selectedModels');
-			} else {
-				if ($settings?.models) {
-					selectedModels = $settings?.models;
-				} else if ($config?.default_models) {
-					console.log($config?.default_models.split(',') ?? '');
-					selectedModels = $config?.default_models.split(',');
-				}
+			} else if ($config?.default_models) {
+				console.log($config?.default_models.split(',') ?? '');
+				selectedModels = $config?.default_models.split(',');
 			}
 		}
 

@@ -12,19 +12,19 @@
     // 在组件加载时检查localStorage中是否有保存的默认模型
     onMount(() => {
         // 如果localStorage中有保存的模型设置，则更新store
-        const savedSettings = localStorage.getItem('modelSettings');
-        if (savedSettings) {
-            try {
-                const parsedSettings = JSON.parse(savedSettings);
-                if (parsedSettings.models) {
-                    settings.update(s => {
-                        return { ...s, models: parsedSettings.models };
-                    });
-                }
-            } catch (e) {
-                console.error('Error parsing saved model settings:', e);
-            }
-        }
+        // const savedSettings = localStorage.getItem('modelSettings');
+        // if (savedSettings) {
+        //     try {
+        //         const parsedSettings = JSON.parse(savedSettings);
+        //         if (parsedSettings.models) {
+        //             settings.update(s => {
+        //                 return { ...s, models: parsedSettings.models };
+        //             });
+        //         }
+        //     } catch (e) {
+        //         console.error('Error parsing saved model settings:', e);
+        //     }
+        // }
     });
 
     // 点击模型后设置默认模型并导航到聊天界面，或显示iframe
