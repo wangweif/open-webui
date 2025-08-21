@@ -35,6 +35,14 @@ class UpdateTavilyRequest(BaseModel):
     assistant_id: str
     tavily_enabled: bool = False
 
+class UpdateReasoningRequest(BaseModel):
+    assistant_id: str
+    reasoning_enabled: bool = False
+
+class UpdateRefineMultiturnRequest(BaseModel):
+    assistant_id: str
+    refine_multiturn: bool = False
+
 
 @router.get("/assistant/{assistant_id}/info")
 async def get_assistant_info(
@@ -266,4 +274,112 @@ async def update_assistant_tavily(
         
     except Exception as e:
         log.error(f"Error updating assistant tavily config: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) 
+
+@router.post("/assistant/update-reasoning")
+async def update_assistant_reasoning(
+    request: UpdateReasoningRequest,
+):
+    """
+    更新assistant的推理配置
+    当用户切换推理时调用此接口
+    """
+    try:
+        # 获取当前assistant信息
+        assistant_response = await get_assistant(request.assistant_id)
+        
+        if 'data' not in assistant_response:
+            raise HTTPException(status_code=404, detail="Assistant not found")
+        
+        assistant_data = assistant_response['data']
+        
+        # 获取当前的prompt_config并更新tavily_api_key
+        prompt_config = assistant_data.get('prompt_config', {}).copy()
+        if request.reasoning_enabled:
+            prompt_config['reasoning'] = True
+        elif 'reasoning' in prompt_config:
+            # 如果禁用推理，移除reasoning
+            del prompt_config['reasoning']
+        
+        # 构造更新数据，按照update载荷的结构
+        update_payload = {
+            "dialog_id": assistant_data.get('id'),  # 使用assistant的id作为dialog_id
+            "name": assistant_data.get('name'),
+            "description": assistant_data.get('description'),
+            "icon": assistant_data.get('icon', ""),
+            "language": assistant_data.get('language'),
+            "prompt_config": prompt_config,  # 更新的prompt_config
+            "kb_ids": assistant_data.get('kb_ids', []),
+            "llm_id": assistant_data.get('llm_id'),
+            "llm_setting": assistant_data.get('llm_setting', {}),
+            "similarity_threshold": assistant_data.get('similarity_threshold'),
+            "vector_similarity_weight": assistant_data.get('vector_similarity_weight'),
+            "top_n": assistant_data.get('top_n'),
+            "rerank_id": assistant_data.get('rerank_id', "")
+        }
+        
+        # 更新assistant
+        update_response = await update_assistant(update_payload)
+        
+        if 'code' in update_response and update_response['code'] != 0:
+            raise HTTPException(status_code=400, detail=update_response.get('message', 'Update failed'))
+        
+        return {"success": True, "message": "Reasoning configuration updated successfully"}
+        
+    except Exception as e:
+        log.error(f"Error updating assistant reasoning config: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) 
+
+@router.post("/assistant/update-refine-multiturn")
+async def update_assistant_refine_multiturn(
+    request: UpdateRefineMultiturnRequest,
+):
+    """
+    更新assistant的query refine配置
+    当用户切换query refine时调用此接口
+    """
+    try:
+        # 获取当前assistant信息
+        assistant_response = await get_assistant(request.assistant_id)
+        
+        if 'data' not in assistant_response:
+            raise HTTPException(status_code=404, detail="Assistant not found")
+        
+        assistant_data = assistant_response['data']
+        
+        # 获取当前的prompt_config并更新tavily_api_key
+        prompt_config = assistant_data.get('prompt_config', {}).copy()
+        if request.refine_multiturn:
+            prompt_config['refine_multiturn'] = True
+        elif 'refine_multiturn' in prompt_config:
+            # 如果禁用query refine，移除query_refine
+            del prompt_config['refine_multiturn']
+        
+        # 构造更新数据，按照update载荷的结构
+        update_payload = {
+            "dialog_id": assistant_data.get('id'),  # 使用assistant的id作为dialog_id
+            "name": assistant_data.get('name'),
+            "description": assistant_data.get('description'),
+            "icon": assistant_data.get('icon', ""),
+            "language": assistant_data.get('language'),
+            "prompt_config": prompt_config,  # 更新的prompt_config
+            "kb_ids": assistant_data.get('kb_ids', []),
+            "llm_id": assistant_data.get('llm_id'),
+            "llm_setting": assistant_data.get('llm_setting', {}),
+            "similarity_threshold": assistant_data.get('similarity_threshold'),
+            "vector_similarity_weight": assistant_data.get('vector_similarity_weight'),
+            "top_n": assistant_data.get('top_n'),
+            "rerank_id": assistant_data.get('rerank_id', "")
+        }
+        
+        # 更新assistant
+        update_response = await update_assistant(update_payload)
+        
+        if 'code' in update_response and update_response['code'] != 0:
+            raise HTTPException(status_code=400, detail=update_response.get('message', 'Update failed'))
+        
+        return {"success": True, "message": "Refine multiturn configuration updated successfully"}
+        
+    except Exception as e:
+        log.error(f"Error updating assistant refine multiturn config: {e}")
         raise HTTPException(status_code=500, detail=str(e)) 
