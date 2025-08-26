@@ -3,7 +3,7 @@
 	import { toast } from 'svelte-sonner';
 	import { DropdownMenu } from 'bits-ui';
 	import { flyAndScale } from '$lib/utils/transitions';
-	import { getAssistantInfo, updateAssistantKnowledgeBases, updateAssistantTavily } from '$lib/apis/ragflow';
+	import { getAssistantInfo, updateAssistantKnowledgeBases, updateAssistantTavily, updateAssistantReasoning } from '$lib/apis/ragflow';
 	import type { AssistantInfo } from '$lib/apis/ragflow';
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import GlobeAlt from '../icons/GlobeAlt.svelte';
@@ -17,6 +17,7 @@
 	let selectedKbIds: string[] = [];
 	let tavilyApiKey = '';
 	let tavilyEnabled = false;
+	let reasoningEnabled = false;
 
 	// 只在选择rag_flow_webapi_pipeline_cs模型时显示
 	$: shouldShow = selectedModelId === 'rag_flow_webapi_pipeline_cs';
@@ -36,6 +37,7 @@
 			selectedKbIds = [...assistantInfo.kb_ids];
 			tavilyApiKey = assistantInfo.tavily_api_key || '';
 			tavilyEnabled = assistantInfo.tavily_enabled;
+			reasoningEnabled = assistantInfo.reasoning_enabled || false;
 		} catch (error) {
 			console.error('Failed to load assistant info:', error);
 			toast.error('Failed to load assistant configuration');
@@ -100,6 +102,27 @@
 		}
 	}
 
+	async function toggleReasoning() {
+		const newReasoningEnabled = !reasoningEnabled;
+		
+		// 乐观更新
+		const previousReasoningEnabled = reasoningEnabled;
+		reasoningEnabled = newReasoningEnabled;
+
+		try {
+			await updateAssistantReasoning(localStorage.token, {
+				assistant_id: assistantId,
+				reasoning_enabled: newReasoningEnabled
+			});
+			toast.success(`Enhanced search ${newReasoningEnabled ? 'enabled' : 'disabled'}`);
+		} catch (error) {
+			// 回滚更改
+			reasoningEnabled = previousReasoningEnabled;
+			console.error('Failed to update reasoning config:', error);
+			toast.error('Failed to update enhanced search configuration');
+		}
+	}
+
 	function closeAllPanels() {
 		showKnowledgeBasePanel = false;
 		showTavilyPanel = false;
@@ -120,6 +143,22 @@
 		>
 			<GlobeAlt className="size-5" strokeWidth="1.75" />
 			<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">联网搜索</span>
+		</button>
+
+		<!-- 增强搜索按钮 - 参考联网搜索按钮样式 -->
+		<button
+			on:click={toggleReasoning}
+			type="button"
+			class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {reasoningEnabled
+				? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
+				: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
+			disabled={loading || !assistantInfo}
+		>
+			<svg class="size-5" stroke-width="1.75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" 
+					d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+			</svg>
+			<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">增强搜索</span>
 		</button>
 
 		<!-- 知识库选择按钮 - 使用Dropdown组件，参考InputMenu样式 -->

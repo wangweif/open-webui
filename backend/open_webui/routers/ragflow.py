@@ -24,6 +24,7 @@ class AssistantInfo(BaseModel):
     knowledge_bases: List[KnowledgeBase]
     tavily_api_key: Optional[str] = None
     tavily_enabled: bool = False
+    reasoning_enabled: bool = False
 
 
 class UpdateKnowledgeBaseRequest(BaseModel):
@@ -63,11 +64,13 @@ async def get_assistant_info(
         assistant_data = assistant_response['data']
         kb_ids = assistant_data.get('kb_ids', [])
         kb_names = assistant_data.get('kb_names', [])
-        prompt_config = assistant_data.get('prompt_config')
+        prompt_config = assistant_data.get('prompt_config', {})
         if 'tavily_api_key' in prompt_config:
             tavily_api_key = prompt_config['tavily_api_key']
         else:
             tavily_api_key = None
+        
+        reasoning_enabled = prompt_config.get('reasoning', False)
         
         knowledge_bases = []
         
@@ -94,7 +97,8 @@ async def get_assistant_info(
             kb_ids=kb_ids,
             knowledge_bases=knowledge_bases,
             tavily_api_key=tavily_api_key,
-            tavily_enabled=bool(tavily_api_key)
+            tavily_enabled=bool(tavily_api_key),
+            reasoning_enabled=reasoning_enabled
         )
         
     except Exception as e:
@@ -141,7 +145,8 @@ async def get_assistant_knowledge_bases(
             kb_ids=kb_ids,
             knowledge_bases=knowledge_bases,
             tavily_api_key=assistant_data.get('tavily_api_key'),
-            tavily_enabled=bool(assistant_data.get('tavily_api_key'))
+            tavily_enabled=bool(assistant_data.get('tavily_api_key')),
+            reasoning_enabled=assistant_data.get('prompt_config', {}).get('reasoning', False)
         )
         
     except Exception as e:
@@ -293,13 +298,15 @@ async def update_assistant_reasoning(
         
         assistant_data = assistant_response['data']
         
-        # 获取当前的prompt_config并更新tavily_api_key
+        # 获取当前的prompt_config并更新reasoning
         prompt_config = assistant_data.get('prompt_config', {}).copy()
         if request.reasoning_enabled:
             prompt_config['reasoning'] = True
+            prompt_config['refine_multiturn'] = True
         elif 'reasoning' in prompt_config:
             # 如果禁用推理，移除reasoning
             del prompt_config['reasoning']
+            del prompt_config['refine_multiturn']
         
         # 构造更新数据，按照update载荷的结构
         update_payload = {
@@ -347,12 +354,12 @@ async def update_assistant_refine_multiturn(
         
         assistant_data = assistant_response['data']
         
-        # 获取当前的prompt_config并更新tavily_api_key
+        # 获取当前的prompt_config并更新refine_multiturn
         prompt_config = assistant_data.get('prompt_config', {}).copy()
         if request.refine_multiturn:
             prompt_config['refine_multiturn'] = True
         elif 'refine_multiturn' in prompt_config:
-            # 如果禁用query refine，移除query_refine
+            # 如果禁用query refine，移除refine_multiturn
             del prompt_config['refine_multiturn']
         
         # 构造更新数据，按照update载荷的结构

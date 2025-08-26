@@ -12,6 +12,7 @@ export interface AssistantInfo {
 	knowledge_bases: KnowledgeBase[];
 	tavily_api_key?: string;
 	tavily_enabled: boolean;
+	reasoning_enabled: boolean;
 }
 
 export interface UpdateKnowledgeBaseRequest {
@@ -22,6 +23,11 @@ export interface UpdateKnowledgeBaseRequest {
 export interface UpdateTavilyRequest {
 	assistant_id: string;
 	tavily_enabled: boolean;
+}
+
+export interface UpdateReasoningRequest {
+	assistant_id: string;
+	reasoning_enabled: boolean;
 }
 
 /**
@@ -170,6 +176,40 @@ export const updateAssistantTavily = async (
 	let error = null;
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/ragflow/assistant/update-tavily`, {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify(request)
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail ?? 'Server connection failed';
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
+/**
+ * 更新assistant的推理配置
+ */
+export const updateAssistantReasoning = async (
+	token: string,
+	request: UpdateReasoningRequest
+): Promise<{ success: boolean; message: string }> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/ragflow/assistant/update-reasoning`, {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
