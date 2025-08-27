@@ -1402,7 +1402,7 @@ async def process_chat_response(
                     for start_tag, end_tag in tags:
                         # Match start tag e.g., <tag> or <tag attr="value">
                         start_tag_pattern = rf"<{re.escape(start_tag)}(\s.*?)?>"
-                        match = re.search(start_tag_pattern, content)
+                        match = re.search(start_tag_pattern, content_blocks[-1]["content"])
                         if match:
                             attr_content = (
                                 match.group(1) if match.group(1) else ""
@@ -1411,39 +1411,28 @@ async def process_chat_response(
                                 attr_content
                             )  # Extract attributes safely
 
-                            # Capture everything before and after the matched tag
-                            before_tag = content[
-                                : match.start()
-                            ]  # Content before opening tag
-                            after_tag = content[
-                                match.end() :
-                            ]  # Content after opening tag
+                            # Capture everything before and after the matched tag in current block content
+                            current_content = content_blocks[-1]["content"]
+                            before_tag = current_content[: match.start()]  # Content before opening tag
+                            after_tag = current_content[match.end() :]  # Content after opening tag
 
-                            # Remove the start tag and after from the currently handling text block
-                            content_blocks[-1]["content"] = content_blocks[-1][
-                                "content"
-                            ].replace(match.group(0) + after_tag, "")
-
+                            # Update the current text block with content before the tag
                             if before_tag:
                                 content_blocks[-1]["content"] = before_tag
-
-                            if not content_blocks[-1]["content"]:
+                            else:
                                 content_blocks.pop()
 
-                            # Append the new block
+                            # Append the new block for the tagged content
                             content_blocks.append(
                                 {
                                     "type": content_type,
                                     "start_tag": start_tag,
                                     "end_tag": end_tag,
                                     "attributes": attributes,
-                                    "content": "",
+                                    "content": after_tag,  # Initialize with content after start tag
                                     "started_at": time.time(),
                                 }
                             )
-
-                            if after_tag:
-                                content_blocks[-1]["content"] = after_tag
 
                             break
                 elif content_blocks[-1]["type"] == content_type:
@@ -1452,11 +1441,11 @@ async def process_chat_response(
                     # Match end tag e.g., </tag>
                     end_tag_pattern = rf"<{re.escape(end_tag)}>"
 
-                    # Check if the content has the end tag
-                    if re.search(end_tag_pattern, content):
+                    # Check if the current block content has the end tag
+                    block_content = content_blocks[-1]["content"]
+                    if re.search(end_tag_pattern, block_content):
                         end_flag = True
 
-                        block_content = content_blocks[-1]["content"]
                         # Strip start and end tags from the content
                         start_tag_pattern = rf"<{re.escape(start_tag)}(.*?)>"
                         block_content = re.sub(
@@ -1467,7 +1456,7 @@ async def process_chat_response(
                         split_content = end_tag_regex.split(block_content, maxsplit=1)
 
                         # Content inside the tag
-                        block_content = (
+                        tag_inner_content = (
                             split_content[0].strip() if split_content else ""
                         )
 
@@ -1476,8 +1465,8 @@ async def process_chat_response(
                             split_content[1].strip() if len(split_content) > 1 else ""
                         )
 
-                        if block_content:
-                            content_blocks[-1]["content"] = block_content
+                        if tag_inner_content:
+                            content_blocks[-1]["content"] = tag_inner_content
                             content_blocks[-1]["ended_at"] = time.time()
                             content_blocks[-1]["duration"] = int(
                                 content_blocks[-1]["ended_at"]
@@ -1486,48 +1475,28 @@ async def process_chat_response(
 
                             # Reset the content_blocks by appending a new text block
                             if content_type != "code_interpreter":
-                                if leftover_content:
-
-                                    content_blocks.append(
-                                        {
-                                            "type": "text",
-                                            "content": leftover_content,
-                                        }
-                                    )
-                                else:
-                                    content_blocks.append(
-                                        {
-                                            "type": "text",
-                                            "content": "",
-                                        }
-                                    )
-
-                        else:
-                            # Remove the block if content is empty
-                            content_blocks.pop()
-
-                            if leftover_content:
                                 content_blocks.append(
                                     {
                                         "type": "text",
                                         "content": leftover_content,
                                     }
                                 )
-                            else:
-                                content_blocks.append(
-                                    {
-                                        "type": "text",
-                                        "content": "",
-                                    }
-                                )
 
-                        # Clean processed content
-                        content = re.sub(
-                            rf"<{re.escape(start_tag)}(.*?)>(.|\n)*?<{re.escape(end_tag)}>",
-                            "",
-                            content,
-                            flags=re.DOTALL,
-                        )
+                        else:
+                            # Remove the block if content is empty
+                            content_blocks.pop()
+
+                            content_blocks.append(
+                                {
+                                    "type": "text",
+                                    "content": leftover_content,
+                                }
+                            )
+
+                        # Update the global content to remove processed content
+                        # Find and remove the complete tag from content
+                        tag_pattern = rf"<{re.escape(start_tag)}(.*?)>.*?<{re.escape(end_tag)}>"
+                        content = re.sub(tag_pattern, "", content, count=1, flags=re.DOTALL)
 
                 return content, content_blocks, end_flag
 
