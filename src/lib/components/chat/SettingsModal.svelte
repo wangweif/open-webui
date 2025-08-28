@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { getContext, tick } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { config, models, settings, user } from '$lib/stores';
+	import { config, models, settings, user, mobile } from '$lib/stores';
 	import { updateUserSettings } from '$lib/apis/users';
 	import { getModels as _getModels } from '$lib/apis';
 	import { goto } from '$app/navigation';
+	import { KNOWLEDGE_BASE_URL } from '$lib/constants';
 
 	import Modal from '../common/Modal.svelte';
 	import Account from './Settings/Account.svelte';
@@ -638,6 +639,10 @@
 									? ''
 									: ' text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'}"
 								on:click={() => {
+									if ($mobile) {
+										toast.info('请在PC端使用该功能');
+										return;
+									}
 									const email = base64Encode($user?.email || 'email');
 									const token = localStorage.token || '';
 									const src = encodeURIComponent(`${KNOWLEDGE_BASE_URL}?dbumid=${email}&token=${token}`);
