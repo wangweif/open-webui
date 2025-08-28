@@ -99,6 +99,54 @@ export const processResponseContent = (content: string, modelId?: string) => {
 	return content.trim();
 };
 
+export interface ChangelogVersion {
+	version: string;
+	date: string;
+	content: string;
+}
+
+export const parseChangelog = (changelogContent: string): ChangelogVersion[] => {
+	const lines = changelogContent.split('\n');
+	const versions: ChangelogVersion[] = [];
+	let currentVersion: ChangelogVersion | null = null;
+	let currentContent: string[] = [];
+
+	for (const line of lines) {
+		// 匹配版本号行：## [版本号] - 日期
+		const versionMatch = line.trim().match(/^### \[([^\]]+)\] - (.+)$/);
+		console.log(versionMatch);
+		if (versionMatch) {
+			// 如果有之前的版本，保存它
+			if (currentVersion) {
+				currentVersion.content = currentContent.join('\n').trim();
+				versions.push(currentVersion);
+			}
+			
+			// 开始新版本
+			currentVersion = {
+				version: versionMatch[1],
+				date: versionMatch[2],
+				content: ''
+			};
+			currentContent = [];
+		} else if (currentVersion && line.trim()) {
+			// 添加内容到当前版本
+			currentContent.push(line);
+		} else if (currentVersion && !line.trim()) {
+			// 保留空行
+			currentContent.push('');
+		}
+	}
+
+	// 处理最后一个版本
+	if (currentVersion) {
+		currentVersion.content = currentContent.join('\n').trim();
+		versions.push(currentVersion);
+	}
+
+	return versions;
+};
+
 export function unescapeHtml(html: string) {
 	const doc = new DOMParser().parseFromString(html, 'text/html');
 	return doc.documentElement.textContent;
