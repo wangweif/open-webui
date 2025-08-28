@@ -40,7 +40,7 @@
 			reasoningEnabled = assistantInfo.reasoning_enabled || false;
 		} catch (error) {
 			console.error('Failed to load assistant info:', error);
-			toast.error('Failed to load assistant configuration');
+			// toast.error('Failed to load assistant configuration');
 		} finally {
 			loading = false;
 		}
@@ -72,12 +72,12 @@
 				assistant_id: assistantId,
 				kb_ids: newKbIds
 			});
-			toast.success('Knowledge base configuration updated');
+			// toast.success('Knowledge base configuration updated');
 		} catch (error) {
 			// 回滚更改
 			selectedKbIds = previousKbIds;
 			console.error('Failed to update knowledge bases:', error);
-			toast.error('Failed to update knowledge base configuration');
+			// toast.error('Failed to update knowledge base configuration');
 		}
 	}
 
@@ -93,12 +93,12 @@
 				assistant_id: assistantId,
 				tavily_enabled: newTavilyEnabled
 			});
-			toast.success(`Web search ${newTavilyEnabled ? 'enabled' : 'disabled'}`);
+			// toast.success(`Web search ${newTavilyEnabled ? 'enabled' : 'disabled'}`);
 		} catch (error) {
 			// 回滚更改
 			tavilyEnabled = previousTavilyEnabled;
 			console.error('Failed to update tavily config:', error);
-			toast.error('Failed to update web search configuration');
+			// toast.error('Failed to update web search configuration');
 		}
 	}
 
@@ -114,12 +114,12 @@
 				assistant_id: assistantId,
 				reasoning_enabled: newReasoningEnabled
 			});
-			toast.success(`Enhanced search ${newReasoningEnabled ? 'enabled' : 'disabled'}`);
+			// toast.success(`Enhanced search ${newReasoningEnabled ? 'enabled' : 'disabled'}`);
 		} catch (error) {
 			// 回滚更改
 			reasoningEnabled = previousReasoningEnabled;
 			console.error('Failed to update reasoning config:', error);
-			toast.error('Failed to update enhanced search configuration');
+			// toast.error('Failed to update enhanced search configuration');
 		}
 	}
 
