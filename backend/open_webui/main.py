@@ -1122,14 +1122,14 @@ async def chat_completion(
     model_item = form_data.pop("model_item", {})
     tasks = form_data.pop("background_tasks", None)
 
-    try:
-        intent_classifier = IntentClassifier('')
-        intent = intent_classifier.classify(form_data.get("messages", [])[-1].get("content", ""))
-        if intent.get('intent','') == 'time':
-            form_data['messages'][-1]['content'] = "现在的时间时是" + time.strftime("%Y-%m-%d", time.localtime()) + " " + form_data['messages'][-1].get('content','')
-        log.info(form_data)
-    except Exception as e:
-        log.info(e)
+    # try:
+    #     intent_classifier = IntentClassifier('')
+    #     intent = intent_classifier.classify(form_data.get("messages", [])[-1].get("content", ""))
+    #     if intent.get('intent','') == 'time':
+    #         form_data['messages'][-1]['content'] = "现在的时间时是" + time.strftime("%Y-%m-%d", time.localtime()) + " " + form_data['messages'][-1].get('content','')
+    #     log.info(form_data)
+    # except Exception as e:
+    #     log.info(e)
 
     metadata = {}
     try:

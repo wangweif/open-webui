@@ -14,6 +14,7 @@
 	import { createNewFeedback, getFeedbackById, updateFeedbackById } from '$lib/apis/evaluations';
 	import { getChatById } from '$lib/apis/chats';
 	import { generateTags } from '$lib/apis';
+	import { chatCompletion } from '$lib/apis/openai';
 
 	import { config, models, settings, temporaryChatEnabled, TTSWorker, user } from '$lib/stores';
 	import { synthesizeOpenAISpeech } from '$lib/apis/audio';
@@ -48,6 +49,7 @@
 	import ContentRenderer from './ContentRenderer.svelte';
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 	import FileItem from '$lib/components/common/FileItem.svelte';
+	import OutlineEditor from '../OutlineEditor.svelte';
 
 	interface MessageType {
 		id: string;
@@ -73,6 +75,12 @@
 		done: boolean;
 		error?: boolean | { content: string };
 		sources?: string[];
+		hasOutline?: boolean;
+		outlineData?: {
+			topic: string;
+			outline: any[];
+		};
+		outlineDone?: boolean;
 		code_executions?: {
 			uuid: string;
 			name: string;
@@ -132,6 +140,9 @@
 
 	export let isLastMessage = true;
 	export let readOnly = false;
+
+	// 添加跟踪修改后的大纲数据
+	let modifiedOutlineData: any = null;
 
 	let buttonsContainerElement: HTMLDivElement;
 	let showDeleteConfirm = false;
@@ -571,6 +582,215 @@
 			});
 		}
 	});
+
+	// 将items数组转换为outlineData格式
+	const convertItemsToOutlineData = (items: any[]) => {
+		if (!items || items.length === 0) return null;
+
+		const outline = [];
+		let currentSection = null;
+		let currentSubsection = null;
+
+		items.forEach(item => {
+			switch (item.level) {
+				case 1:
+					// 一级标题
+					currentSection = {
+						title: item.text,
+						subsections: []
+					};
+					outline.push(currentSection);
+					currentSubsection = null;
+					break;
+				case 2:
+					// 二级标题
+					if (currentSection) {
+						currentSubsection = {
+							title: item.text,
+							subpoints: []
+						};
+						currentSection.subsections.push(currentSubsection);
+					}
+					break;
+				case 3:
+					// 三级内容
+					if (currentSubsection) {
+						currentSubsection.subpoints.push(item.text);
+					}
+					break;
+			}
+		});
+
+		return {
+			topic: message.outlineData?.topic || "大纲主题",
+			outline: outline
+		};
+	};
+
+	const handleRefreshOutline = async () => {
+		// 获取用户的原始问题（父消息）
+		const userMessage = history.messages[message.parentId];
+		if (!userMessage || userMessage.role !== 'user') {
+			toast.error($i18n.t('无法找到原始用户问题'));
+			return;
+		}
+
+		// 清空当前消息内容并移除大纲数据
+		const updatedMessage = {
+			...message,
+			content: '',
+			hasOutline: false,
+			outlineData: undefined,
+			outlineDone: false,
+			done: false
+		};
+		
+		// 保存更新的消息
+		saveMessage(message.id, updatedMessage);
+		await tick();
+		
+		// 重新生成响应
+		regenerateResponse(message);
+		toast.success($i18n.t('正在重新生成大纲...'));
+	};
+
+	const handleContinueWithOutline = async () => {
+		if (!message.outlineData && !modifiedOutlineData) {
+			toast.error($i18n.t('没有大纲数据可以继续'));
+			return;
+		}
+
+		try {
+			// 使用修改后的大纲数据（如果有的话），否则使用原始数据
+			let currentOutlineData;
+			if (modifiedOutlineData) {
+				// 将items数组转换为outlineData格式
+				currentOutlineData = convertItemsToOutlineData(modifiedOutlineData);
+			} else {
+				currentOutlineData = message.outlineData;
+			}
+			
+			// 发送大纲数据的JSON格式
+			const outlineJson = JSON.stringify(currentOutlineData, null, 2);
+
+			// 构建完整的消息体，参考提供的结构
+			const messageBody = {
+				background_tasks: {
+					title_generation: true,
+					tags_generation: true
+				},
+				chat_id: chatId,
+				features: {
+					image_generation: false,
+					code_interpreter: false,
+					web_search: false,
+					deep_research: true
+				},
+				id: crypto.randomUUID(),
+				messages: [
+					{
+						role: 'user',
+						content: outlineJson
+					}
+				],
+				model: message.model,
+				model_item: model ? {
+					id: model.id,
+					name: model.name,
+					object: "model",
+					created: Math.floor(Date.now() / 1000)
+				} : undefined,
+				params: {},
+				session_id: null, // 需要从某处获取session_id
+				stream: true,
+				tool_servers: [],
+				variables: {
+					"{{USER_NAME}}": $user?.name || "Unknown",
+					"{{USER_LOCATION}}": "Unknown",
+					"{{CURRENT_DATETIME}}": new Date().toLocaleString('zh-CN')
+				},
+				// 自定义参数
+				outline: true,
+				outlineData: currentOutlineData
+			};
+
+			// 在后台发送消息，不在界面显示
+			const [response, controller] = await chatCompletion(localStorage.token, messageBody);
+			
+			if (response && response.ok) {
+				toast.success($i18n.t('正在基于大纲继续生成内容...'));
+				
+				// 先清空大纲，准备显示生成的内容
+				const updatedMessage = {
+					...message,
+					hasOutline: false,
+					outlineData: undefined,
+					content: '',
+					done: false
+				};
+				saveMessage(message.id, updatedMessage);
+				await tick();
+				
+				const reader = response.body.getReader();
+				const decoder = new TextDecoder();
+				let accumulatedContent = '';
+
+				// 处理流式响应
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) {
+						// 标记消息为完成状态
+						const finalMessage = {
+							...message,
+							hasOutline: false,
+							outlineData: undefined,
+							content: accumulatedContent,
+							done: true
+						};
+						saveMessage(message.id, finalMessage);
+						break;
+					}
+
+					const chunk = decoder.decode(value, { stream: true });
+					const lines = chunk.split('\n').filter((line) => line.trim() !== '');
+
+					for (const line of lines) {
+						if (line.startsWith('data: ')) {
+							if (line.startsWith('data: [DONE]')) {
+								break;
+							} else {
+								try {
+									const data = JSON.parse(line.slice(6));
+									if (data.choices && data.choices[0]?.delta?.content) {
+										// 累积接收到的内容
+										const newContent = data.choices[0].delta.content;
+										accumulatedContent += newContent;
+										
+										// 实时更新消息内容进行流式展示
+										const streamingMessage = {
+											...message,
+											hasOutline: false,
+											outlineData: undefined,
+											content: accumulatedContent,
+											done: false
+										};
+										history.messages[messageId] = streamingMessage;
+									}
+								} catch (e) {
+									console.error('解析数据失败:', e);
+								}
+							}
+						}
+					}
+				}
+			} else {
+				toast.error($i18n.t('发送大纲消息失败'));
+			}
+		} catch (error) {
+			console.error('发送大纲消息失败:', error);
+			toast.error($i18n.t('发送大纲消息失败'));
+		}
+	};
 </script>
 
 <DeleteConfirmDialog
@@ -780,70 +1000,126 @@
 								{#if message.content === '' && !message.error}
 									<Skeleton />
 								{:else if message.content && message.error !== true}
-									<!-- always show message contents even if there's an error -->
-									<!-- unless message.error === true which is legacy error handling, where the error message is stored in message.content -->
-									<ContentRenderer
-										id={message.id}
-										{history}
-										content={message.content}
-										sources={message.sources}
-										floatingButtons={message?.done && !readOnly}
-										save={!readOnly}
-										{model}
-										onTaskClick={async (e) => {
-											console.log(e);
-										}}
-										onSourceClick={async (id, idx) => {
-											console.log(id, idx);
-											let sourceButton = document.getElementById(`source-${message.id}-${idx}`);
-											const sourcesCollapsible = document.getElementById(`collapsible-${message.id}`);
+									<!-- 检查是否包含搜索文本或大纲数据 -->
+									{#if message.hasOutline || message.content == "正在生成大纲，请稍等..."}
+										<div class="outline-container mt-2 w-full max-w-full">
+											{#if message.outlineDone == undefined || message.outlineDone == false }
+												<div class="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 w-full">
+													<div class="flex items-center space-x-2">
+														<svg class="animate-spin h-4 w-4 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+															<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+															<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+														</svg>
+														<span class="text-blue-800 dark:text-blue-200">{"正在生成大纲，请稍等..."}</span>
+													</div>
+												</div>
+											{/if}
+											
+											{#if message.hasOutline && message.outlineData && message.outlineDone}
+												<OutlineEditor 
+													outlineData={message.outlineData} 
+													editable={!readOnly}
+													on:change={(e) => {
+														// 保存修改后的大纲数据
+														modifiedOutlineData = e.detail;
+													}}
+												/>
+												
+												<!-- 大纲操作按钮 -->
+												{#if !readOnly && message.outlineDone}
+													<div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-200 dark:border-gray-600 w-full">
+														<button
+															type="button"
+															class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors duration-200 flex items-center gap-1.5"
+															on:click={handleRefreshOutline}
+															title="刷新大纲"
+														>
+															<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+															</svg>
+															刷新
+														</button>
+														<button
+															type="button"
+															class="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 flex items-center gap-1.5"
+															on:click={handleContinueWithOutline}
+															title="基于大纲继续"
+														>
+															<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+															</svg>
+															继续
+														</button>
+													</div>
+												{/if}
+											{/if}
+										</div>
+									{:else}
+										<!-- always show message contents even if there's an error -->
+										<!-- unless message.error === true which is legacy error handling, where the error message is stored in message.content -->
+										<ContentRenderer
+											id={message.id}
+											{history}
+											content={message.content}
+											sources={message.sources}
+											floatingButtons={message?.done && !readOnly}
+											save={!readOnly}
+											{model}
+											onTaskClick={async (e) => {
+												console.log(e);
+											}}
+											onSourceClick={async (id, idx) => {
+												console.log(id, idx);
+												let sourceButton = document.getElementById(`source-${message.id}-${idx}`);
+												const sourcesCollapsible = document.getElementById(`collapsible-${message.id}`);
 
-											if (sourceButton) {
-												sourceButton.click();
-											} else if (sourcesCollapsible) {
-												// Open sources collapsible so we can click the source button
-												sourcesCollapsible
-													.querySelector('div:first-child')
-													.dispatchEvent(new PointerEvent('pointerup', {}));
+												if (sourceButton) {
+													sourceButton.click();
+												} else if (sourcesCollapsible) {
+													// Open sources collapsible so we can click the source button
+													sourcesCollapsible
+														.querySelector('div:first-child')
+														.dispatchEvent(new PointerEvent('pointerup', {}));
 
-												// Wait for next frame to ensure DOM updates
-												await new Promise((resolve) => {
-													requestAnimationFrame(() => {
-														requestAnimationFrame(resolve);
+													// Wait for next frame to ensure DOM updates
+													await new Promise((resolve) => {
+														requestAnimationFrame(() => {
+															requestAnimationFrame(resolve);
+														});
 													});
-												});
 
-												// Try clicking the source button again
-												sourceButton = document.getElementById(`source-${message.id}-${idx}`);
-												sourceButton && sourceButton.click();
-											}
-										}}
-										onAddMessages={({ modelId, parentId, messages }) => {
-											addMessages({ modelId, parentId, messages });
-										}}
-										on:update={(e) => {
-											const { raw, oldContent, newContent } = e.detail;
+													// Try clicking the source button again
+													sourceButton = document.getElementById(`source-${message.id}-${idx}`);
+													sourceButton && sourceButton.click();
+												}
+											}}
+											onAddMessages={({ modelId, parentId, messages }) => {
+												addMessages({ modelId, parentId, messages });
+											}}
+											on:update={(e) => {
+												const { raw, oldContent, newContent } = e.detail;
 
-											history.messages[message.id].content = history.messages[
-												message.id
-											].content.replace(raw, raw.replace(oldContent, newContent));
+												history.messages[message.id].content = history.messages[
+													message.id
+												].content.replace(raw, raw.replace(oldContent, newContent));
 
-											updateChat();
-										}}
-										on:select={(e) => {
-											const { type, content } = e.detail;
+												updateChat();
+											}}
+											on:select={(e) => {
+												const { type, content } = e.detail;
 
-											if (type === 'explain') {
-												submitMessage(
-													message.id,
-													`Explain this section to me in more detail\n\n\`\`\`\n${content}\n\`\`\``
-												);
-											} else if (type === 'ask') {
-												const input = e.detail?.input ?? '';
-												submitMessage(message.id, `\`\`\`\n${content}\n\`\`\`\n${input}`);
-											}
-										}}
-									/>
+												if (type === 'explain') {
+													submitMessage(
+														message.id,
+														`Explain this section to me in more detail\n\n\`\`\`\n${content}\n\`\`\``
+													);
+												} else if (type === 'ask') {
+													const input = e.detail?.input ?? '';
+													submitMessage(message.id, `\`\`\`\n${content}\n\`\`\`\n${input}`);
+												}
+											}}
+										/>
+									{/if}
 								{/if}
 
 								{#if message?.error}
@@ -1302,7 +1578,7 @@
 													<path
 														stroke-linecap="round"
 														stroke-linejoin="round"
-														d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+														d="M21 12a9 9 0 1 1-18 0 9 9 0 0118 0Z"
 													/>
 													<path
 														stroke-linecap="round"

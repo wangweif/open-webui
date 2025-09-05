@@ -95,6 +95,7 @@
 	import Placeholder from './Placeholder.svelte';
 	import NotificationToast from '../NotificationToast.svelte';
 	import Spinner from '../common/Spinner.svelte';
+	import OutlineEditor from './OutlineEditor.svelte';
 
 	export let chatIdProp = '';
 
@@ -128,6 +129,7 @@
 	let selectedToolIds = [];
 	let imageGenerationEnabled = false;
 	let webSearchEnabled = false;
+	let deepResearchEnabled = false;
 	let codeInterpreterEnabled = false;
 
 	let chat = null;
@@ -741,6 +743,12 @@
 			webSearchEnabled = true;
 		}
 
+		// 从localStorage读取深度搜索状态
+		const savedDeepResearch = localStorage.getItem('deepResearchEnabled');
+		if (savedDeepResearch === 'true') {
+			deepResearchEnabled = true;
+		}
+
 		if ($page.url.searchParams.get('image-generation') === 'true') {
 			imageGenerationEnabled = true;
 		}
@@ -1135,6 +1143,39 @@
 		}
 	};
 
+	// 检测和解析大纲数据
+	function detectAndParseOutlineData(content: string) {
+		// 检测是否包含深度搜索提示和JSON数据
+		const searchPattern = /正在生成大纲，请稍等\.\.\.(.*)$/;
+		const match = content.match(searchPattern);
+		
+		if (match && match[1]) {
+			try {
+				const jsonData = JSON.parse(match[1]);
+				if (jsonData.topic && jsonData.outline) {
+					return {
+						isOutlineData: true,
+						outlineDone: true,
+						outlineData: jsonData
+					};
+				}
+			} catch (e) {
+				// JSON解析失败，继续正常处理
+				return {
+					isOutlineData: true,
+					outlineDone: false,
+					outlineData: match[1]
+				};
+			}
+		}
+		
+		return {
+			isOutlineData: false,
+			outlineDone: false,
+			outlineData: null
+		};
+	}
+
 	const chatCompletionEventHandler = async (data, message, chatId) => {
 		const { id, done, choices, content, sources, selected_model_id, error, usage } = data;
 
@@ -1191,6 +1232,14 @@
 		if (content) {
 			// REALTIME_CHAT_SAVE is disabled
 			message.content = content;
+
+			// 检测是否为大纲数据
+			const outlineDetection = detectAndParseOutlineData(message.content);
+			if (outlineDetection.isOutlineData) {
+				message.outlineData = outlineDetection.outlineData;
+				message.hasOutline = true;
+				message.outlineDone = outlineDetection.outlineDone;
+			}
 
 			if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
 				navigator.vibrate(5);
@@ -1661,7 +1710,8 @@
 						$config?.features?.enable_web_search &&
 						($user?.role === 'admin' || $user?.permissions?.features?.web_search)
 							? webSearchEnabled || ($settings?.webSearch ?? false) === 'always'
-							: false
+							: false,
+					deep_research: localStorage.getItem('deepResearchEnabled') === 'true' && model.id === 'rag_flow_webapi_pipeline_cs'
 				},
 				variables: {
 					...getPromptVariables(
