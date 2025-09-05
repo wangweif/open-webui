@@ -686,7 +686,7 @@
 					web_search: false,
 					deep_research: true
 				},
-				id: crypto.randomUUID(),
+				// id: crypto.randomUUID(),
 				messages: [
 					{
 						role: 'user',
