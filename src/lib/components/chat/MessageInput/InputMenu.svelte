@@ -35,10 +35,11 @@
 	export let selectedToolIds: string[] = [];
 
 	export let isRagFlowModel: boolean = false;
-export let isAiPriceModel: boolean = false;
-export let isIdentificationModel: boolean = false;
-export let isWebSearchModel: boolean = false;
-export let isDocSummaryModel: boolean = false;
+    export let isAiPriceModel: boolean = false;
+    export let isIdentificationModel: boolean = false;
+    export let isWebSearchModel: boolean = false;
+    export let isDocSummaryModel: boolean = false;
+    export let isAgriPolicyModel: boolean = false;
 	export let files: any[] = []; // 传入当前已上传的文件列表
 
 	export let onClose: Function;

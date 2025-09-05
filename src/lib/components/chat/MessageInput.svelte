@@ -84,6 +84,7 @@
 	$: isAgriculturePriceModel= selectedModelIds.includes('data_query_analysis_pipeline');
 	$: isPlantingModel= selectedModelIds.includes('chatbi_query_analasis_pipeline');
 	$: isDocSummaryModel= selectedModelIds.includes('n8n_summary');
+	$: isAgriPolicyModel= selectedModelIds.includes('AgriPolicy_pipline');
 
 	// 初始化时从localStorage加载状态
 	let manuallyDisabledWebSearch = localStorage.getItem('deepseekWebSearchDisabled') === 'true';
@@ -1183,7 +1184,7 @@
 
 								<div class=" flex justify-between mt-1 mb-2.5 mx-0.5 max-w-full" dir="ltr">
 									<div class="ml-1 self-end flex items-start flex-1 max-w-[80%] gap-0.5">
-										{#if !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isAgriculturePriceModel && !isPlantingModel}
+										{#if !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isAgriculturePriceModel && !isPlantingModel && !isAgriPolicyModel}
 											<InputMenu
 												bind:selectedToolIds
 												{screenCaptureHandler}
@@ -1192,6 +1193,7 @@
 												{isWebSearchModel}
 												{isRagFlowModel}
 												{isDocSummaryModel}
+												{isAgriPolicyModel}
 												{files}
 												uploadFilesHandler={() => {
 													filesInputElement.click();
@@ -1282,7 +1284,7 @@
 											{/if}
 
 											{#if $_user}
-												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isIdentificationModel && !isAgriculturePriceModel && !isPlantingModel && !isDocSummaryModel }
+												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isIdentificationModel && !isAgriculturePriceModel && !isPlantingModel && !isDocSummaryModel &&!isAgriPolicyModel}
 													<Tooltip content={isRagFlowModel ? $i18n.t('Search is not needed for this model') : $i18n.t('Search the internet')} placement="top">
 														<button
 															on:click|preventDefault={() => {
