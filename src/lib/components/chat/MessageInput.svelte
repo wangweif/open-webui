@@ -90,7 +90,7 @@
 	let manuallyDisabledWebSearch = localStorage.getItem('deepseekWebSearchDisabled') === 'true';
 
 	// 当选择非联网搜索模型时，如果搜索功能已启用，则禁用它
-	$: if (isRagFlowModel && webSearchEnabled || isAiPriceModel && webSearchEnabled || isNongJingSanziModel && webSearchEnabled || isIdentificationModel && webSearchEnabled || isAgriculturePriceModel && webSearchEnabled || isPlantingModel && webSearchEnabled) {
+	$: if (!isWebSearchModel && webSearchEnabled) {
 		webSearchEnabled = false;
 	}
 
