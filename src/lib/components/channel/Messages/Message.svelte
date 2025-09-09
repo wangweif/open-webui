@@ -4,6 +4,7 @@
 	import isToday from 'dayjs/plugin/isToday';
 	import isYesterday from 'dayjs/plugin/isYesterday';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
+	import 'dayjs/locale/zh-cn';
 
 	dayjs.extend(relativeTime);
 	dayjs.extend(isToday);
@@ -11,7 +12,20 @@
 	dayjs.extend(localizedFormat);
 
 	import { getContext, onMount } from 'svelte';
+	import type { Writable } from 'svelte/store';
+	import type { i18n as i18nType } from 'i18next';
+	
 	const i18n = getContext<Writable<i18nType>>('i18n');
+	
+	// 设置 dayjs 本地化
+	$: {
+		const locale = localStorage?.getItem('locale') || 'zh-cn';
+		if (locale.startsWith('zh')) {
+			dayjs.locale('zh-cn');
+		} else {
+			dayjs.locale('en-US');
+		}
+	}
 
 	import { settings, user, shortCodesToEmojis } from '$lib/stores';
 
@@ -175,7 +189,7 @@
 								class=" self-center text-xs invisible group-hover:visible text-gray-400 font-medium first-letter:capitalize ml-0.5 translate-y-[1px]"
 							>
 								<Tooltip content={dayjs(message.created_at / 1000000).format('LLLL')}>
-									<span class="line-clamp-1">{formatDate(message.created_at / 1000000)}</span>
+									<span class="line-clamp-1">{formatDate(message.created_at / 1000000, $i18n)}</span>
 								</Tooltip>
 							</div>
 						{/if}

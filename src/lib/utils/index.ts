@@ -354,16 +354,18 @@ export const generateInitialsImage = (name) => {
 	return canvas.toDataURL();
 };
 
-export const formatDate = (inputDate) => {
+export const formatDate = (inputDate, i18n = null) => {
 	const date = dayjs(inputDate);
 	const now = dayjs();
 
 	if (date.isToday()) {
-		return `Today at ${date.format('LT')}`;
+		const todayText = i18n?.t ? i18n.t('Today') : 'Today';
+		return `${todayText} ${date.format('LT')}`;
 	} else if (date.isYesterday()) {
-		return `Yesterday at ${date.format('LT')}`;
+		const yesterdayText = i18n?.t ? i18n.t('Yesterday') : 'Yesterday';
+		return `${yesterdayText} ${date.format('LT')}`;
 	} else {
-		return `${date.format('L')} at ${date.format('LT')}`;
+		return `${date.format('L')} ${date.format('LT')}`;
 	}
 };
 

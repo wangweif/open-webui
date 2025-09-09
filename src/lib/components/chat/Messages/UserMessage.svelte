@@ -16,9 +16,20 @@
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
+	import 'dayjs/locale/zh-cn';
 
 	const i18n = getContext('i18n');
 	dayjs.extend(localizedFormat);
+	
+	// 设置 dayjs 本地化
+	$: {
+		const locale = localStorage?.getItem('locale') || 'zh-cn';
+		if (locale.startsWith('zh')) {
+			dayjs.locale('zh-cn');
+		} else {
+			dayjs.locale('en-US');
+		}
+	}
 
 	export let user;
 
@@ -130,7 +141,7 @@
 							class=" self-center text-xs invisible group-hover:visible text-gray-400 font-medium first-letter:capitalize ml-0.5 translate-y-[1px]"
 						>
 							<Tooltip content={dayjs(message.timestamp * 1000).format('LLLL')}>
-								<span class="line-clamp-1">{formatDate(message.timestamp * 1000)}</span>
+								<span class="line-clamp-1">{formatDate(message.timestamp * 1000, $i18n)}</span>
 							</Tooltip>
 						</div>
 					{/if}

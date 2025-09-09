@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import dayjs from 'dayjs';
+	import 'dayjs/locale/zh-cn';
 
 	import { createEventDispatcher } from 'svelte';
 	import { onMount, tick, getContext } from 'svelte';
@@ -8,6 +9,16 @@
 	import type { i18n as i18nType, t } from 'i18next';
 
 	const i18n = getContext<Writable<i18nType>>('i18n');
+	
+	// 设置 dayjs 本地化
+	$: {
+		const locale = localStorage?.getItem('locale') || 'zh-cn';
+		if (locale.startsWith('zh')) {
+			dayjs.locale('zh-cn');
+		} else {
+			dayjs.locale('en-US');
+		}
+	}
 
 	const dispatch = createEventDispatcher();
 
@@ -828,7 +839,7 @@
 						class=" self-center text-xs invisible group-hover:visible text-gray-400 font-medium first-letter:capitalize ml-0.5 translate-y-[1px]"
 					>
 						<Tooltip content={dayjs(message.timestamp * 1000).format('LLLL')}>
-							<span class="line-clamp-1">{formatDate(message.timestamp * 1000)}</span>
+							<span class="line-clamp-1">{formatDate(message.timestamp * 1000, $i18n)}</span>
 						</Tooltip>
 					</div>
 				{/if}
