@@ -1104,6 +1104,44 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
     return {"data": models}
 
 
+@app.get("/api/all_models")
+async def get_all_models_without_auth(request: Request):
+    """
+    获取所有模型的接口，不需要用户验证
+    """
+    all_models = await get_all_models(request, user=None)
+
+    models = []
+    for model in all_models:
+        # Filter out filter pipelines
+        if "pipeline" in model and model["pipeline"].get("type", None) == "filter":
+            continue
+
+        try:
+            model_tags = [tag.get("name") for tag in model.get("info", {}).get("meta", {}).get("tags", [])]
+            tags = [tag.get("name") for tag in model.get("tags", [])]
+
+            tags = list(set(model_tags + tags))
+            model["tags"] = [{"name": tag} for tag in tags]
+        except Exception as e:
+            log.debug(f"Error processing model tags: {e}")
+            model["tags"] = []
+            pass
+
+        models.append(model)
+
+    model_order_list = request.app.state.config.MODEL_ORDER_LIST
+    if model_order_list:
+        model_order_dict = {model_id: i for i, model_id in enumerate(model_order_list)}
+        # Sort models by order list priority, with fallback for those not in the list
+        models.sort(key=lambda x: (model_order_dict.get(x["id"], float("inf")), x["name"]))
+
+    log.debug(
+        f"/api/all_models returned all models: {json.dumps([model['id'] for model in models])}"
+    )
+    return {"data": models}
+
+
 @app.get("/api/models/base")
 async def get_base_models(request: Request, user=Depends(get_admin_user)):
     models = await get_all_base_models(request, user=user)

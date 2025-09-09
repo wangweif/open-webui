@@ -14,7 +14,7 @@
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 
 	import { getUserById, getUserSettings } from '$lib/apis/users';
-	import { getModels } from '$lib/apis';
+	import { getAllModels } from '$lib/apis';
 	import { toast } from 'svelte-sonner';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
 
@@ -61,30 +61,27 @@
 	//////////////////////////
 
 	const loadSharedChat = async () => {
-		const userSettings = await getUserSettings(localStorage.token).catch((error) => {
-			console.error(error);
-			return null;
-		});
+		// const userSettings = await getUserSettings(localStorage.token).catch((error) => {
+		// 	console.error(error);
+		// 	return null;
+		// });
 
-		if (userSettings) {
-			settings.set(userSettings.ui);
-		} else {
-			let localStorageSettings = {} as Parameters<(typeof settings)['set']>[0];
+		// if (userSettings) {
+		// 	settings.set(userSettings.ui);
+		// } else {
+		// 	let localStorageSettings = {} as Parameters<(typeof settings)['set']>[0];
 
-			try {
-				localStorageSettings = JSON.parse(localStorage.getItem('settings') ?? '{}');
-			} catch (e: unknown) {
-				console.error('Failed to parse settings from localStorage', e);
-			}
+		// 	try {
+		// 		localStorageSettings = JSON.parse(localStorage.getItem('settings') ?? '{}');
+		// 	} catch (e: unknown) {
+		// 		console.error('Failed to parse settings from localStorage', e);
+		// 	}
 
-			settings.set(localStorageSettings);
-		}
+		// 	settings.set(localStorageSettings);
+		// }
 
 		await models.set(
-			await getModels(
-				localStorage.token,
-				$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
-			)
+			await getAllModels()
 		);
 		await chatId.set($page.params.id);
 		chat = await getChatByShareId(localStorage.token, $chatId).catch(async (error) => {
@@ -93,10 +90,10 @@
 		});
 
 		if (chat) {
-			user = await getUserById(localStorage.token, chat.user_id).catch((error) => {
-				console.error(error);
-				return null;
-			});
+			// user = await getUserById(localStorage.token, chat.user_id).catch((error) => {
+			// 	console.error(error);
+			// 	return null;
+			// });
 
 			const chatContent = chat.chat;
 
@@ -168,7 +165,7 @@
 
 						<div class="flex text-sm justify-between items-center mt-1">
 							<div class="text-gray-400">
-								{dayjs(chat.chat.timestamp).format('LLL')}
+								{dayjs(chat.chat.timestamp).format('YYYY年MM月DD日 HH:mm:ss')}
 							</div>
 						</div>
 					</div>
@@ -195,7 +192,7 @@
 				</div>
 			</div>
 
-			<div
+			<!-- <div
 				class="absolute bottom-0 right-0 left-0 flex justify-center w-full bg-linear-to-b from-transparent to-white dark:to-gray-900"
 			>
 				<div class="pb-5">
@@ -206,7 +203,7 @@
 						{$i18n.t('Clone Chat')}
 					</button>
 				</div>
-			</div>
+			</div> -->
 		</div>
 	</div>
 {/if}

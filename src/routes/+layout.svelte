@@ -433,6 +433,8 @@
 	};
 
 	onMount(async () => {
+		// 检查是否为共享聊天路由，如果是则跳过复杂的初始化逻辑
+		const isSharedChatRoute = $page.url.pathname.startsWith('/s/');
 		if (typeof window !== 'undefined' && window.applyTheme) {
 			window.applyTheme();
 		}
@@ -505,7 +507,9 @@
 
 		let backendConfig = null;
 		try {
-			backendConfig = await getBackendConfig();
+			if (!isSharedChatRoute) {
+				backendConfig = await getBackendConfig();
+			}
 			console.log('Backend config:', backendConfig);
 		} catch (error) {
 			console.error('Error loading backend config:', error);
@@ -519,7 +523,7 @@
 			const browserLanguages = navigator.languages
 				? navigator.languages
 				: [navigator.language || navigator.userLanguage];
-			const lang = backendConfig.default_locale
+			const lang = backendConfig?.default_locale
 				? backendConfig.default_locale
 				: bestMatchingLanguage(languages, browserLanguages, 'en-US');
 			changeLanguage(lang);
@@ -564,7 +568,9 @@
 			}
 		} else {
 			// Redirect to /error when Backend Not Detected
-			await goto(`/error`);
+			if (!isSharedChatRoute) {
+				await goto(`/error`);
+			}
 		}
 
 		await tick();
