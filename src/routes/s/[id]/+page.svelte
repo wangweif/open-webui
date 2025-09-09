@@ -192,18 +192,21 @@
 				</div>
 			</div>
 
-			<!-- <div
+			<div
 				class="absolute bottom-0 right-0 left-0 flex justify-center w-full bg-linear-to-b from-transparent to-white dark:to-gray-900"
 			>
 				<div class="pb-5">
 					<button
-						class="px-4 py-2 text-sm font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full"
-						on:click={cloneSharedChat}
+						class="px-5 py-3 text-lg font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full"
+						on:click={() => {
+							// 强制刷新页面以重新触发根路由的完整初始化
+							window.location.href = '/';
+						}}
 					>
-						{$i18n.t('Clone Chat')}
+						{"和小智聊更多"}
 					</button>
 				</div>
-			</div> -->
+			</div>
 		</div>
 	</div>
 {/if}
