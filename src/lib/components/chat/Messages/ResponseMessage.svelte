@@ -156,6 +156,11 @@
 	// 添加跟踪修改后的大纲数据
 	let modifiedOutlineData: any = null;
 
+	// 添加进度条相关状态
+	let isGeneratingWithOutline = false;
+	let generationProgress = 0;
+	let currentProcessing = '';
+
 	let buttonsContainerElement: HTMLDivElement;
 	let showDeleteConfirm = false;
 
@@ -674,6 +679,11 @@
 		}
 
 		try {
+			// 设置生成状态
+			isGeneratingWithOutline = true;
+			generationProgress = 0;
+			currentProcessing = '';
+
 			// 使用修改后的大纲数据（如果有的话），否则使用原始数据
 			let currentOutlineData;
 			if (modifiedOutlineData) {
@@ -752,7 +762,11 @@
 				while (true) {
 					const { done, value } = await reader.read();
 					if (done) {
-						// 标记消息为完成状态
+						// 标记消息为完成状态并重置进度状态
+						isGeneratingWithOutline = false;
+						generationProgress = 100;
+						currentProcessing = '';
+						
 						const finalMessage = {
 							...message,
 							hasOutline: false,
@@ -777,7 +791,37 @@
 									if (data.choices && data.choices[0]?.delta?.content) {
 										// 累积接收到的内容
 										const newContent = data.choices[0].delta.content;
-										accumulatedContent += newContent;
+										
+										// 检查是否包含进度信息
+										const processMatch = newContent.match(/<process>\s*(\{[^}]+\})\s*<\/process>/);
+										if (processMatch) {
+											try {
+												// 解析进度信息，处理可能的格式问题
+												let progressStr = processMatch[1];
+												// 修复可能的单引号问题
+												progressStr = progressStr.replace(/'/g, '"');
+												// 修复百分号问题
+												progressStr = progressStr.replace(/(\d+)%/g, '$1');
+												
+												const progressData = JSON.parse(progressStr);
+												console.log('progressData', progressData);
+												console.log('isGeneratingWithOutline', isGeneratingWithOutline);
+												if (progressData.process !== undefined) {
+													generationProgress = parseInt(progressData.process);
+												}
+												if (progressData.processing) {
+													currentProcessing = progressData.processing;
+												}
+												if(generationProgress == 100) {
+													isGeneratingWithOutline = false;
+												}
+												
+											} catch (e) {
+												console.log('解析进度数据失败:', e);
+											}
+										} else {
+											accumulatedContent += newContent;
+										}
 										
 										// 实时更新消息内容进行流式展示
 										const streamingMessage = {
@@ -797,11 +841,16 @@
 					}
 				}
 			} else {
-				toast.error($i18n.t('发送大纲消息失败'));
+				// 重置进度状态
+				isGeneratingWithOutline = false;
+				generationProgress = 0;
+				currentProcessing = '';
 			}
 		} catch (error) {
-			console.error('发送大纲消息失败:', error);
-			toast.error($i18n.t('发送大纲消息失败'));
+			// 重置进度状态
+			isGeneratingWithOutline = false;
+			generationProgress = 0;
+			currentProcessing = '';
 		}
 	};
 </script>
@@ -1012,11 +1061,11 @@
 							</div>
 						{:else}
 							<div class="w-full flex flex-col relative" id="response-content-container">
-								{#if message.content === '' && !message.error}
+								{#if message.content === '' && !message.error && !isGeneratingWithOutline}
 									<Skeleton />
-								{:else if message.content && message.error !== true}
+								{:else if message.content && message.error !== true || isGeneratingWithOutline}
 									<!-- 检查是否包含搜索文本或大纲数据 -->
-									{#if message.hasOutline || message.content == "正在生成大纲，请稍等..."}
+									{#if message.hasOutline || message.content == "正在生成大纲，请稍等..." || isGeneratingWithOutline}
 										<div class="outline-container mt-2 w-full max-w-full">
 											{#if message.outlineDone == undefined || message.outlineDone == false }
 												<div class="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 w-full">
@@ -1027,6 +1076,34 @@
 														</svg>
 														<span class="text-blue-800 dark:text-blue-200">{"正在生成大纲，请稍等..."}</span>
 													</div>
+												</div>
+											{/if}
+
+											<!-- 基于大纲生成内容的进度条 -->
+											{#if isGeneratingWithOutline}
+												<div class="mb-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 w-full">
+													<div class="flex items-center justify-between mb-2">
+														<span class="text-sm font-medium text-blue-800 dark:text-blue-200">正在基于大纲生成内容...</span>
+														<span class="text-sm text-blue-600 dark:text-blue-300">{generationProgress}%</span>
+													</div>
+													
+													<!-- 进度条 -->
+													<div class="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2 mb-2">
+														<div 
+															class="bg-blue-500 dark:bg-blue-400 h-2 rounded-full transition-all duration-300 ease-out"
+															style="width: {generationProgress}%"
+														></div>
+													</div>
+													
+													<!-- 当前处理内容 -->
+													{#if currentProcessing}
+														<div class="flex items-center space-x-2">
+															<svg class="animate-pulse h-3 w-3 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+																<circle cx="12" cy="12" r="3"/>
+															</svg>
+															<span class="text-xs text-blue-700 dark:text-blue-300">正在处理: {currentProcessing}</span>
+														</div>
+													{/if}
 												</div>
 											{/if}
 											
