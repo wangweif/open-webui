@@ -198,9 +198,9 @@
 		try {
 			// 获取聊天详情
 			const chat = await getChatById(localStorage.token, chatId);
-			
+
 			let modelId = null;
-			
+
 			// 尝试从不同位置获取模型ID
 			if (chat?.chat?.models && chat.chat.models.length > 0) {
 				modelId = chat.chat.models[0];
@@ -214,28 +214,26 @@
 					modelId = (assistantMessage as any).model;
 				}
 			}
-			
+
 			if (modelId) {
-				
 				// 检查该模型是否存在于当前模型列表中
-				const modelExists = $models.find(m => m.id === modelId);
-				
+				const modelExists = $models.find((m) => m.id === modelId);
+
 				if (modelExists) {
 					// 保存到localStorage确保持久化
 					const modelSettings = { models: [modelId] };
 					localStorage.setItem('modelSettings', JSON.stringify(modelSettings));
-					
+
 					// 更新settings store
-					settings.update(s => {
+					settings.update((s) => {
 						const newSettings = { ...s, models: [modelId] };
 						return newSettings;
 					});
-					
+
 					// 强制触发ModelItem重新渲染
 					await tick();
-					
-				} 
-			} 
+				}
+			}
 		} catch (error) {
 			console.error('Error handling chat click:', error);
 		}
@@ -644,6 +642,9 @@
 				</a>
 			</div>
 		{/if} -->
+		<div class="px-1.5 flex justify-center mb-2">
+			<img src="/logo.jpg" alt="Logo" class="h-12 w-auto object-contain" />
+		</div>
 
 		{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
 			<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
@@ -689,7 +690,7 @@
 			<div class="px-1.5 mt-1">
 				<!-- 模型标题 -->
 				<div class="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-500 font-medium">
-					{"应用"}
+					{'应用'}
 				</div>
 				<!-- 模型列表 -->
 				<div class="px-1.5 flex flex-col space-y-0.5">

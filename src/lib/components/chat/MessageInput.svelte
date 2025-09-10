@@ -81,16 +81,24 @@
 	$: isWebSearchModel = selectedModelIds.includes('Qwen3:32B');
 	$: isNongJingSanziModel = selectedModelIds.includes('NongJing-sanzi');
 	$: isIdentificationModel = selectedModelIds.includes('identification_webapi_pipeline_cs');
-	$: isAgriculturePriceModel= selectedModelIds.includes('data_query_analysis_pipeline');
-	$: isPlantingModel= selectedModelIds.includes('chatbi_query_analasis_pipeline');
-	$: isDocSummaryModel= selectedModelIds.includes('n8n_summary');
-	$: isAgriPolicyModel= selectedModelIds.includes('AgriPolicy_pipline');
+	$: isAgriculturePriceModel = selectedModelIds.includes('data_query_analysis_pipeline');
+	$: isPlantingModel = selectedModelIds.includes('chatbi_query_analasis_pipeline');
+	$: isDocSummaryModel = selectedModelIds.includes('n8n_summary');
+	$: isAgriPolicyModel = selectedModelIds.includes('AgriPolicy_pipline');
 
 	// 初始化时从localStorage加载状态
 	let manuallyDisabledWebSearch = localStorage.getItem('deepseekWebSearchDisabled') === 'true';
 
 	// 当选择非联网搜索模型时，如果搜索功能已启用，则禁用它
-	$: if (isRagFlowModel && webSearchEnabled || isAiPriceModel && webSearchEnabled || isNongJingSanziModel && webSearchEnabled || isIdentificationModel && webSearchEnabled || isAgriculturePriceModel && webSearchEnabled || isPlantingModel && webSearchEnabled) {
+	$: if (
+		(isRagFlowModel && webSearchEnabled) ||
+		(isAiPriceModel && webSearchEnabled) ||
+		(isNongJingSanziModel && webSearchEnabled) ||
+		(isIdentificationModel && webSearchEnabled) ||
+		(isAgriculturePriceModel && webSearchEnabled) ||
+		(isPlantingModel && webSearchEnabled) ||
+		(isDocSummaryModel && webSearchEnabled)
+	) {
 		webSearchEnabled = false;
 	}
 
@@ -305,7 +313,7 @@
 			files.length > ($config?.file?.max_count ?? 0)
 		) {
 			console.log('File exceeds max count limit:', {
-				maxCount: ($config?.file?.max_count ?? 0)
+				maxCount: $config?.file?.max_count ?? 0
 			});
 			// 缩减files规模
 			files = files.slice(0, $config?.file?.max_count ?? 0);
@@ -379,7 +387,10 @@
 			}
 
 			// 检查 rag_flow_webapi_pipeline_cs 模型的文件类型限制
-			if (isRagFlowModel && !['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/avif'].includes(file['type'])) {
+			if (
+				isRagFlowModel &&
+				!['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/avif'].includes(file['type'])
+			) {
 				showRagFlowFileTypeError();
 				return;
 			}
@@ -492,8 +503,6 @@
 <FilesOverlay show={dragged} />
 
 <ToolServersModal bind:show={showTools} {selectedToolIds} />
-
-
 
 {#if loaded}
 	<div class="w-full font-primary">
@@ -1284,8 +1293,13 @@
 											{/if}
 
 											{#if $_user}
-												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isIdentificationModel && !isAgriculturePriceModel && !isPlantingModel && !isDocSummaryModel &&!isAgriPolicyModel}
-													<Tooltip content={isRagFlowModel ? $i18n.t('Search is not needed for this model') : $i18n.t('Search the internet')} placement="top">
+												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isIdentificationModel && !isAgriculturePriceModel && !isPlantingModel && !isDocSummaryModel && !isAgriPolicyModel}
+													<Tooltip
+														content={isRagFlowModel
+															? $i18n.t('Search is not needed for this model')
+															: $i18n.t('Search the internet')}
+														placement="top"
+													>
 														<button
 															on:click|preventDefault={() => {
 																webSearchEnabled = !webSearchEnabled;
@@ -1302,7 +1316,9 @@
 															class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {webSearchEnabled ||
 															($settings?.webSearch ?? false) === 'always'
 																? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
-																: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'} {isRagFlowModel ? 'opacity-50 cursor-not-allowed' : ''}"
+																: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'} {isRagFlowModel
+																? 'opacity-50 cursor-not-allowed'
+																: ''}"
 															disabled={isRagFlowModel}
 														>
 															<GlobeAlt className="size-5" strokeWidth="1.75" />
@@ -1316,7 +1332,7 @@
 
 												<!-- 知识库选择器 - 只在选择 rag_flow_webapi_pipeline_cs 模型时显示 -->
 												{#if isRagFlowModel}
-													<KnowledgeBaseSelector 
+													<KnowledgeBaseSelector
 														selectedModelId="rag_flow_webapi_pipeline_cs"
 														assistantId={$_user.assistant_id}
 													/>
