@@ -176,7 +176,7 @@
 			<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">增强搜索</span>
 		</button>
 
-		<!-- 深度搜索按钮 - 参考增强搜索按钮样式 -->
+		<!-- 深度研究按钮 - 参考增强搜索按钮样式 -->
 		<button
 			on:click={toggleDeepResearch}
 			type="button"
@@ -188,7 +188,7 @@
 				<path stroke-linecap="round" stroke-linejoin="round" 
 					d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM13.5 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
 			</svg>
-			<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">深度搜索</span>
+			<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">深度研究</span>
 		</button>
 
 		<!-- 知识库选择按钮 - 使用Dropdown组件，参考InputMenu样式 -->

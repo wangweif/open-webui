@@ -804,8 +804,6 @@
 												progressStr = progressStr.replace(/(\d+)%/g, '$1');
 												
 												const progressData = JSON.parse(progressStr);
-												console.log('progressData', progressData);
-												console.log('isGeneratingWithOutline', isGeneratingWithOutline);
 												if (progressData.process !== undefined) {
 													generationProgress = parseInt(progressData.process);
 												}
