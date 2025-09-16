@@ -4,7 +4,7 @@
 	import 'dayjs/locale/zh-cn';
 
 	import { createEventDispatcher } from 'svelte';
-	import { onMount, tick, getContext } from 'svelte';
+	import { onMount, tick, getContext, afterUpdate } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import type { i18n as i18nType, t } from 'i18next';
 
@@ -62,6 +62,7 @@
 	import FileItem from '$lib/components/common/FileItem.svelte';
 	import OutlineEditor from '../OutlineEditor.svelte';
 	import ShareChatModal from '../ShareChatModal.svelte';
+	import { detectAndParseOutlineData } from '$lib/utils';
 
 	interface MessageType {
 		id: string;
@@ -93,6 +94,10 @@
 			outline: any[];
 		};
 		outlineDone?: boolean;
+		// 添加进度相关字段
+		isGeneratingWithOutline?: boolean;
+		generationProgress?: number;
+		currentProcessing?: string;
 		code_executions?: {
 			uuid: string;
 			name: string;
@@ -121,13 +126,34 @@
 	}
 
 	export let chatId = '';
-	export let history;
+	export let history: any;
 	export let messageId;
 
 	let message: MessageType = JSON.parse(JSON.stringify(history.messages[messageId]));
 	$: if (history.messages) {
 		if (JSON.stringify(message) !== JSON.stringify(history.messages[messageId])) {
 			message = JSON.parse(JSON.stringify(history.messages[messageId]));
+		}
+	}
+
+	// 添加跟踪修改后的大纲数据
+	let modifiedOutlineData: any = null;
+
+	// 修改进度条相关状态，从消息对象中初始化
+	let isGeneratingWithOutline = message?.isGeneratingWithOutline ?? false;
+	let generationProgress = message?.generationProgress ?? 0;
+	let currentProcessing = message?.currentProcessing ?? '';
+
+	// 同步进度状态 - 当消息对象变化时自动同步本地状态
+	$: {
+		if (message?.isGeneratingWithOutline !== undefined && isGeneratingWithOutline !== message.isGeneratingWithOutline) {
+			isGeneratingWithOutline = message.isGeneratingWithOutline;
+		}
+		if (message?.generationProgress !== undefined && generationProgress !== message.generationProgress) {
+			generationProgress = message.generationProgress;
+		}
+		if (message?.currentProcessing !== undefined && currentProcessing !== message.currentProcessing) {
+			currentProcessing = message.currentProcessing;
 		}
 	}
 
@@ -152,14 +178,6 @@
 
 	export let isLastMessage = true;
 	export let readOnly = false;
-
-	// 添加跟踪修改后的大纲数据
-	let modifiedOutlineData: any = null;
-
-	// 添加进度条相关状态
-	let isGeneratingWithOutline = false;
-	let generationProgress = 0;
-	let currentProcessing = '';
 
 	let buttonsContainerElement: HTMLDivElement;
 	let showDeleteConfirm = false;
@@ -453,6 +471,23 @@
 		generatingImage = false;
 	};
 
+	// 消息预处理（处理成大纲格式）
+	const processMessage = async (message: MessageType) => {
+		const outlineData = detectAndParseOutlineData(message.content);
+		if(message.hasOutline) {
+			return message;
+		}
+		if(outlineData.isOutlineData) {
+			message.hasOutline = true;
+			message.outlineData = outlineData.outlineData;
+			message.outlineDone = outlineData.outlineDone;
+			if(message.outlineDone) {
+				saveMessage(message.id, message);
+			}
+		}
+		return message;
+	}
+
 	let feedbackLoading = false;
 
 	const feedbackHandler = async (rating: number | null = null, details: object | null = null) => {
@@ -584,11 +619,10 @@
 	}
 
 	onMount(async () => {
-		// console.log('ResponseMessage mounted');
+		message = await processMessage(message);
 
 		await tick();
 		if (buttonsContainerElement) {
-			console.log(buttonsContainerElement);
 			buttonsContainerElement.addEventListener('wheel', function (event) {
 				// console.log(event.deltaY);
 
@@ -679,12 +713,6 @@
 		}
 
 		try {
-			// 设置生成状态
-			isGeneratingWithOutline = true;
-			generationProgress = 0;
-			currentProcessing = '';
-
-			// 使用修改后的大纲数据（如果有的话），否则使用原始数据
 			let currentOutlineData;
 			if (modifiedOutlineData) {
 				// 将items数组转换为outlineData格式
@@ -696,159 +724,33 @@
 			// 发送大纲数据的JSON格式
 			const outlineJson = JSON.stringify(currentOutlineData, null, 2);
 
-			// 构建完整的消息体，参考提供的结构
-			const messageBody = {
-				background_tasks: {
-					title_generation: true,
-					tags_generation: true
-				},
-				chat_id: chatId,
-				features: {
-					image_generation: false,
-					code_interpreter: false,
-					web_search: false,
-					deep_research: true
-				},
-				// id: crypto.randomUUID(),
-				messages: [
-					{
-						role: 'user',
-						content: outlineJson
-					}
-				],
-				model: message.model,
-				model_item: model ? {
-					id: model.id,
-					name: model.name,
-					object: "model",
-					created: Math.floor(Date.now() / 1000)
-				} : undefined,
-				params: {},
-				session_id: null, // 需要从某处获取session_id
-				stream: true,
-				tool_servers: [],
-				variables: {
-					"{{USER_NAME}}": $user?.name || "Unknown",
-					"{{USER_LOCATION}}": "Unknown",
-					"{{CURRENT_DATETIME}}": new Date().toLocaleString('zh-CN')
-				},
-				// 自定义参数
-				outline: true,
-				outlineData: currentOutlineData
+
+			// 将进度状态保存到消息对象中
+			const progressMessage = {
+				...message,
+				isGeneratingWithOutline: true,
+				generationProgress: 0,
+				currentProcessing: '',
+				outlineData: outlineJson,
+				outlineDone: true,
+				hasOutline: true
 			};
-
-			// 在后台发送消息，不在界面显示
-			const [response, controller] = await chatCompletion(localStorage.token, messageBody);
-			
-			if (response && response.ok) {
-				toast.success($i18n.t('正在基于大纲继续生成内容...'));
-				
-				// 先清空大纲，准备显示生成的内容
-				const updatedMessage = {
-					...message,
-					hasOutline: false,
-					outlineData: undefined,
-					content: '',
-					done: false
-				};
-				saveMessage(message.id, updatedMessage);
-				await tick();
-				
-				const reader = response.body.getReader();
-				const decoder = new TextDecoder();
-				let accumulatedContent = '';
-
-				// 处理流式响应
-				while (true) {
-					const { done, value } = await reader.read();
-					if (done) {
-						// 标记消息为完成状态并重置进度状态
-						isGeneratingWithOutline = false;
-						generationProgress = 100;
-						currentProcessing = '';
-						
-						const finalMessage = {
-							...message,
-							hasOutline: false,
-							outlineData: undefined,
-							content: accumulatedContent,
-							done: true
-						};
-						saveMessage(message.id, finalMessage);
-						break;
-					}
-
-					const chunk = decoder.decode(value, { stream: true });
-					const lines = chunk.split('\n').filter((line) => line.trim() !== '');
-
-					for (const line of lines) {
-						if (line.startsWith('data: ')) {
-							if (line.startsWith('data: [DONE]')) {
-								break;
-							} else {
-								try {
-									const data = JSON.parse(line.slice(6));
-									if (data.choices && data.choices[0]?.delta?.content) {
-										// 累积接收到的内容
-										const newContent = data.choices[0].delta.content;
-										
-										// 检查是否包含进度信息
-										const processMatch = newContent.match(/<process>\s*(\{[^}]+\})\s*<\/process>/);
-										if (processMatch) {
-											try {
-												// 解析进度信息，处理可能的格式问题
-												let progressStr = processMatch[1];
-												// 修复可能的单引号问题
-												progressStr = progressStr.replace(/'/g, '"');
-												// 修复百分号问题
-												progressStr = progressStr.replace(/(\d+)%/g, '$1');
-												
-												const progressData = JSON.parse(progressStr);
-												if (progressData.process !== undefined) {
-													generationProgress = parseInt(progressData.process);
-												}
-												if (progressData.processing) {
-													currentProcessing = progressData.processing;
-												}
-												if(generationProgress == 100) {
-													isGeneratingWithOutline = false;
-												}
-												
-											} catch (e) {
-												console.log('解析进度数据失败:', e);
-											}
-										} else {
-											accumulatedContent += newContent;
-										}
-										
-										// 实时更新消息内容进行流式展示
-										const streamingMessage = {
-											...message,
-											hasOutline: false,
-											outlineData: undefined,
-											content: accumulatedContent,
-											done: false
-										};
-										history.messages[messageId] = streamingMessage;
-									}
-								} catch (e) {
-									console.error('解析数据失败:', e);
-								}
-							}
-						}
-					}
-				}
-			} else {
-				// 重置进度状态
-				isGeneratingWithOutline = false;
-				generationProgress = 0;
-				currentProcessing = '';
-			}
+			saveMessage(message.id, progressMessage);
+			await tick();
+			regenerateResponse(message)
 		} catch (error) {
-			// 重置进度状态
+			// 重置进度状态并保存
 			isGeneratingWithOutline = false;
 			generationProgress = 0;
 			currentProcessing = '';
+			
+			const errorMessage = {
+				...message,
+				isGeneratingWithOutline: false,
+				generationProgress: 0,
+				currentProcessing: ''
+			};
+			saveMessage(message.id, errorMessage);
 		}
 	};
 </script>

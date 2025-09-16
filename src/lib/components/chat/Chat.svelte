@@ -96,6 +96,7 @@
 	import NotificationToast from '../NotificationToast.svelte';
 	import Spinner from '../common/Spinner.svelte';
 	import OutlineEditor from './OutlineEditor.svelte';
+	import { detectAndParseOutlineData } from '$lib/utils';
 
 	export let chatIdProp = '';
 
@@ -1143,39 +1144,6 @@
 		}
 	};
 
-	// 检测和解析大纲数据
-	function detectAndParseOutlineData(content: string) {
-		// 检测是否包含深度搜索提示和JSON数据
-		const searchPattern = /正在生成大纲，请稍等\.\.\.(.*)$/;
-		const match = content.match(searchPattern);
-		
-		if (match && match[1]) {
-			try {
-				const jsonData = JSON.parse(match[1]);
-				if (jsonData.topic && jsonData.outline) {
-					return {
-						isOutlineData: true,
-						outlineDone: true,
-						outlineData: jsonData
-					};
-				}
-			} catch (e) {
-				// JSON解析失败，继续正常处理
-				return {
-					isOutlineData: true,
-					outlineDone: false,
-					outlineData: match[1]
-				};
-			}
-		}
-		
-		return {
-			isOutlineData: false,
-			outlineDone: false,
-			outlineData: null
-		};
-	}
-
 	const chatCompletionEventHandler = async (data, message, chatId) => {
 		const { id, done, choices, content, sources, selected_model_id, error, usage } = data;
 
@@ -1239,6 +1207,41 @@
 				message.outlineData = outlineDetection.outlineData;
 				message.hasOutline = true;
 				message.outlineDone = outlineDetection.outlineDone;
+			}
+			const regex = /<process>\s*(\{[^}]+\})\s*<\/process>/g;
+			const matches = Array.from(message.content.matchAll(regex));
+			const lastMatch = matches.at(-1);   // 取最后一条
+			let progressData = null;
+			if (lastMatch && lastMatch[1]) {
+				try {
+					// 移除匹配到的进度信息
+					message.content = message.content.replace(/<process>[\s\S]*?<\/process>/g, '');
+					message.outlineDone = true;
+					progressData = JSON.parse(lastMatch[1]);
+					
+					// 更新进度信息
+					if (progressData.process !== undefined) {
+						message.generationProgress = parseInt(progressData.process);
+					}
+					if (progressData.processing !== undefined) {
+						message.currentProcessing = progressData.processing;
+					}
+
+					// 如果进度达到100%，设置生成完成状态
+					if (message.generationProgress === 100) {
+						message.isGeneratingWithOutline = false;
+					} else {
+						// 确保在生成过程中设置为true
+						message.isGeneratingWithOutline = true;
+					}
+				} catch (error) {
+					if(message.generationProgress == null) {
+						message.generationProgress = 0;
+					}
+					if(message.currentProcessing == null) {
+						message.currentProcessing = '';
+					}
+				}
 			}
 
 			if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
@@ -1458,7 +1461,8 @@
 
 		let _chatId = JSON.parse(JSON.stringify($chatId));
 		_history = JSON.parse(JSON.stringify(_history));
-
+		const hasOutline = _history.messages[_history.currentId].hasOutline ?? false;
+		const outlineData = _history.messages[_history.currentId].outlineData ?? undefined;
 		const responseMessageIds: Record<PropertyKey, string> = {};
 		// If modelId is provided, use it, else use selected model
 		let selectedModelIds = modelId
@@ -1572,7 +1576,7 @@
 					const chatEventEmitter = await getChatEventEmitter(model.id, _chatId);
 
 					scrollToBottom();
-					await sendPromptSocket(_history, model, responseMessageId, _chatId);
+					await sendPromptSocket(_history, model, responseMessageId, _chatId,hasOutline,outlineData);
 
 					if (chatEventEmitter) clearInterval(chatEventEmitter);
 				} else {
@@ -1585,7 +1589,7 @@
 		chats.set(await getChatList(localStorage.token, $currentChatPage));
 	};
 
-	const sendPromptSocket = async (_history, model, responseMessageId, _chatId) => {
+	const sendPromptSocket = async (_history, model, responseMessageId, _chatId,hasOutline = false,outlineData = undefined) => {
 		const responseMessage = _history.messages[responseMessageId];
 		const userMessage = _history.messages[responseMessage.parentId];
 
@@ -1713,6 +1717,8 @@
 							: false,
 					deep_research: localStorage.getItem('deepResearchEnabled') === 'true' && model.id === 'rag_flow_webapi_pipeline_cs'
 				},
+				hasOutline : hasOutline,
+				outlineData : outlineData,
 				variables: {
 					...getPromptVariables(
 						$user?.name,

@@ -1284,7 +1284,7 @@
 											{/if}
 
 											{#if $_user}
-												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isIdentificationModel && !isAgriculturePriceModel && !isPlantingModel && !isDocSummaryModel &&!isAgriPolicyModel}
+												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && isWebSearchModel}
 													<Tooltip content={isRagFlowModel ? $i18n.t('Search is not needed for this model') : $i18n.t('Search the internet')} placement="top">
 														<button
 															on:click|preventDefault={() => {

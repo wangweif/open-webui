@@ -1392,3 +1392,43 @@ export const sortModels = (modelList: any[]) => {
 		return 0;
 	});
 };
+
+// 检测和解析大纲数据
+export function detectAndParseOutlineData(content: string) {
+	// 检测是否包含深度搜索提示和JSON数据
+	const searchPattern = /正在生成大纲，请稍等\.\.\.(.*)$/;
+	if(typeof content !== 'string'){
+		return {
+			isOutlineData: false,
+			outlineDone: false,
+			outlineData: null
+		};
+	}
+	const match = content.match(searchPattern);
+	
+	if (match && match[1]) {
+		try {
+			const jsonData = JSON.parse(match[1]);
+			if (jsonData.topic && jsonData.outline) {
+				return {
+					isOutlineData: true,
+					outlineDone: true,
+					outlineData: jsonData
+				};
+			}
+		} catch (e) {
+			// JSON解析失败，继续正常处理
+			return {
+				isOutlineData: true,
+				outlineDone: false,
+				outlineData: match[1]
+			};
+		}
+	}
+	
+	return {
+		isOutlineData: false,
+		outlineDone: false,
+		outlineData: null
+	};
+}
