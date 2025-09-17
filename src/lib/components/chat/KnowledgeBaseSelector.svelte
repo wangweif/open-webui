@@ -20,8 +20,12 @@
 	let reasoningEnabled = false;
 	let deepResearchEnabled = false;
 
-	// 只在选择rag_flow_webapi_pipeline_cs模型时显示
-	$: shouldShow = selectedModelId === 'rag_flow_webapi_pipeline_cs';
+	// 在选择rag_flow_webapi_pipeline_cs和n8n_project_research模型时显示
+	$: shouldShow = selectedModelId === 'rag_flow_webapi_pipeline_cs' || selectedModelId === 'n8n_project_research';
+
+	// 区分不同模型显示的功能
+	$: showAllFeatures = selectedModelId === 'rag_flow_webapi_pipeline_cs';
+	$: showOnlyKnowledgeBase = selectedModelId === 'n8n_project_research';
 
 	// 监听模型变化，加载assistant信息
 	$: if (shouldShow) {
@@ -148,6 +152,7 @@
 {#if shouldShow}
 	<div class="ragflow-container inline-flex items-center gap-1">
 		<!-- 联网搜索按钮 - 参考Web Search样式 -->
+		{#if showAllFeatures}
 		<button
 			on:click={toggleTavily}
 			type="button"
@@ -159,8 +164,10 @@
 			<GlobeAlt className="size-5" strokeWidth="1.75" />
 			<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">联网搜索</span>
 		</button>
+		{/if}
 
 		<!-- 增强搜索按钮 - 参考联网搜索按钮样式 -->
+		{#if showAllFeatures}
 		<button
 			on:click={toggleReasoning}
 			type="button"
@@ -175,8 +182,10 @@
 			</svg>
 			<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">增强搜索</span>
 		</button>
+		{/if}
 
 		<!-- 深度研究按钮 - 参考增强搜索按钮样式 -->
+		{#if showAllFeatures}
 		<button
 			on:click={toggleDeepResearch}
 			type="button"
@@ -190,6 +199,7 @@
 			</svg>
 			<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">深度研究</span>
 		</button>
+		{/if}
 
 		<!-- 知识库选择按钮 - 使用Dropdown组件，参考InputMenu样式 -->
 		<Dropdown

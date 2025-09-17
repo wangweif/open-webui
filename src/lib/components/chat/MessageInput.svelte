@@ -85,6 +85,7 @@
 	$: isPlantingModel= selectedModelIds.includes('chatbi_query_analasis_pipeline');
 	$: isDocSummaryModel= selectedModelIds.includes('n8n_summary');
 	$: isAgriPolicyModel= selectedModelIds.includes('AgriPolicy_pipline');
+	$: isN8nProjectResearchModel= selectedModelIds.includes('n8n_project_research');
 
 	// 初始化时从localStorage加载状态
 	let manuallyDisabledWebSearch = localStorage.getItem('deepseekWebSearchDisabled') === 'true';
@@ -1315,9 +1316,9 @@
 												{/if}
 
 												<!-- 知识库选择器 - 只在选择 rag_flow_webapi_pipeline_cs 模型时显示 -->
-												{#if isRagFlowModel}
+												{#if isRagFlowModel || isN8nProjectResearchModel}
 													<KnowledgeBaseSelector 
-														selectedModelId="rag_flow_webapi_pipeline_cs"
+														selectedModelId={selectedModelIds[0]}
 														assistantId={$_user.assistant_id}
 													/>
 												{/if}
