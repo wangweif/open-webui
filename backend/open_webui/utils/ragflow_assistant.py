@@ -166,3 +166,106 @@ async def add_user_to_user_tenant(tenant_id,email):
         log.error(f"将用户添加到UserTenant表失败，状态码: {response_data.get('code')},消息: {response_data.get('message')}")
         return False
     return True
+
+def upload_file_to_kb(file_path, file_name):
+    """将文件上传到知识库并触发解析
+    
+    Args:
+        file_path (str): 上传的文件路径
+        file_name (str): 上传的文件名称
+    Returns:
+        bool: 上传和解析是否成功
+    """
+    try:
+        api_url = "https://know.baafs.net.cn/v1/document/upload"
+        
+        # 读取文件内容
+        with open(file_path, 'rb') as f:
+            files = {'file': (file_name, f, 'application/octet-stream')}
+            data = {
+                "kb_id": "21bbe92892aa11f099d113c3763cbaf8",
+                "webkitRelativePath": file_name,
+                "parser_id": "naive"
+            }
+            
+            response = requests.post(api_url, files=files, data=data, headers=get_header())
+            
+            # 检查响应状态码
+            if response.status_code != 200:
+                log.error(f"上传文件到知识库失败，文件: {file_name}, HTTP状态码: {response.status_code}")
+                return False
+            
+            try:
+                response_data = response.json()
+                log.info(f"上传响应数据: {response_data}")
+                
+                # 检查响应格式和状态
+                if response_data.get('code') != 0:
+                    log.error(f"上传文件到知识库失败，文件: {file_name}, 状态码: {response_data.get('code')}, 消息: {response_data.get('message')}")
+                    return False
+
+                # 获取上传成功的文件信息
+                uploaded_files = response_data.get('data', [])
+                if not uploaded_files:
+                    log.error(f"上传成功但未返回文件信息，文件: {file_name}, 响应: {response_data}")
+                    return False
+                
+                if not isinstance(uploaded_files, list) or len(uploaded_files) == 0:
+                    log.error(f"文件信息格式错误，文件: {file_name}, data字段: {uploaded_files}")
+                    return False
+                
+                # 获取第一个文件的ID
+                first_file = uploaded_files[0]
+                if not isinstance(first_file, dict):
+                    log.error(f"文件信息不是字典格式，文件: {file_name}, 第一个文件: {first_file}")
+                    return False
+                
+                file_id = first_file.get('id')
+                if not file_id:
+                    log.error(f"未获取到文件ID，文件: {file_name}, 文件信息: {first_file}")
+                    return False
+                
+                log.info(f"文件 {file_name} 成功上传到知识库，文件ID: {file_id}")
+                
+                # 调用解析接口
+                parse_result = parse_chunks([file_id], run=1)
+                if parse_result and parse_result.get('code') == 0:
+                    log.info(f"文件 {file_name} 解析任务启动成功")
+                else:
+                    log.error(f"文件 {file_name} 解析任务启动失败: {parse_result}")
+                
+                return True
+                
+            except ValueError as e:
+                log.error(f"JSON解析失败，文件: {file_name}, 错误: {str(e)}, 响应内容: {response.text}")
+                return False
+                
+    except Exception as e:
+        log.error(f"上传文件到知识库时发生异常，文件: {file_name}, 错误: {str(e)}")
+        return False
+        
+def parse_chunks(doc_ids, run=1):
+    """解析文档
+
+    Args:
+        doc_ids (str): 文档 ID 列表
+        run (int, optional): 是否可用状态. Defaults to 1.
+
+    Returns:
+        dict: 解析文档后的结果
+    """
+    url = f"https://know.baafs.net.cn/v1/document/run"
+    data = {"delete":False,"doc_ids":doc_ids,"run":run}
+    response = requests.post(url, json=data, headers=get_header())
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {
+            "retcode": response.status_code,
+            "retmsg": "Failed to parse_chunks: {doc_ids}"
+        }
+
+def get_header():
+    return {
+        'authorization': create_token(data={"id": TENANT_ID})
+    }

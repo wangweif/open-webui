@@ -32,6 +32,7 @@ from open_webui.routers.retrieval import ProcessFileForm, process_file
 from open_webui.routers.audio import transcribe
 from open_webui.storage.provider import Storage
 from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.ragflow_assistant import upload_file_to_kb
 from pydantic import BaseModel
 
 log = logging.getLogger(__name__)
@@ -144,6 +145,41 @@ def upload_file(
                 )
 
         if file_item:
+            # 上传文件到知识库（仅支持文档类型文件）
+            try:
+                # 定义支持的文档文件类型
+                supported_types = [
+                    "application/pdf",
+                    "text/plain",
+                    "application/msword",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "application/vnd.ms-excel",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/vnd.ms-powerpoint",
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    "text/csv",
+                    "text/markdown",
+                    "text/html"
+                ]
+                
+                if file.content_type in supported_types:
+                    # 获取实际文件路径（对于云存储会下载到本地）
+                    actual_file_path = Storage.get_file(file_path)
+                    log.info(f"开始上传文件到知识库: {name}, 类型: {file.content_type}, 路径: {actual_file_path}")
+                    
+                    # 调用知识库上传
+                    upload_result = upload_file_to_kb(actual_file_path, name)
+                    if upload_result:
+                        log.info(f"文件成功上传到知识库: {name}")
+                    else:
+                        log.error(f"文件上传到知识库失败: {name}")
+                else:
+                    log.info(f"文件类型 {file.content_type} 不支持上传到知识库: {name}")
+                
+            except Exception as e:
+                log.error(f"上传文件到知识库时发生异常: {name}, 错误: {str(e)}")
+                # 不影响主流程，继续返回文件信息
+            
             return file_item
         else:
             raise HTTPException(
