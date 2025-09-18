@@ -1401,8 +1401,9 @@
 		
 		// 检查是否为 n8n_summary 模型
 		const isDocSummaryModel = selectedModels.includes('n8n_summary');
+		const isN8nProjectResearchModel = selectedModels.includes('n8n_project_research');
 		
-		if (isDocSummaryModel) {
+		if (isDocSummaryModel || isN8nProjectResearchModel) {
 			// 对于文档摘要模型，只使用当前上传的文件，不累积历史文件
 			chatFiles = _files.filter((item) => ['doc', 'file', 'collection'].includes(item.type));
 		} else {
