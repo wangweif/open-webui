@@ -1454,7 +1454,7 @@
 		_history,
 		prompt: string,
 		parentId: string,
-		{ modelId = null, modelIdx = null, newChat = false } = {}
+		{ hasOutline = false, outlineData = undefined, modelId = null, modelIdx = null, newChat = false } = {}
 	) => {
 		if (autoScroll) {
 			scrollToBottom();
@@ -1462,8 +1462,6 @@
 
 		let _chatId = JSON.parse(JSON.stringify($chatId));
 		_history = JSON.parse(JSON.stringify(_history));
-		const hasOutline = _history.messages[_history.currentId].hasOutline ?? false;
-		const outlineData = _history.messages[_history.currentId].outlineData ?? undefined;
 		const responseMessageIds: Record<PropertyKey, string> = {};
 		// If modelId is provided, use it, else use selected model
 		let selectedModelIds = modelId
@@ -1888,7 +1886,7 @@
 		await sendPrompt(history, userPrompt, userMessageId);
 	};
 
-	const regenerateResponse = async (message) => {
+	const regenerateResponse = async (message, hasOutline = false, outlineData = undefined) => {
 		console.log('regenerateResponse');
 
 		if (history.currentId) {
@@ -1901,7 +1899,7 @@
 
 			if ((userMessage?.models ?? [...selectedModels]).length == 1) {
 				// If user message has only one model selected, sendPrompt automatically selects it for regeneration
-				await sendPrompt(history, userPrompt, userMessage.id);
+				await sendPrompt(history, userPrompt, userMessage.id, { hasOutline:hasOutline, outlineData:outlineData});
 			} else {
 				// If there are multiple models selected, use the model of the response message for regeneration
 				// e.g. many model chat

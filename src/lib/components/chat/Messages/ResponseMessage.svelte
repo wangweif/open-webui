@@ -688,18 +688,18 @@
 		}
 
 		// 清空当前消息内容并移除大纲数据
-		const updatedMessage = {
-			...message,
-			content: '',
-			hasOutline: false,
-			outlineData: undefined,
-			outlineDone: false,
-			done: false
-		};
+		// const updatedMessage = {
+		// 	...message,
+		// 	content: '',
+		// 	hasOutline: false,
+		// 	outlineData: undefined,
+		// 	outlineDone: false,
+		// 	done: false
+		// };
 		
-		// 保存更新的消息
-		saveMessage(message.id, updatedMessage);
-		await tick();
+		// // 保存更新的消息
+		// saveMessage(message.id, updatedMessage);
+		// await tick();
 		
 		// 重新生成响应
 		regenerateResponse(message);
@@ -728,16 +728,11 @@
 			// 将进度状态保存到消息对象中
 			const progressMessage = {
 				...message,
-				isGeneratingWithOutline: true,
-				generationProgress: 0,
-				currentProcessing: '',
-				outlineData: outlineJson,
-				outlineDone: true,
-				hasOutline: true
+				outlineData: currentOutlineData,
 			};
 			saveMessage(message.id, progressMessage);
 			await tick();
-			regenerateResponse(message)
+			regenerateResponse(message, true, outlineJson)
 		} catch (error) {
 			// 重置进度状态并保存
 			isGeneratingWithOutline = false;
