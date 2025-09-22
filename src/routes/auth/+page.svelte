@@ -217,23 +217,20 @@
 					</div>
 				{:else}
 					<div class="my-auto pb-10 w-full dark:text-gray-100">
-						<!-- 如果是农科小智，添加机器人logo和文字 -->
-						{#if $WEBUI_NAME === '农科小智'}
-							<div class="mb-8 flex items-center justify-center">
-								<div class="flex-shrink-0">
-									<img 
-										src="/login.jpg" 
-										alt="农科小智" 
-										class="w-20 h-20 object-contain"
-									/>
-								</div>
-								<div class="ml-4">
-									<div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-										农科小智
-									</div>
+						<div class="mb-8 flex items-center justify-center">
+							<div class="flex-shrink-0">
+								<img 
+									src="/login.jpg" 
+									alt="农科小智" 
+									class="w-20 h-20 object-contain"
+								/>
+							</div>
+							<div class="ml-4">
+								<div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+									农科小智
 								</div>
 							</div>
-						{/if}
+						</div>
 						
 						<!-- 登录表单区域，添加圆角矩形框 -->
 						<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
