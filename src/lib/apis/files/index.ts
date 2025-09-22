@@ -1,8 +1,18 @@
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 
-export const uploadFile = async (token: string, file: File) => {
+export const uploadFile = async (token: string, file: File, kb_ids?: string[], enable_kb_upload?: boolean) => {
 	const data = new FormData();
 	data.append('file', file);
+
+	// 如果存在 kb_ids，添加到 FormData 中
+	if (kb_ids && kb_ids.length > 0) {
+		data.append('kb_ids', JSON.stringify(kb_ids));
+	}
+
+	// 添加 enable_kb_upload 参数
+	if (enable_kb_upload !== undefined) {
+		data.append('enable_kb_upload', enable_kb_upload.toString());
+	}
 	let error = null;
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/files/`, {

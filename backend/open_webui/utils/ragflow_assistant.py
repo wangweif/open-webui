@@ -167,12 +167,13 @@ async def add_user_to_user_tenant(tenant_id,email):
         return False
     return True
 
-def upload_file_to_kb(file_path, file_name):
+def upload_file_to_kb(file_path, file_name, kb_id):
     """将文件上传到知识库并触发解析
     
     Args:
         file_path (str): 上传的文件路径
         file_name (str): 上传的文件名称
+        kb_id (str): 知识库ID
     Returns:
         bool: 上传和解析是否成功
     """
@@ -183,7 +184,7 @@ def upload_file_to_kb(file_path, file_name):
         with open(file_path, 'rb') as f:
             files = {'file': (file_name, f, 'application/octet-stream')}
             data = {
-                "kb_id": "21bbe92892aa11f099d113c3763cbaf8",
+                "kb_id": kb_id,
                 "webkitRelativePath": file_name,
                 "parser_id": "naive"
             }
@@ -225,14 +226,14 @@ def upload_file_to_kb(file_path, file_name):
                     log.error(f"未获取到文件ID，文件: {file_name}, 文件信息: {first_file}")
                     return False
                 
-                log.info(f"文件 {file_name} 成功上传到知识库，文件ID: {file_id}")
+                log.info(f"文件 {file_name} 成功上传到知识库 {kb_id}，文件ID: {file_id}")
                 
                 # 调用解析接口
                 parse_result = parse_chunks([file_id], run=1)
                 if parse_result and parse_result.get('code') == 0:
-                    log.info(f"文件 {file_name} 解析任务启动成功")
+                    log.info(f"文件 {file_name} 在知识库 {kb_id} 中的解析任务启动成功")
                 else:
-                    log.error(f"文件 {file_name} 解析任务启动失败: {parse_result}")
+                    log.error(f"文件 {file_name} 在知识库 {kb_id} 中的解析任务启动失败: {parse_result}")
                 
                 return True
                 

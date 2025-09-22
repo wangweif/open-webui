@@ -80,7 +80,7 @@ def has_access_to_file(
 
 
 @router.post("/", response_model=FileModelResponse)
-def upload_file(
+async def upload_file(
     request: Request,
     file: UploadFile = File(...),
     user=Depends(get_verified_user),
@@ -88,6 +88,13 @@ def upload_file(
     process: bool = Query(True),
 ):
     log.info(f"file.content_type: {file.content_type}")
+    
+    # 从表单数据中读取参数
+    form = await request.form()
+    print('form', form)
+    kb_ids = form.get('kb_ids')
+    enable_kb_upload = form.get('enable_kb_upload')
+    
     try:
         unsanitized_filename = file.filename
         filename = os.path.basename(unsanitized_filename)
@@ -147,34 +154,52 @@ def upload_file(
         if file_item:
             # 上传文件到知识库（仅支持文档类型文件）
             try:
-                # 定义支持的文档文件类型
-                supported_types = [
-                    "application/pdf",
-                    "text/plain",
-                    "application/msword",
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    "application/vnd.ms-excel",
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "application/vnd.ms-powerpoint",
-                    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                    "text/csv",
-                    "text/markdown",
-                    "text/html"
-                ]
+                # 检查是否启用知识库上传功能
+                # 将字符串转换为布尔值
+                kb_upload_enabled = enable_kb_upload and enable_kb_upload.lower() == 'true'
+                log.info(f"参数检查 - enable_kb_upload: {enable_kb_upload}, kb_upload_enabled: {kb_upload_enabled}, kb_ids: {kb_ids}")
                 
-                if file.content_type in supported_types:
-                    # 获取实际文件路径（对于云存储会下载到本地）
-                    actual_file_path = Storage.get_file(file_path)
-                    log.info(f"开始上传文件到知识库: {name}, 类型: {file.content_type}, 路径: {actual_file_path}")
-                    
-                    # 调用知识库上传
-                    upload_result = upload_file_to_kb(actual_file_path, name)
-                    if upload_result:
-                        log.info(f"文件成功上传到知识库: {name}")
-                    else:
-                        log.error(f"文件上传到知识库失败: {name}")
+                if not kb_upload_enabled:
+                    log.info(f"知识库上传功能未启用，跳过上传: {name}")
                 else:
-                    log.info(f"文件类型 {file.content_type} 不支持上传到知识库: {name}")
+                    # 解析 kb_ids 参数
+                    target_kb_ids = []
+                    if kb_ids:
+                        try:
+                            import json
+                            target_kb_ids = json.loads(kb_ids)
+                            if not isinstance(target_kb_ids, list):
+                                target_kb_ids = []
+                        except (json.JSONDecodeError, TypeError):
+                            log.warning(f"kb_ids 参数解析失败: {kb_ids}")
+                            target_kb_ids = []
+                    
+                    
+                    if target_kb_ids:
+                        # 获取实际文件路径（对于云存储会下载到本地）
+                        actual_file_path = Storage.get_file(file_path)
+                        log.info(f"开始上传文件到知识库: {name}, 路径: {actual_file_path}, 目标知识库: {target_kb_ids}")
+                        
+                        # 上传到每个指定的知识库
+                        upload_success_count = 0
+                        for kb_id in target_kb_ids:
+                            try:
+                                upload_result = upload_file_to_kb(actual_file_path, name, kb_id)
+                                if upload_result:
+                                    log.info(f"文件成功上传到知识库 {kb_id}: {name}")
+                                    upload_success_count += 1
+                                else:
+                                    log.error(f"文件上传到知识库 {kb_id} 失败: {name}")
+                            except Exception as kb_e:
+                                log.error(f"上传文件到知识库 {kb_id} 时发生异常: {name}, 错误: {str(kb_e)}")
+                        
+                        if upload_success_count > 0:
+                            log.info(f"文件成功上传到 {upload_success_count}/{len(target_kb_ids)} 个知识库: {name}")
+                        else:
+                            log.error(f"文件未能成功上传到任何知识库: {name}")
+                    else:
+                        log.info(f"未指定知识库ID，跳过上传: {name}")
+
                 
             except Exception as e:
                 log.error(f"上传文件到知识库时发生异常: {name}, 错误: {str(e)}")

@@ -1,9 +1,16 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, createEventDispatcher } from 'svelte';
 	import { toast } from 'svelte-sonner';
+
+	const dispatch = createEventDispatcher();
 	import { DropdownMenu } from 'bits-ui';
 	import { flyAndScale } from '$lib/utils/transitions';
-	import { getAssistantInfo, updateAssistantKnowledgeBases, updateAssistantTavily, updateAssistantReasoning } from '$lib/apis/ragflow';
+	import {
+		getAssistantInfo,
+		updateAssistantKnowledgeBases,
+		updateAssistantTavily,
+		updateAssistantReasoning
+	} from '$lib/apis/ragflow';
 	import type { AssistantInfo } from '$lib/apis/ragflow';
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import GlobeAlt from '../icons/GlobeAlt.svelte';
@@ -21,7 +28,10 @@
 	let deepResearchEnabled = false;
 
 	// 在选择rag_flow_webapi_pipeline_cs和n8n_project_research模型时显示
-	$: shouldShow = selectedModelId === 'rag_flow_webapi_pipeline_cs' || selectedModelId === 'n8n_project_research';
+	$: shouldShow =
+		selectedModelId === 'rag_flow_webapi_pipeline_cs' ||
+		selectedModelId === 'n8n_project_research' ||
+		selectedModelId === 'contract_review';
 
 	// 区分不同模型显示的功能
 	$: showAllFeatures = selectedModelId === 'rag_flow_webapi_pipeline_cs';
@@ -46,6 +56,10 @@
 		try {
 			assistantInfo = await getAssistantInfo(localStorage.token, assistantId);
 			selectedKbIds = [...assistantInfo.kb_ids];
+
+			// 分发初始 kb_ids 事件
+			dispatch('kbIdsChange', { kb_ids: selectedKbIds });
+
 			tavilyApiKey = assistantInfo.tavily_api_key || '';
 			tavilyEnabled = assistantInfo.tavily_enabled;
 			reasoningEnabled = assistantInfo.reasoning_enabled || false;
@@ -69,7 +83,7 @@
 		let newKbIds: string[];
 
 		if (isCurrentlySelected) {
-			newKbIds = selectedKbIds.filter(id => id !== kbId);
+			newKbIds = selectedKbIds.filter((id) => id !== kbId);
 		} else {
 			newKbIds = [...selectedKbIds, kbId];
 		}
@@ -77,6 +91,9 @@
 		// 乐观更新
 		const previousKbIds = [...selectedKbIds];
 		selectedKbIds = newKbIds;
+
+		// 分发 kb_ids 变化事件
+		dispatch('kbIdsChange', { kb_ids: newKbIds });
 
 		try {
 			await updateAssistantKnowledgeBases(localStorage.token, {
@@ -87,6 +104,8 @@
 		} catch (error) {
 			// 回滚更改
 			selectedKbIds = previousKbIds;
+			// 回滚时也要分发事件
+			dispatch('kbIdsChange', { kb_ids: previousKbIds });
 			console.error('Failed to update knowledge bases:', error);
 			// toast.error('Failed to update knowledge base configuration');
 		}
@@ -94,7 +113,7 @@
 
 	async function toggleTavily() {
 		const newTavilyEnabled = !tavilyEnabled;
-		
+
 		// 乐观更新
 		const previousTavilyEnabled = tavilyEnabled;
 		tavilyEnabled = newTavilyEnabled;
@@ -115,7 +134,7 @@
 
 	async function toggleReasoning() {
 		const newReasoningEnabled = !reasoningEnabled;
-		
+
 		// 乐观更新
 		const previousReasoningEnabled = reasoningEnabled;
 		reasoningEnabled = newReasoningEnabled;
@@ -137,7 +156,7 @@
 	function toggleDeepResearch() {
 		const newDeepResearchEnabled = !deepResearchEnabled;
 		deepResearchEnabled = newDeepResearchEnabled;
-		
+
 		// 保存到localStorage
 		localStorage.setItem('deepResearchEnabled', newDeepResearchEnabled.toString());
 	}
@@ -153,52 +172,79 @@
 	<div class="ragflow-container inline-flex items-center gap-1">
 		<!-- 联网搜索按钮 - 参考Web Search样式 -->
 		{#if showAllFeatures}
-		<button
-			on:click={toggleTavily}
-			type="button"
-			class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {tavilyEnabled
-				? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
-				: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
-			disabled={loading || !assistantInfo}
-		>
-			<GlobeAlt className="size-5" strokeWidth="1.75" />
-			<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">联网搜索</span>
-		</button>
+			<button
+				on:click={toggleTavily}
+				type="button"
+				class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {tavilyEnabled
+					? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
+					: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
+				disabled={loading || !assistantInfo}
+			>
+				<GlobeAlt className="size-5" strokeWidth="1.75" />
+				<span
+					class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]"
+					>联网搜索</span
+				>
+			</button>
 		{/if}
 
 		<!-- 增强搜索按钮 - 参考联网搜索按钮样式 -->
 		{#if showAllFeatures}
-		<button
-			on:click={toggleReasoning}
-			type="button"
-			class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {reasoningEnabled
-				? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
-				: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
-			disabled={loading || !assistantInfo}
-		>
-			<svg class="size-5" stroke-width="1.75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" 
-					d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-			</svg>
-			<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">增强搜索</span>
-		</button>
+			<button
+				on:click={toggleReasoning}
+				type="button"
+				class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {reasoningEnabled
+					? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
+					: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
+				disabled={loading || !assistantInfo}
+			>
+				<svg
+					class="size-5"
+					stroke-width="1.75"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+					/>
+				</svg>
+				<span
+					class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]"
+					>增强搜索</span
+				>
+			</button>
 		{/if}
 
 		<!-- 深度研究按钮 - 参考增强搜索按钮样式 -->
 		{#if showAllFeatures}
-		<button
-			on:click={toggleDeepResearch}
-			type="button"
-			class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {deepResearchEnabled
-				? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
-				: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
-		>
-			<svg class="size-5" stroke-width="1.75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" 
-					d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM13.5 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-			</svg>
-			<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">深度研究</span>
-		</button>
+			<button
+				on:click={toggleDeepResearch}
+				type="button"
+				class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {deepResearchEnabled
+					? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
+					: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
+			>
+				<svg
+					class="size-5"
+					stroke-width="1.75"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM13.5 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+					/>
+				</svg>
+				<span
+					class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]"
+					>深度研究</span
+				>
+			</button>
 		{/if}
 
 		<!-- 知识库选择按钮 - 使用Dropdown组件，参考InputMenu样式 -->
@@ -212,18 +258,33 @@
 		>
 			<button
 				type="button"
-				class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {selectedKbIds.length > 0 || showKnowledgeBasePanel
+				class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {selectedKbIds.length >
+					0 || showKnowledgeBasePanel
 					? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
 					: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
 				disabled={loading || !assistantInfo}
 			>
-				<svg class="size-5" stroke-width="1.75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" 
-						d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10" />
+				<svg
+					class="size-5"
+					stroke-width="1.75"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10"
+					/>
 				</svg>
-				<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]">知识库选择</span>
+				<span
+					class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]"
+					>知识库选择</span
+				>
 				{#if assistantInfo && assistantInfo.knowledge_bases.length > 0}
-					<span class="ml-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full text-xs font-medium">
+					<span
+						class="ml-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full text-xs font-medium"
+					>
 						{selectedKbIds.length}/{assistantInfo.knowledge_bases.length}
 					</span>
 				{/if}
@@ -252,9 +313,18 @@
 									<div class="flex-1 truncate">
 										<div class="flex flex-1 gap-2 items-center">
 											<div class="shrink-0">
-												<svg class="w-4 h-4" stroke-width="1.75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" 
-														d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10" />
+												<svg
+													class="w-4 h-4"
+													stroke-width="1.75"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10"
+													/>
 												</svg>
 											</div>
 											<div class="truncate" title={kb.kb_name}>{kb.kb_name}</div>
@@ -262,8 +332,20 @@
 									</div>
 
 									<div class="shrink-0">
-										<div class="w-10 h-5 bg-gray-200 dark:bg-gray-600 rounded-full relative transition-colors duration-200 {selectedKbIds.includes(kb.kb_id) ? 'bg-primary-500 dark:bg-primary-500' : ''}">
-											<div class="w-4 h-4 bg-white rounded-full absolute top-0.5 transition-transform duration-200 {selectedKbIds.includes(kb.kb_id) ? 'translate-x-5' : 'translate-x-0.5'}"></div>
+										<div
+											class="w-10 h-5 bg-gray-200 dark:bg-gray-600 rounded-full relative transition-colors duration-200 {selectedKbIds.includes(
+												kb.kb_id
+											)
+												? 'bg-primary-500 dark:bg-primary-500'
+												: ''}"
+										>
+											<div
+												class="w-4 h-4 bg-white rounded-full absolute top-0.5 transition-transform duration-200 {selectedKbIds.includes(
+													kb.kb_id
+												)
+													? 'translate-x-5'
+													: 'translate-x-0.5'}"
+											></div>
 										</div>
 									</div>
 								</button>
@@ -278,8 +360,20 @@
 		{#if loading}
 			<div class="loading-container">
 				<svg class="size-4 animate-spin text-gray-600 dark:text-gray-300" viewBox="0 0 24 24">
-					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
-					<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+					<circle
+						class="opacity-25"
+						cx="12"
+						cy="12"
+						r="10"
+						stroke="currentColor"
+						stroke-width="4"
+						fill="none"
+					/>
+					<path
+						class="opacity-75"
+						fill="currentColor"
+						d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+					/>
 				</svg>
 			</div>
 		{/if}
