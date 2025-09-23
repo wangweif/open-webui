@@ -435,6 +435,7 @@
 	onMount(async () => {
 		// 检查是否为共享聊天路由，如果是则跳过复杂的初始化逻辑
 		const isSharedChatRoute = $page.url.pathname.startsWith('/s/');
+		const isGuestChatRoute = $page.url.pathname.startsWith('/guest-chat');
 		if (typeof window !== 'undefined' && window.applyTheme) {
 			window.applyTheme();
 		}
@@ -507,7 +508,7 @@
 
 		let backendConfig = null;
 		try {
-			if (!isSharedChatRoute) {
+			if (!isSharedChatRoute && !isGuestChatRoute) {
 				backendConfig = await getBackendConfig();
 			}
 			console.log('Backend config:', backendConfig);
@@ -568,7 +569,7 @@
 			}
 		} else {
 			// Redirect to /error when Backend Not Detected
-			if (!isSharedChatRoute) {
+			if (!isSharedChatRoute && !isGuestChatRoute) {
 				await goto(`/error`);
 			}
 		}
