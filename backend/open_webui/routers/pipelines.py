@@ -18,6 +18,8 @@ from pydantic import BaseModel
 from starlette.responses import FileResponse
 from typing import Optional
 
+from open_webui.utils.ragflow_assistant import get_assistant
+
 from open_webui.env import SRC_LOG_LEVELS
 from open_webui.config import CACHE_DIR
 from open_webui.constants import ERROR_MESSAGES
@@ -58,7 +60,26 @@ def get_sorted_filters(model_id, models):
 
 
 async def process_pipeline_inlet_filter(request, payload, user, models):
-    user = {"id": user.id, "email": user.email, "name": user.name, "role": user.role, "assistant_id": user.assistant_id}
+    user_dict = {
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "role": user.role,
+        "assistant_id": user.assistant_id,
+    }
+    kb_ids = []
+    if user.assistant_id:
+        try:
+            assistant_response = await get_assistant(user.assistant_id)
+            print("assistant_response", assistant_response)
+            assistant_data = assistant_response['data']
+            kb_ids = assistant_data.get('kb_ids', [])
+        except Exception as e:
+            log.error(f"获取助手信息失败: {str(e)}")
+            kb_ids = []
+
+    # 添加 kb_ids 到用户信息中
+    user_dict["kb_ids"] = kb_ids
     model_id = payload["model"]
     sorted_filters = get_sorted_filters(model_id, models)
     model = models[model_id]
@@ -80,7 +101,7 @@ async def process_pipeline_inlet_filter(request, payload, user, models):
 
             headers = {"Authorization": f"Bearer {key}"}
             request_data = {
-                "user": user,
+                "user": user_dict,
                 "body": payload,
             }
 
@@ -107,7 +128,13 @@ async def process_pipeline_inlet_filter(request, payload, user, models):
 
 
 async def process_pipeline_outlet_filter(request, payload, user, models):
-    user = {"id": user.id, "email": user.email, "name": user.name, "role": user.role, "assistant_id": user.assistant_id}
+    user = {
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "role": user.role,
+        "assistant_id": user.assistant_id
+    }
     model_id = payload["model"]
     sorted_filters = get_sorted_filters(model_id, models)
     model = models[model_id]
