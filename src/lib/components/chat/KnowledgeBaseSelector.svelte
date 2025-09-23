@@ -183,7 +183,7 @@
 				<GlobeAlt className="size-5" strokeWidth="1.75" />
 				<span
 					class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]"
-					>联网搜索</span
+					>搜索</span
 				>
 			</button>
 		{/if}
