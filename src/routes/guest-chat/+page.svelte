@@ -1,17 +1,38 @@
 <script lang="ts">
 	import { json } from "@sveltejs/kit";
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
 	import ContentRenderer from '$lib/components/chat/Messages/ContentRenderer.svelte';
 
-	let messages = [];
-	let inputValue = '';
-	let isLoading = false;
-	let messagesContainer;
-
-	// Scroll to bottom when new messages are added
-	$: if (messagesContainer) {
-		messagesContainer.scrollTop = messagesContainer.scrollHeight;
+	interface Message {
+		id: number;
+		role: 'user' | 'assistant';
+		content: string;
 	}
+
+	interface Chunk {
+		document_id: string;
+		document_name: string;
+		content: string;
+	}
+
+	let messages: Message[] = [];
+	let inputValue: string = '';
+	let isLoading: boolean = false;
+	let messagesContainer: HTMLElement;
+
+	// Auto-scroll function
+	async function scrollToBottom() {
+		if (messagesContainer) {
+			await tick(); // 等待DOM更新
+			messagesContainer.scrollTop = messagesContainer.scrollHeight;
+		}
+	}
+
+	// Scroll to bottom when new messages are added or updated
+	$: if (messages.length > 0) {
+		scrollToBottom();
+	}
+
 	let assistant_id = '5207a2b0349111f0a58a09681006223d';
 	let session_id = '';	
 
@@ -36,7 +57,7 @@
 		}
 		if (!question.trim() || isLoading) return;
 
-		const userMessage = {
+		const userMessage: Message = {
 			id: Date.now(),
 			role: 'user',
 			content: question
@@ -44,7 +65,7 @@
 		messages = [...messages, userMessage];
 		isLoading = true;
 
-		const assistantMessage = {
+		const assistantMessage: Message = {
 			id: Date.now() + 1,
 			role: 'assistant',
 			content: ''
@@ -74,9 +95,13 @@
 
 			// Handle streaming response
 			const reader = response.body?.getReader();
+			if (!reader) {
+				throw new Error('无法获取响应流');
+			}
+			
 			const decoder = new TextDecoder();
 			let accumulatedContent = '';
-
+			let json_error_content = '';
 			while (true) {
 				const { done, value } = await reader.read();
 				if (done) break;
@@ -87,11 +112,18 @@
 				for (const line of lines) {
 					let json_data = null
 					if(line){
-						json_data = JSON.parse(line.slice(5));
+						try{
+							json_data = JSON.parse(line.slice(5));
+						} catch (JsonError) {
+							json_error_content += line;
+							try{
+								json_data = JSON.parse(json_error_content.slice(5));
+							}catch(JsonError){}
+						}
 					}
 					if (json_data?.data) {
+						json_error_content = '';
 						const data = json_data.data;
-						console.log(data);
 						if (data === true) continue;
 						
 						try {
@@ -109,8 +141,16 @@
 							if(data.reference?.chunks){
 								
 								if(data.reference.chunks.length > 0){
-									accumulatedContent += `\n\n**链接**`
-									for(const chunk of data.reference.chunks){
+									accumulatedContent += `\n\n### **链接**`
+									// 根据chunk_id 去重
+									const uniqueChunks = Array.from(
+										new Map(data.reference.chunks.map(chunk => [chunk.document_id, chunk])).values()
+									);
+									// 取前20条
+									const top20Chunks = uniqueChunks.slice(0, 20);
+									for(const chunk of top20Chunks){
+										const match = chunk.content.match(/标题:\s*(.*?)\r?内容:/);
+										let title = "";
 										const filename = chunk.document_name;
 										const parts = filename.split(".");
 										// 移除文件后缀
@@ -120,12 +160,18 @@
 										// 提取并移除[]中的内容
 										let url = processed_filename.match(/\[(.*?)\]/)?.[1];
 										if(url){
-											processed_filename = processed_filename.replace(`[${url}]`, '');
+											title = processed_filename.replace(`[${url}]`, '');
+										}
+										if (match) {
+											title = match[1].trim();
+										}
+										if(title.length > 23){
+											title = title.slice(0, 20) + "...";
 										}
 										// url解码
 										url = decodeURIComponent(url);
 										// 拼接 preview_url
-										const reference = `\n\n - [${processed_filename}](${url})`;
+										const reference = `\n\n - [${title}](${url})`;
 										accumulatedContent += reference;
 									}
 									messages = messages.map((msg, index) => 
@@ -195,13 +241,15 @@
 						{#if message.role === 'user'}
 							{message.content}
 						{:else}
-							<ContentRenderer
-								id={message.id}
-								history={messages}
-								content={message.content}
-								floatingButtons={false}
-								save={false}
-							/>
+							<div class="markdown-prose max-w-none p-4">
+								<ContentRenderer
+									id={message.id}
+									history={messages}
+									content={message.content}
+									floatingButtons={false}
+									save={false}
+								/>
+							</div>
 						{/if}
 					</div>
 				</div>
