@@ -62,7 +62,7 @@ def get_sorted_filters(model_id, models):
 async def process_pipeline_inlet_filter(request, payload, user, models):
     # 通过model.id 获取assistant_id信息
     assistant_id = user.assistant_id
-    from backend.open_webui.routers.ragflow import ModelAppMapping
+    from open_webui.routers.ragflow import ModelAppMapping
     from open_webui.models.app_sessions import AppSessions
     model_id = payload["model"]
     if ModelAppMapping.is_supported_model_except_rag_flow(model_id):
