@@ -60,17 +60,28 @@ def get_sorted_filters(model_id, models):
 
 
 async def process_pipeline_inlet_filter(request, payload, user, models):
+    # 通过model.id 获取assistant_id信息
+    assistant_id = user.assistant_id
+    from backend.open_webui.routers.ragflow import ModelAppMapping
+    from open_webui.models.app_sessions import AppSessions
+    model_id = payload["model"]
+    if ModelAppMapping.is_supported_model_except_rag_flow(model_id):
+        app_id = ModelAppMapping.get_app_id(model_id)
+        existing_session = AppSessions.get_app_session_by_app_user(
+            app_id, user.ragflow_user_id
+        )
+        assistant_id = existing_session.assistant_id
     user_dict = {
         "id": user.id,
         "email": user.email,
         "name": user.name,
         "role": user.role,
-        "assistant_id": user.assistant_id,
+        "assistant_id": assistant_id,
     }
     kb_ids = []
-    if user.assistant_id:
+    if assistant_id:
         try:
-            assistant_response = await get_assistant(user.assistant_id)
+            assistant_response = await get_assistant(assistant_id)
             print("assistant_response", assistant_response)
             assistant_data = assistant_response['data']
             kb_ids = assistant_data.get('kb_ids', [])
@@ -80,7 +91,6 @@ async def process_pipeline_inlet_filter(request, payload, user, models):
 
     # 添加 kb_ids 到用户信息中
     user_dict["kb_ids"] = kb_ids
-    model_id = payload["model"]
     sorted_filters = get_sorted_filters(model_id, models)
     model = models[model_id]
 

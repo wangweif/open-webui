@@ -116,6 +116,56 @@ async def create_assistant(user_id):
     assistant_id = response_data['data']['id']
     return assistant_id
 
+
+async def create_assistant_for_app(
+    name: str, description: str, user_id: str, kb_ids: list = None
+):
+    token = create_token(data={"id": TENANT_ID})
+    """通用的assistant创建函数"""
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/dialog/set"
+
+    # 如果没有提供知识库ID，使用空列表
+    if kb_ids is None:
+        kb_ids = []
+
+    payload = {
+        "name": name,
+        "description": description,
+        "icon": "",
+        "language": "Chinese",
+        "prompt_config": {
+            "empty_response": "",
+            "prologue": "你好！ 我是你的助理，有什么可以帮到你的吗？",
+            "quote": True,
+            "keyword": False,
+            "tts": False,
+            "system": '你是一个智能助手，请总结知识库的内容来回答问题，请列举知识库中的数据详细回答。当所有知识库内容都与问题无关时，你的回答必须包括"知识库中未找到您要的答案！"这句话。回答需要考虑聊天历史。\n        以下是知识库：\n        {knowledge}\n        以上是知识库。',
+            "refine_multiturn": False,
+            "use_kg": False,
+            "reasoning": False,
+            "parameters": [{"key": "knowledge", "optional": False}],
+        },
+        "kb_ids": kb_ids,
+        "llm_id": "Qwen3:32B___VLLM@VLLM",
+        "llm_setting": {
+            "temperature": 0.1,
+            "top_p": 0.3,
+            "presence_penalty": 0.4,
+            "frequency_penalty": 0.7,
+        },
+        "similarity_threshold": 0.2,
+        "vector_similarity_weight": 0.3,
+        "rerank_id": "bge-reranker-v2-m3___VLLM@VLLM",
+        "top_n": 30,
+        "top_k": 2048,
+        "user_id": user_id,
+    }
+    session = await get_session()
+    headers = {"Content-Type": "application/json", "Cookie": "token=" + token}
+    async with session.post(api_url, json=payload, headers=headers) as response:
+        return await response.json()
+
+
 async def get_assistant(assistant_id):
     api_url = f"{KNOWLEDGE_BASE_URL}/v1/dialog/get?dialog_id={assistant_id}"
     

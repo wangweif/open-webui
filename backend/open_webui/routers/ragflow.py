@@ -4,9 +4,17 @@ from typing import List, Optional
 import logging
 
 from open_webui.utils.auth import get_verified_user
-from open_webui.utils.ragflow_assistant import get_assistant, get_kbs, update_assistant, get_accessible_kbs
+from open_webui.utils.ragflow_assistant import (
+    get_assistant,
+    get_kbs,
+    update_assistant,
+    get_accessible_kbs,
+    create_assistant_for_app,
+)
 from open_webui.models.users import Users
+from open_webui.models.app_sessions import AppSessions, AppSessionModel
 from open_webui.config import RAGFLOW_TAVILY_API_KEY
+
 log = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -389,4 +397,144 @@ async def update_assistant_refine_multiturn(
         
     except Exception as e:
         log.error(f"Error updating assistant refine multiturn config: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# 新增的app session管理相关接口
+class ModelAppMapping:
+    """模型到应用ID的映射"""
+
+    MODEL_APP_ID_MAP = {
+        "rag_flow_webapi_pipeline_cs": 1,
+        "n8n_project_research": 2,
+        "contract_review": 3,
+    }
+
+    @classmethod
+    def get_app_id(cls, model_id: str) -> Optional[int]:
+        return cls.MODEL_APP_ID_MAP.get(model_id)
+
+    @classmethod
+    def is_supported_model(cls, model_id: str) -> bool:
+        return model_id in cls.MODEL_APP_ID_MAP
+
+    @classmethod
+    def is_supported_model_except_rag_flow(cls, model_id: str) -> bool:
+        """判断是否在 MODEL_APP_ID_MAP 中，且不为 rag_flow_webapi_pipeline_cs"""
+        return model_id in cls.MODEL_APP_ID_MAP and model_id != "rag_flow_webapi_pipeline_cs"
+
+
+class GetOrCreateAssistantRequest(BaseModel):
+    model_id: str
+    user_id: str
+
+
+class GetOrCreateAssistantResponse(BaseModel):
+    assistant_id: str
+    is_new: bool
+    message: str
+
+
+async def get_or_create_assistant(
+    request: GetOrCreateAssistantRequest, user=Depends(get_verified_user)
+) -> GetOrCreateAssistantResponse:
+    """
+    根据模型ID和用户ID获取或创建assistant
+    专门为 n8n_project_research 和 contract_review 模型使用
+    rag_flow_webapi_pipeline_cs 模型继续使用用户表中的默认 assistant_id
+    """
+    try:
+        # rag_flow_webapi_pipeline_cs 使用用户默认的 assistant_id
+        if request.model_id == "rag_flow_webapi_pipeline_cs":
+            assistant_id = getattr(user, "assistant_id", None)
+            if not assistant_id:
+                raise HTTPException(
+                    status_code=400, detail="User does not have an associated assistant"
+                )
+            return GetOrCreateAssistantResponse(
+                assistant_id=assistant_id,
+                is_new=False,
+                message="Using default user assistant",
+            )
+
+        # 检查是否为支持的模型
+        if not ModelAppMapping.is_supported_model(request.model_id):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Model {request.model_id} is not supported for assistant management",
+            )
+
+        # 获取app_id
+        app_id = ModelAppMapping.get_app_id(request.model_id)
+
+        # 查询是否已存在app session
+        existing_session = AppSessions.get_app_session_by_app_user(
+            app_id, user.ragflow_user_id
+        )
+
+        if existing_session:
+            return GetOrCreateAssistantResponse(
+                assistant_id=existing_session.assistant_id,
+                is_new=False,
+                message="Using existing assistant",
+            )
+
+        # 创建新的assistant
+        assistant_name = f"Assistant for {request.model_id} - {user.ragflow_user_id}"
+        assistant_description = f"Dedicated assistant for {request.model_id} model"
+
+        create_response = await create_assistant_for_app(
+            name=assistant_name, description=assistant_description, user_id=user.ragflow_user_id
+        )
+
+        if "code" in create_response and create_response["code"] != 0:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to create assistant: {create_response.get('message', 'Unknown error')}",
+            )
+
+        # 从创建响应中获取assistant_id
+        if "data" not in create_response:
+            raise HTTPException(
+                status_code=500, detail="Invalid response from assistant creation"
+            )
+
+        new_assistant_id = create_response["data"]["id"]
+
+        # 保存app session记录
+        app_session = AppSessions.insert_new_app_session(
+            app_id=app_id, user_id=user.ragflow_user_id, assistant_id=new_assistant_id
+        )
+
+        if not app_session:
+            raise HTTPException(status_code=500, detail="Failed to save app session")
+
+        return GetOrCreateAssistantResponse(
+            assistant_id=new_assistant_id,
+            is_new=True,
+            message="Created new assistant successfully",
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error(f"Error getting or creating assistant: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/model/{model_id}/assistant")
+async def get_model_assistant(
+    model_id: str, user=Depends(get_verified_user)
+) -> GetOrCreateAssistantResponse:
+    """
+    根据模型ID获取当前用户的assistant信息
+    用于模型切换时获取对应的assistant_id
+    """
+    try:
+        # 直接调用 get_or_create_assistant 逻辑
+        request = GetOrCreateAssistantRequest(model_id=model_id, user_id=user.id)
+        return await get_or_create_assistant(request, user)
+
+    except Exception as e:
+        log.error(f"Error getting model assistant: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

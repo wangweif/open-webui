@@ -232,4 +232,49 @@ export const updateAssistantReasoning = async (
 	}
 
 	return res;
+};
+
+export interface GetOrCreateAssistantRequest {
+	model_id: string;
+	user_id: string;
+}
+
+export interface GetOrCreateAssistantResponse {
+	assistant_id: string;
+	is_new: boolean;
+	message: string;
+}
+
+/**
+ * 根据模型ID获取当前用户的assistant信息, app_session 不存在则创建新的assistant
+ */
+export const getModelAssistant = async (
+	token: string,
+	modelId: string
+): Promise<GetOrCreateAssistantResponse> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/ragflow/model/${modelId}/assistant`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.log(err);
+			error = err.detail ?? 'Server connection failed';
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
 }; 

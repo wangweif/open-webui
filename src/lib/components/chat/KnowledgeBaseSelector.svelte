@@ -9,11 +9,13 @@
 		getAssistantInfo,
 		updateAssistantKnowledgeBases,
 		updateAssistantTavily,
-		updateAssistantReasoning
+		updateAssistantReasoning,
+		getModelAssistant
 	} from '$lib/apis/ragflow';
-	import type { AssistantInfo } from '$lib/apis/ragflow';
+	import type { AssistantInfo, GetOrCreateAssistantResponse } from '$lib/apis/ragflow';
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import GlobeAlt from '../icons/GlobeAlt.svelte';
+	import { user } from '$lib/stores';
 	export let selectedModelId: string = '';
 	export let assistantId: string = '';
 
@@ -26,6 +28,7 @@
 	let tavilyEnabled = false;
 	let reasoningEnabled = false;
 	let deepResearchEnabled = false;
+	let currentAssistantId = '';
 
 	// 在选择rag_flow_webapi_pipeline_cs和n8n_project_research模型时显示
 	$: shouldShow =
@@ -37,8 +40,8 @@
 	$: showAllFeatures = selectedModelId === 'rag_flow_webapi_pipeline_cs';
 	$: showOnlyKnowledgeBase = selectedModelId === 'n8n_project_research';
 
-	// 监听模型变化，加载assistant信息
-	$: if (shouldShow) {
+	// 监听模型变化，获取或创建assistant并加载信息
+	$: if (shouldShow && selectedModelId && $user?.id) {
 		loadAssistantInfo();
 	}
 
@@ -49,12 +52,23 @@
 	});
 
 	async function loadAssistantInfo() {
-		console.log('loadAssistantInfo', assistantId, localStorage.token);
-		if (!assistantId || !localStorage.token) return;
+		// 先获取或创建assistant
+		console.log('loadModelAssistant', selectedModelId, $user?.id, localStorage.token);
+		if (!selectedModelId || !$user?.id || !localStorage.token) return;
+
+		const assistantResponse = await getModelAssistant(localStorage.token, selectedModelId);
+		currentAssistantId = assistantResponse.assistant_id;
 
 		loading = true;
 		try {
-			assistantInfo = await getAssistantInfo(localStorage.token, assistantId);
+			// 如果创建了新的assistant，显示消息
+			if (assistantResponse.is_new) {
+				console.log('创建了新的assistant:', assistantResponse.message);
+			}
+
+			// 加载assistant信息
+			assistantInfo = await getAssistantInfo(localStorage.token, currentAssistantId);
+			console.log('assistantInfo', assistantInfo);
 			selectedKbIds = [...assistantInfo.kb_ids];
 
 			// 分发初始 kb_ids 事件
@@ -63,6 +77,7 @@
 			tavilyApiKey = assistantInfo.tavily_api_key || '';
 			tavilyEnabled = assistantInfo.tavily_enabled;
 			reasoningEnabled = assistantInfo.reasoning_enabled || false;
+			console.log('tavilyApiKey,tavilyEnabled,reasoningEnabled', assistantInfo);
 		} catch (error) {
 			console.error('Failed to load assistant info:', error);
 			// toast.error('Failed to load assistant configuration');
@@ -97,7 +112,7 @@
 
 		try {
 			await updateAssistantKnowledgeBases(localStorage.token, {
-				assistant_id: assistantId,
+				assistant_id: currentAssistantId,
 				kb_ids: newKbIds
 			});
 			// toast.success('Knowledge base configuration updated');
