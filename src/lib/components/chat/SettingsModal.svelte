@@ -271,6 +271,25 @@
 			]
 		},
 		{
+			id: 'smart-qa',
+			title: 'Smart Q&A',
+			keywords: [
+				'smart',
+				'qa',
+				'question',
+				'answer',
+				'智能问数',
+				'智能',
+				'问答',
+				'问数',
+				'ai',
+				'artificial',
+				'intelligence',
+				'query',
+				'询问'
+			]
+		},
+		{
 			id: 'version',
 			title: 'Version',
 			keywords: [
@@ -662,6 +681,36 @@
 									</svg>
 								</div>
 								<div class=" self-center">知识库</div>
+							</button>
+						{:else if tabId === 'smart-qa'}
+							<button
+								class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
+								'smart-qa'
+									? ''
+									: ' text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'}"
+								on:click={() => {
+									if ($mobile) {
+										toast.info('请在PC端使用该功能');
+										return;
+									}
+									const src = encodeURIComponent('https://llm.bjzntd.com/chatbi');
+									goto(`/c/iframe?src=${src}`);
+									show = false;
+								}}
+							>
+								<div class=" self-center mr-2">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 24 24"
+										fill="currentColor"
+										class="size-4"
+									>
+										<path
+											d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
+										/>
+									</svg>
+								</div>
+								<div class=" self-center">智能问数</div>
 							</button>
 						{:else if tabId === 'version'}
 							<button
