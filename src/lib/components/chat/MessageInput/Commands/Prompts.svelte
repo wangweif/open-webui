@@ -18,6 +18,10 @@
 
 	export let prompt = '';
 	export let command = '';
+	export let fileUploadLimit: number | undefined = undefined;
+	export let imageUploadLimit: number | undefined = undefined;
+	export let showFileUploadButton: boolean = false;
+	export let showImageUploadButton: boolean = false;
 
 	let selectedPromptIdx = 0;
 	let filteredPrompts = [];
@@ -61,6 +65,16 @@
 			}
 
 			if (imageUrl) {
+				// 检查图片上传限制
+				const currentImages = (files ?? []).filter((f) => f?.type === 'image');
+				const limit = imageUploadLimit ?? Infinity;
+				const remaining = Math.max(0, limit - currentImages.length);
+
+				if (remaining <= 0) {
+					toast.warning('超过图片上传上限');
+					return;
+				}
+
 				files = [
 					...files,
 					{

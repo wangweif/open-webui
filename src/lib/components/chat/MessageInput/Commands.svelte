@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
@@ -17,6 +17,10 @@
 
 	export let prompt = '';
 	export let files = [];
+	export let fileUploadLimit: number | undefined = undefined;
+	export let imageUploadLimit: number | undefined = undefined;
+	export let showFileUploadButton: boolean = false;
+	export let showImageUploadButton: boolean = false;
 
 	let loading = false;
 	let commandElement = null;
@@ -56,7 +60,16 @@
 {#if show}
 	{#if !loading}
 		{#if command?.charAt(0) === '/'}
-			<Prompts bind:this={commandElement} bind:prompt bind:files {command} />
+			<Prompts 
+				bind:this={commandElement} 
+				bind:prompt 
+				bind:files 
+				{command}
+				{fileUploadLimit}
+				{imageUploadLimit}
+				{showFileUploadButton}
+				{showImageUploadButton}
+			/>
 		{:else if (command?.charAt(0) === '#' && command.startsWith('#') && !command.includes('# ')) || ('\\#' === command.slice(0, 2) && command.startsWith('#') && !command.includes('# '))}
 			<Knowledge
 				bind:this={commandElement}

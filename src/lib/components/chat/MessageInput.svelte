@@ -76,6 +76,34 @@
 	let selectedModelIds = [];
 	$: selectedModelIds = atSelectedModel !== undefined ? [atSelectedModel.id] : selectedModels;
 
+	// 模型能力配置
+	$: modelCapabilities = selectedModelIds.length > 0
+		? $models.find((m) => m.id === selectedModelIds[0])?.info?.meta?.capabilities ?? {}
+		: {};
+	$: fileUploadLimit = selectedModelIds.length > 0
+		? $models.find((m) => m.id === selectedModelIds[0])?.info?.meta?.fileUploadLimit ?? undefined
+		: undefined;
+	$: imageUploadLimit = selectedModelIds.length > 0
+		? $models.find((m) => m.id === selectedModelIds[0])?.info?.meta?.imageUploadLimit ?? undefined
+		: undefined;
+	// 获取附件上传类型
+	$: attachmentUploadType = selectedModelIds.length > 0
+		? $models.find((m) => m.id === selectedModelIds[0])?.info?.meta?.attachmentUploadType
+		: undefined;
+
+	// 按钮显示控制
+	$: showWebSearchButton = modelCapabilities.webSearch ?? true;
+	$: showKbWebSearchButton = modelCapabilities.kb_webSearch ?? true;
+	$: showEnhancedSearchButton = modelCapabilities.enhancedSearch ?? true;
+	$: showDeepResearchButton = modelCapabilities.deepResearch ?? true;
+	$: showKnowledgeBaseButton = modelCapabilities.knowledgeBase ?? true;
+	// 根据附件上传类型控制上传按钮显示
+	$: showFileUploadButton = attachmentUploadType 
+		? attachmentUploadType === 'file' : false;
+	$: showImageUploadButton = attachmentUploadType 
+		? attachmentUploadType === 'image' : false;
+
+	// 保持原有的模型特定逻辑
 	$: isRagFlowModel = selectedModelIds.includes('rag_flow_webapi_pipeline_cs');
 	$: isAiPriceModel = selectedModelIds.includes('aiPrice');
 	$: isWebSearchModel = selectedModelIds.includes('Qwen3:32B');
@@ -357,6 +385,61 @@
 		}
 	};
 
+	// 检查文件上传限制的通用函数
+	function checkUploadLimit(inputFiles) {
+		const currentFiles = (files ?? []).filter((f) => f?.type !== 'image');
+		const currentImages = (files ?? []).filter((f) => f?.type === 'image');
+		
+		// 分析要上传的文件
+		const inputImages = inputFiles.filter((f) => f.type.startsWith('image/'));
+		const inputNonImages = inputFiles.filter((f) => !f.type.startsWith('image/'));
+		
+		// 根据上传类型确定限制
+		let limit, currentCount, fileType, totalInputCount;
+		if (showImageUploadButton && !showFileUploadButton) {
+			// 仅图片上传
+			limit = imageUploadLimit ?? Infinity;
+			currentCount = currentImages.length;
+			totalInputCount = inputImages.length;
+			fileType = '图片';
+		} else {
+			// 文件上传（包括图片）
+			limit = fileUploadLimit ?? Infinity;
+			currentCount = currentFiles.length + currentImages.length;
+			totalInputCount = inputFiles.length;
+			fileType = '文件';
+		}
+		
+		const remaining = Math.max(0, limit - currentCount);
+
+		if (remaining <= 0) {
+			toast.warning(`超过${fileType}上传上限`);
+			return { allowed: false, files: [] };
+		}
+
+		if (totalInputCount > remaining) {
+			// 如果选择的总数超过剩余限制，需要智能选择
+			let selectedFiles = [];
+			
+			if (showImageUploadButton && !showFileUploadButton) {
+				// 仅图片模式：只选择图片
+				selectedFiles = inputImages.slice(0, remaining);
+			} else {
+				// 文件模式：优先选择图片，然后选择其他文件
+				const imageRemaining = Math.max(0, remaining - inputImages.length);
+				selectedFiles = [
+					...inputImages.slice(0, Math.min(inputImages.length, remaining)),
+					...inputNonImages.slice(0, imageRemaining)
+				];
+			}
+			
+			toast.warning(`超过${fileType}上传上限，已限制为${remaining}个`);
+			return { allowed: true, files: selectedFiles };
+		}
+
+		return { allowed: true, files: inputFiles };
+	}
+
 	const inputFilesHandler = async (inputFiles) => {
 		console.log('Input files handler called with:', inputFiles);
 		inputFiles.forEach((file) => {
@@ -457,7 +540,11 @@
 			const inputFiles = Array.from(e.dataTransfer?.files);
 			if (inputFiles && inputFiles.length > 0) {
 				console.log(inputFiles);
-				inputFilesHandler(inputFiles);
+				
+				const result = checkUploadLimit(inputFiles);
+				if (result.allowed && result.files.length > 0) {
+					inputFilesHandler(result.files);
+				}
 			}
 		}
 
@@ -579,6 +666,10 @@
 						bind:this={commandsElement}
 						bind:prompt
 						bind:files
+						{fileUploadLimit}
+						{imageUploadLimit}
+						{showFileUploadButton}
+						{showImageUploadButton}
 						on:upload={(e) => {
 							dispatch('upload', e.detail);
 						}}
@@ -613,7 +704,10 @@
 						on:change={async () => {
 							if (inputFiles && inputFiles.length > 0) {
 								const _inputFiles = Array.from(inputFiles);
-								inputFilesHandler(_inputFiles);
+								const result = checkUploadLimit(_inputFiles);
+								if (result.allowed && result.files.length > 0) {
+									inputFilesHandler(result.files);
+								}
 							} else {
 								toast.error($i18n.t(`File not found.`));
 							}
@@ -936,6 +1030,16 @@
 													if (clipboardData && clipboardData.items) {
 														for (const item of clipboardData.items) {
 															if (item.type.indexOf('image') !== -1) {
+																// 检查图片上传限制
+																const currentImages = (files ?? []).filter((f) => f?.type === 'image');
+																const limit = imageUploadLimit ?? Infinity;
+																const remaining = Math.max(0, limit - currentImages.length);
+
+																if (remaining <= 0) {
+																	toast.warning('超过图片上传上限');
+																	return;
+																}
+
 																const blob = item.getAsFile();
 																const reader = new FileReader();
 
@@ -955,6 +1059,17 @@
 																	const text = clipboardData.getData('text/plain');
 
 																	if (text.length > PASTED_TEXT_CHARACTER_LIMIT) {
+																		// 检查文件上传限制
+																		const currentFiles = (files ?? []).filter((f) => f?.type !== 'image');
+																		const currentImages = (files ?? []).filter((f) => f?.type === 'image');
+																		const limit = fileUploadLimit ?? Infinity;
+																		const remaining = Math.max(0, limit - currentFiles.length - currentImages.length);
+
+																		if (remaining <= 0) {
+																			toast.warning('超过文件上传上限');
+																			return;
+																		}
+
 																		e.preventDefault();
 																		const blob = new Blob([text], { type: 'text/plain' });
 																		const file = new File([blob], `Pasted_Text_${Date.now()}.txt`, {
@@ -1152,6 +1267,16 @@
 												if (clipboardData && clipboardData.items) {
 													for (const item of clipboardData.items) {
 														if (item.type.indexOf('image') !== -1) {
+															// 检查图片上传限制
+															const currentImages = (files ?? []).filter((f) => f?.type === 'image');
+															const limit = imageUploadLimit ?? Infinity;
+															const remaining = Math.max(0, limit - currentImages.length);
+
+															if (remaining <= 0) {
+																toast.warning('超过图片上传上限');
+																return;
+															}
+
 															const blob = item.getAsFile();
 															const reader = new FileReader();
 
@@ -1171,6 +1296,17 @@
 																const text = clipboardData.getData('text/plain');
 
 																if (text.length > PASTED_TEXT_CHARACTER_LIMIT) {
+																	// 检查文件上传限制
+																	const currentFiles = (files ?? []).filter((f) => f?.type !== 'image');
+																	const currentImages = (files ?? []).filter((f) => f?.type === 'image');
+																	const limit = fileUploadLimit ?? Infinity;
+																	const remaining = Math.max(0, limit - currentFiles.length - currentImages.length);
+
+																	if (remaining <= 0) {
+																		toast.warning('超过文件上传上限');
+																		return;
+																	}
+
 																	e.preventDefault();
 																	const blob = new Blob([text], { type: 'text/plain' });
 																	const file = new File([blob], `Pasted_Text_${Date.now()}.txt`, {
@@ -1190,16 +1326,15 @@
 
 								<div class=" flex justify-between mt-1 mb-2.5 mx-0.5 max-w-full" dir="ltr">
 									<div class="ml-1 self-end flex items-start flex-1 max-w-[80%] gap-0.5">
-										{#if !isRagFlowModel && !isAiPriceModel && !isNongJingSanziModel && !isAgriculturePriceModel && !isPlantingModel && !isAgriPolicyModel}
+										{#if showFileUploadButton || showImageUploadButton}
 											<InputMenu
 												bind:selectedToolIds
 												{screenCaptureHandler}
 												{inputFilesHandler}
-												{isIdentificationModel}
-												{isWebSearchModel}
-												{isRagFlowModel}
-												{isDocSummaryModel}
-												{isAgriPolicyModel}
+												{showImageUploadButton}
+												{showFileUploadButton}
+												{fileUploadLimit}
+												{imageUploadLimit}
 												{files}
 												uploadFilesHandler={() => {
 													filesInputElement.click();
@@ -1290,11 +1425,9 @@
 											{/if}
 
 											{#if $_user}
-												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && isWebSearchModel}
+												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search) && showWebSearchButton}
 													<Tooltip
-														content={isRagFlowModel
-															? $i18n.t('Search is not needed for this model')
-															: $i18n.t('Search the internet')}
+														content={$i18n.t('Search the internet')}
 														placement="top"
 													>
 														<button
@@ -1316,7 +1449,6 @@
 																: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'} {isRagFlowModel
 																? 'opacity-50 cursor-not-allowed'
 																: ''}"
-															disabled={isRagFlowModel}
 														>
 															<GlobeAlt className="size-5" strokeWidth="1.75" />
 															<span
@@ -1328,10 +1460,14 @@
 												{/if}
 
 												<!-- 知识库选择器 - 只在选择 rag_flow_webapi_pipeline_cs 模型时显示 -->
-												{#if isRagFlowModel || isN8nProjectResearchModel || isContractReviewModel}
+												{#if showKnowledgeBaseButton || showKbWebSearchButton || showEnhancedSearchButton || showDeepResearchButton}
 													<KnowledgeBaseSelector
 														selectedModelId={selectedModelIds[0]}
 														assistantId={$_user.assistant_id}
+														{showKnowledgeBaseButton}
+														{showKbWebSearchButton}
+														{showEnhancedSearchButton}
+														{showDeepResearchButton}
 														on:kbIdsChange={(e) => {
 															kb_ids = e.detail.kb_ids;
 															console.log('kb_ids updated:', kb_ids);

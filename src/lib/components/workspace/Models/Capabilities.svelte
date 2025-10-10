@@ -6,18 +6,28 @@
 
 	const i18n = getContext('i18n');
 
-	const helpText = {
+	const helpText: { [key: string]: string } = {
 		vision: $i18n.t('Model accepts image inputs'),
 		usage: $i18n.t(
 			'Sends `stream_options: { include_usage: true }` in the request.\nSupported providers will return token usage information in the response when set.'
 		),
-		citations: $i18n.t('Displays citations in the response')
+		citations: $i18n.t('Displays citations in the response'),
+		webSearch: '联网搜索',
+		kb_webSearch: '知识库联网搜索',
+		enhancedSearch: '增强搜索',
+		deepResearch: '深度搜索',
+		knowledgeBase: '知识库选择器'
 	};
 
 	export let capabilities: {
 		vision?: boolean;
 		usage?: boolean;
 		citations?: boolean;
+		webSearch?: boolean;
+		kb_webSearch?: boolean;
+		enhancedSearch?: boolean;
+		deepResearch?: boolean;
+		knowledgeBase?: boolean;
 	} = {};
 </script>
 
@@ -36,7 +46,7 @@
 				/>
 
 				<div class=" py-0.5 text-sm capitalize">
-					<Tooltip content={marked.parse(helpText[capability])}>
+					<Tooltip content={helpText[capability] ? marked.parse(helpText[capability]) : ''}>
 						{$i18n.t(capability)}
 					</Tooltip>
 				</div>

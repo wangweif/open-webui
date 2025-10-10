@@ -2,6 +2,7 @@
 	import { DropdownMenu } from 'bits-ui';
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { getContext, onMount, tick } from 'svelte';
+    import { toast } from 'svelte-sonner';
 
 	import { config, user, tools as _tools, mobile } from '$lib/stores';
 	import { createPicker } from '$lib/utils/google-drive-picker';
@@ -34,15 +35,68 @@
 
 	export let selectedToolIds: string[] = [];
 
-	export let isRagFlowModel: boolean = false;
-    export let isAiPriceModel: boolean = false;
-    export let isIdentificationModel: boolean = false;
-    export let isWebSearchModel: boolean = false;
-    export let isDocSummaryModel: boolean = false;
-    export let isAgriPolicyModel: boolean = false;
+	export let fileUploadLimit: number | undefined = undefined;
+	export let imageUploadLimit: number | undefined = undefined;
+	export let showFileUploadButton: boolean = false;
+	export let showImageUploadButton: boolean = false;
 	export let files: any[] = []; // 传入当前已上传的文件列表
 
 	export let onClose: Function;
+
+	// 导出检查上传限制的函数
+	export function checkUploadLimit(inputFiles) {
+		const currentFiles = (files ?? []).filter((f) => f?.type !== 'image');
+		const currentImages = (files ?? []).filter((f) => f?.type === 'image');
+		
+		// 分析要上传的文件
+		const inputImages = inputFiles.filter((f) => f.type.startsWith('image/'));
+		const inputNonImages = inputFiles.filter((f) => !f.type.startsWith('image/'));
+		
+		// 根据上传类型确定限制
+		let limit, currentCount, fileType, totalInputCount;
+		if (showImageUploadButton && !showFileUploadButton) {
+			// 仅图片上传
+			limit = imageUploadLimit ?? Infinity;
+			currentCount = currentImages.length;
+			totalInputCount = inputImages.length;
+			fileType = '图片';
+		} else {
+			// 文件上传（包括图片）
+			limit = fileUploadLimit ?? Infinity;
+			currentCount = currentFiles.length + currentImages.length;
+			totalInputCount = inputFiles.length;
+			fileType = '文件';
+		}
+		
+		const remaining = Math.max(0, limit - currentCount);
+
+		if (remaining <= 0) {
+			toast.warning(`超过${fileType}上传上限`);
+			return { allowed: false, files: [] };
+		}
+
+		if (totalInputCount > remaining) {
+			// 如果选择的总数超过剩余限制，需要智能选择
+			let selectedFiles = [];
+			
+			if (showImageUploadButton && !showFileUploadButton) {
+				// 仅图片模式：只选择图片
+				selectedFiles = inputImages.slice(0, remaining);
+			} else {
+				// 文件模式：优先选择图片，然后选择其他文件
+				const imageRemaining = Math.max(0, remaining - inputImages.length);
+				selectedFiles = [
+					...inputImages.slice(0, Math.min(inputImages.length, remaining)),
+					...inputNonImages.slice(0, imageRemaining)
+				];
+			}
+			
+			toast.warning(`超过${fileType}上传上限，已限制为${remaining}个`);
+			return { allowed: true, files: selectedFiles };
+		}
+
+		return { allowed: true, files: inputFiles };
+	}
 
 	let tools = {};
 	let show = false;
@@ -53,10 +107,6 @@
 
 	let fileUploadEnabled = true;
 	$: fileUploadEnabled = $user?.role === 'admin' || $user?.permissions?.chat?.file_upload;
-
-	// 检查RagFlowModel是否已经上传了图片
-	$: hasRagFlowImage = isRagFlowModel && files.some(file => file.type === 'image') || isIdentificationModel && files.some(file => file.type === 'image');
-	$: ragFlowUploadDisabled = isRagFlowModel && hasRagFlowImage;
 
 	const init = async () => {
 		if ($_tools === null) {
@@ -81,23 +131,13 @@
 	function handleFileChange(event) {
 		const inputFiles = Array.from(event.target?.files);
 		if (inputFiles && inputFiles.length > 0) {
-			console.log(inputFiles);
-			
-			// 对于RagFlowModel，检查是否已经有图片
-			if (isRagFlowModel && hasRagFlowImage) {
-				// 如果已经有图片，则不允许再上传
-				console.log('RagFlowModel already has an image, upload blocked');
-				return;
-			}
-			
-			// 对于RagFlowModel，只取第一张图片
-			if (isRagFlowModel && inputFiles.length > 1) {
-				inputFilesHandler([inputFiles[0]]);
-			} else {
-				inputFilesHandler(inputFiles);
+			const result = checkUploadLimit(inputFiles);
+			if (result.allowed && result.files.length > 0) {
+				inputFilesHandler(result.files);
 			}
 		}
 	}
+
 </script>
 
 <!-- Hidden file input used to open the camera on mobile -->
@@ -140,7 +180,7 @@
 			align="start"
 			transition={flyAndScale}
 		>
-			{#if Object.keys(tools).length > 0 && !isRagFlowModel && !isAiPriceModel && !isIdentificationModel && !isWebSearchModel && !isDocSummaryModel}
+			{#if Object.keys(tools).length > 0}
 				<div class="  max-h-28 overflow-y-auto scrollbar-hidden">
 					{#each Object.keys(tools) as toolId}
 						<button
@@ -212,38 +252,47 @@
 				</DropdownMenu.Item>
 			</Tooltip> -->
 
-				<Tooltip
-					content={!fileUploadEnabled 
-						? $i18n.t('You do not have permission to upload files') 
-						: ragFlowUploadDisabled 
-							? '已上传图片，无法再次上传' 
-							: ''}
-					className="w-full"
-				>
-					<DropdownMenu.Item
-						class="flex gap-2 items-center px-3 py-2 text-sm font-medium rounded-xl {!fileUploadEnabled || ragFlowUploadDisabled
-							? 'opacity-50 cursor-not-allowed'
-							: 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'}"
-						on:click={() => {
-							if (fileUploadEnabled && !ragFlowUploadDisabled) {
-								if (isRagFlowModel || isIdentificationModel) {
-									// 对于RagFlowModel，使用专门的单图片上传输入框
-									const ragflowInputElement = document.getElementById('ragflow-image-input');
-									if (ragflowInputElement) {
-										ragflowInputElement.click();
-									}
-								} else {
-									uploadFilesHandler();
-								}
-							}
-						}}
-					>
-						<DocumentArrowUpSolid />
-						<div class="line-clamp-1">{isRagFlowModel || isIdentificationModel ? '上传图片' : $i18n.t('Upload Files')}</div>
-					</DropdownMenu.Item>
-				</Tooltip>
+			<Tooltip
+				content={!fileUploadEnabled ? $i18n.t('You do not have permission to upload files') :  ''}
+				className="w-full"
+			>
+				<DropdownMenu.Item
+					class="flex gap-2 items-center px-3 py-2 text-sm font-medium rounded-xl {!fileUploadEnabled
+						? 'opacity-50 cursor-not-allowed'
+						: 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'}"
+					on:click={() => {
+						if (fileUploadEnabled) {
+							const currentFileCount = (files ?? []).length;
+							const currentImageCount = (files ?? []).filter((f) => f?.type === 'image').length;
 
-			{#if $config?.features?.enable_google_drive_integration && !isDocSummaryModel}
+							if (showImageUploadButton && !showFileUploadButton) {
+								// 仅图片上传情形：若已达图片上限则阻止
+								if ((imageUploadLimit ?? Infinity) <= currentImageCount) {
+									toast.warning('超过图片上传上限');
+									return;
+								}
+								// 对于图片上传，使用专门的单图片上传输入框
+								const ragflowInputElement = document.getElementById('ragflow-image-input');
+								if (ragflowInputElement) {
+									ragflowInputElement.click();
+								}
+							} else {
+								// 文件上传情形：若已达文件上限则阻止
+								if ((fileUploadLimit ?? Infinity) <= currentFileCount) {
+									toast.warning('超过文件上传上限');
+									return;
+								}
+								uploadFilesHandler();
+							}
+						}
+					}}
+				>
+					<DocumentArrowUpSolid />
+					<div class="line-clamp-1">{showFileUploadButton ? '上传文件' : '上传图片'}</div>
+				</DropdownMenu.Item>
+			</Tooltip>
+
+			{#if $config?.features?.enable_google_drive_integration}
 				<DropdownMenu.Item
 					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
 					on:click={() => {
@@ -280,7 +329,7 @@
 				</DropdownMenu.Item>
 			{/if}
 
-			{#if $config?.features?.enable_onedrive_integration && !isDocSummaryModel}
+			{#if $config?.features?.enable_onedrive_integration}
 				<DropdownMenu.Item
 					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
 					on:click={() => {

@@ -1601,6 +1601,9 @@ export interface ModelMeta {
 	description?: string;
 	capabilities?: object;
 	profile_image_url?: string;
+	fileUploadLimit?: number;
+	imageUploadLimit?: number;
+	attachmentUploadType?: 'file' | 'image' | 'none';
 }
 
 export interface ModelParams {}

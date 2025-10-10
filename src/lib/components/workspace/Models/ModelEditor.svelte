@@ -10,6 +10,7 @@
 	import ActionsSelector from '$lib/components/workspace/Models/ActionsSelector.svelte';
 	import Capabilities from '$lib/components/workspace/Models/Capabilities.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
+	import Checkbox from '$lib/components/common/Checkbox.svelte';
 	import { getTools } from '$lib/apis/tools';
 	import { getFunctions } from '$lib/apis/functions';
 	import { getKnowledgeBases } from '$lib/apis/knowledge';
@@ -77,8 +78,42 @@
 	let capabilities = {
 		vision: true,
 		usage: undefined,
-		citations: true
+		citations: true,
+		webSearch: false,
+		kb_webSearch: false,
+		enhancedSearch: false,
+		deepResearch: false,
+		knowledgeBase: false,
 	};
+
+	let fileUploadLimit: number | undefined = undefined;
+	let imageUploadLimit: number | undefined = undefined;
+	let attachmentUploadType: 'file' | 'image' | 'none' = 'none';
+
+	function handleUploadLimitInput(e: Event, type: 'file' | 'image') {
+		const inputEl = e.currentTarget as HTMLInputElement;
+		const raw = (inputEl?.value ?? '').trim();
+		const parsed = raw === '' ? undefined : Math.max(1, Number(raw));
+		if (type === 'file') {
+			fileUploadLimit = parsed as number | undefined;
+		} else {
+			imageUploadLimit = parsed as number | undefined;
+		}
+	}
+
+	function handleAttachmentTypeChange(type: 'file' | 'image' | 'none') {
+		attachmentUploadType = type;
+		// Reset the other capability when switching types
+		if (type === 'file') {
+			imageUploadLimit = undefined;
+		} else if (type === 'image') {
+			fileUploadLimit = undefined;
+		} else {
+			fileUploadLimit = undefined;
+			imageUploadLimit = undefined;
+		}
+		capabilities = capabilities;
+	}
 
 	let knowledge = [];
 	let toolIds = [];
@@ -116,6 +151,26 @@
 
 		info.access_control = accessControl;
 		info.meta.capabilities = capabilities;
+
+		// persist upload limits outside capabilities
+		if (fileUploadLimit !== undefined && fileUploadLimit !== null) {
+			(info.meta as any).fileUploadLimit = fileUploadLimit;
+		} else if ((info.meta as any).fileUploadLimit !== undefined) {
+			delete (info.meta as any).fileUploadLimit;
+		}
+
+		if (imageUploadLimit !== undefined && imageUploadLimit !== null) {
+			(info.meta as any).imageUploadLimit = imageUploadLimit;
+		} else if ((info.meta as any).imageUploadLimit !== undefined) {
+			delete (info.meta as any).imageUploadLimit;
+		}
+
+		// 保存附件上传类型
+		if (attachmentUploadType !== 'none') {
+			(info.meta as any).attachmentUploadType = attachmentUploadType;
+		} else if ((info.meta as any).attachmentUploadType !== undefined) {
+			delete (info.meta as any).attachmentUploadType;
+		}
 
 		if (enableDescription) {
 			info.meta.description = info.meta.description.trim() === '' ? null : info.meta.description;
@@ -230,6 +285,22 @@
 				}
 			});
 			capabilities = { ...capabilities, ...(model?.meta?.capabilities ?? {}) };
+
+			// load upload limits from meta (outside capabilities)
+			fileUploadLimit = (model?.meta as any)?.fileUploadLimit ?? undefined;
+			imageUploadLimit = (model?.meta as any)?.imageUploadLimit ?? undefined;
+
+			// 恢复附件上传类型
+			const savedAttachmentType = (model?.meta as any)?.attachmentUploadType;
+			if (savedAttachmentType === 'file' || savedAttachmentType === 'image') {
+				attachmentUploadType = savedAttachmentType;
+			} else if (fileUploadLimit !== undefined) {
+				attachmentUploadType = 'file';
+			} else if (imageUploadLimit !== undefined) {
+				attachmentUploadType = 'image';
+			} else {
+				attachmentUploadType = 'none';
+			}
 
 			if ('access_control' in model) {
 				accessControl = model.access_control;
@@ -715,6 +786,60 @@
 
 					<div class="my-2">
 						<Capabilities bind:capabilities />
+					</div>
+
+					<div class="my-2">
+						<div class="flex w-full justify-between mb-1">
+							<div class=" self-center text-sm font-semibold">附件上传</div>
+						</div>
+						<div class="flex">
+							<div class=" flex items-center gap-2 mr-3">
+								<Checkbox
+									state={attachmentUploadType === 'file' ? 'checked' : 'unchecked'}
+									on:change={(e) => {
+										handleAttachmentTypeChange(e.detail === 'checked' ? 'file' : 'none');
+									}}
+								/>
+								<div class=" py-0.5 text-sm capitalize">文件</div>
+							</div>
+							<div class=" flex items-center gap-2 mr-3">
+								<Checkbox
+									state={attachmentUploadType === 'image' ? 'checked' : 'unchecked'}
+									on:change={(e) => {
+										handleAttachmentTypeChange(e.detail === 'checked' ? 'image' : 'none');
+									}}
+								/>
+								<div class=" py-0.5 text-sm capitalize">图片</div>
+							</div>
+						</div>
+
+						{#if attachmentUploadType === 'file'}
+							<div class="my-1 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+								<div class="text-xs font-semibold mb-1">文件上传数量</div>
+								<input
+									class="text-sm w-full bg-transparent outline-hidden"
+									type="number"
+									min="1"
+									step="1"
+									placeholder="输入数字（空为不限制）"
+									value={fileUploadLimit ?? ''}
+									on:input={(e) => handleUploadLimitInput(e, 'file')}
+								/>
+							</div>
+						{:else if attachmentUploadType === 'image'}
+							<div class="my-1 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+								<div class="text-xs font-semibold mb-1">图片上传数量</div>
+								<input
+									class="text-sm w-full bg-transparent outline-hidden"
+									type="number"
+									min="1"
+									step="1"
+									placeholder="输入数字（空为不限制）"
+									value={imageUploadLimit ?? ''}
+									on:input={(e) => handleUploadLimitInput(e, 'image')}
+								/>
+							</div>
+						{/if}
 					</div>
 
 					<div class="my-2 text-gray-300 dark:text-gray-700">
