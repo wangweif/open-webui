@@ -92,11 +92,11 @@
 		: undefined;
 
 	// 按钮显示控制
-	$: showWebSearchButton = modelCapabilities.webSearch ?? true;
-	$: showKbWebSearchButton = modelCapabilities.kb_webSearch ?? true;
-	$: showEnhancedSearchButton = modelCapabilities.enhancedSearch ?? true;
-	$: showDeepResearchButton = modelCapabilities.deepResearch ?? true;
-	$: showKnowledgeBaseButton = modelCapabilities.knowledgeBase ?? true;
+	$: showWebSearchButton = modelCapabilities.webSearch ?? false;
+	$: showKbWebSearchButton = modelCapabilities.kb_webSearch ?? false;
+	$: showEnhancedSearchButton = modelCapabilities.enhancedSearch ?? false;
+	$: showDeepResearchButton = modelCapabilities.deepResearch ?? false;
+	$: showKnowledgeBaseButton = modelCapabilities.knowledgeBase ?? false;
 	// 根据附件上传类型控制上传按钮显示
 	$: showFileUploadButton = attachmentUploadType 
 		? attachmentUploadType === 'file' : false;
