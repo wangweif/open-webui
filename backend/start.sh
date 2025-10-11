@@ -65,4 +65,11 @@ if [ -n "$SPACE_ID" ]; then
   export WEBUI_URL=${SPACE_HOST}
 fi
 
-WEBUI_SECRET_KEY="t0p-s3cr3t" exec uvicorn open_webui.main:app --host "$HOST" --port "$PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}"
+# Set ENABLE_REALTIME_CHAT_SAVE if not already set
+if [ -z "$ENABLE_REALTIME_CHAT_SAVE" ]; then
+  export ENABLE_REALTIME_CHAT_SAVE=true
+fi
+
+PYTHON_CMD=$(command -v python3 || command -v python)
+
+WEBUI_SECRET_KEY="$WEBUI_SECRET_KEY" exec "$PYTHON_CMD" -m uvicorn open_webui.main:app --host "$HOST" --port "$PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}"
