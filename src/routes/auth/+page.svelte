@@ -222,14 +222,14 @@
 								<img 
 									src="/login.jpg" 
 									alt="农科小智" 
-									class="w-20 h-20 object-contain"
+									class="w-40 h-40 object-contain"
 								/>
 							</div>
-							<div class="ml-4">
+							<!-- <div class="ml-4">
 								<div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
 									农科小智
 								</div>
-							</div>
+							</div> -->
 						</div>
 						
 						<!-- 登录表单区域，添加圆角矩形框 -->
