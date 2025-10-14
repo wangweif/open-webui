@@ -271,7 +271,14 @@
 
 					console.log(voice);
 
-					const speak = new SpeechSynthesisUtterance(message.content);
+					let content = message.content;
+					// 移除思考
+					content = removeAllDetails(content);
+					// 移除参考文件
+					content = content.replace(/### 参考文件[\s\S]*$/, '');
+					// 移除#号
+					content = content.replace(/#/g, '');
+					const speak = new SpeechSynthesisUtterance(content);
 					speak.rate = $settings.audio?.tts?.playbackRate ?? 1;
 
 					console.log(speak);
