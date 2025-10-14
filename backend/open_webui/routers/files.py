@@ -88,7 +88,6 @@ async def upload_file(
     process: bool = Query(True),
 ):
     log.info(f"file.content_type: {file.content_type}")
-    
     # 从表单数据中读取参数
     form = await request.form()
     print('form', form)
@@ -162,6 +161,11 @@ async def upload_file(
                 if not kb_upload_enabled:
                     log.info(f"知识库上传功能未启用，跳过上传: {name}")
                 else:
+                    # 通过hash, kb_id判断file是否进行过上传，上传过则跳过上传知识库
+                    is_unique = Files.is_unique(hash=file_item.hash, kb_id=kb_ids)
+                    if not is_unique:
+                        log.info(f"文件已存在，跳过上传知识库: {name}")
+                        return file_item
                     # 解析 kb_ids 参数
                     target_kb_ids = []
                     if kb_ids:
@@ -176,6 +180,7 @@ async def upload_file(
                     
                     
                     if target_kb_ids:
+                        Files.update_file_kb_id_by_id(id=id, kb_id=kb_ids)
                         # 获取实际文件路径（对于云存储会下载到本地）
                         actual_file_path = Storage.get_file(file_path)
                         log.info(f"开始上传文件到知识库: {name}, 路径: {actual_file_path}, 目标知识库: {target_kb_ids}")

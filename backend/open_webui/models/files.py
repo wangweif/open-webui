@@ -28,6 +28,7 @@ class File(Base):
     meta = Column(JSON, nullable=True)
 
     access_control = Column(JSON, nullable=True)
+    kb_id = Column(Text, nullable=True)
 
     created_at = Column(BigInteger)
     updated_at = Column(BigInteger)
@@ -47,6 +48,7 @@ class FileModel(BaseModel):
     meta: Optional[dict] = None
 
     access_control: Optional[dict] = None
+    kb_id: Optional[str] = None
 
     created_at: Optional[int]  # timestamp in epoch
     updated_at: Optional[int]  # timestamp in epoch
@@ -230,6 +232,30 @@ class FilesTable:
                 return True
             except Exception:
                 return False
+
+    def is_unique(self, hash: str, kb_id: str) -> bool:
+        with get_db() as db:
+            try:
+                count = (
+                    db.query(File)
+                    .filter_by(hash=hash)
+                    .filter(File.kb_id.like(f'%{kb_id}%'))
+                    .count()
+                )
+                return count == 0
+            except Exception:
+                return False
+
+    def update_file_kb_id_by_id(self, id: str, kb_id: str) -> Optional[FileModel]:
+        with get_db() as db:
+            try:
+                file = db.query(File).filter_by(id=id).first()
+                file.kb_id = kb_id
+                db.commit()
+
+                return FileModel.model_validate(file)
+            except Exception:
+                return None
 
 
 Files = FilesTable()
