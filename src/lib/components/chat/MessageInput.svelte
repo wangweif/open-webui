@@ -309,6 +309,18 @@
 			return null;
 		}
 
+		// 检测是否为 contract_review 模型，如果是则检查知识库选择
+		if (isContractReviewModel) {
+			if (!kb_ids || kb_ids.length === 0) {
+				toast.error('请选择一个知识库');
+				return null;
+			}
+			if (kb_ids.length > 1) {
+				toast.error('请选择唯一的一个知识库');
+				return null;
+			}
+		}
+
 		const tempItemId = uuidv4();
 		const fileItem = {
 			type: 'file',
