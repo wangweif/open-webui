@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { settings, playingNotificationSound, isLastActiveTab } from '$lib/stores';
+	import { removeAllDetails } from '$lib/utils';
 	import DOMPurify from 'dompurify';
 
 	import { marked } from 'marked';
@@ -15,6 +16,8 @@
 		if (!navigator.userActivation.hasBeenActive) {
 			return;
 		}
+		// 移除details
+		content = removeAllDetails(content);
 
 		if ($settings?.notificationSound ?? true) {
 			if (!$playingNotificationSound && $isLastActiveTab) {
@@ -37,9 +40,9 @@
 		dispatch('closeToast');
 	}}
 >
-	<div class="shrink-0 self-top -translate-y-0.5">
+	<!-- <div class="shrink-0 self-top -translate-y-0.5">
 		<img src={'/static/favicon.png'} alt="favicon" class="size-7 rounded-full" />
-	</div>
+	</div> -->
 
 	<div>
 		{#if title}
