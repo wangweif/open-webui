@@ -76,6 +76,31 @@
 	let selectedModelIds = [];
 	$: selectedModelIds = atSelectedModel !== undefined ? [atSelectedModel.id] : selectedModels;
 
+	// 用于检测模型切换的变量
+	let previousSelectedModelIds: string[] = [];
+	
+	// 当模型切换时，清空附件
+	$: if (selectedModelIds && selectedModelIds.length > 0 && previousSelectedModelIds.length > 0) {
+		const modelChanged = JSON.stringify(selectedModelIds) !== JSON.stringify(previousSelectedModelIds);
+		if (modelChanged && files.length > 0) {
+			// 删除已上传的文件
+			files.forEach(async (file) => {
+				if (file.type !== 'collection' && !file?.collection && file.id) {
+					try {
+						await deleteFileById(localStorage.token, file.id);
+					} catch (e) {
+						console.error('Failed to delete file:', e);
+					}
+				}
+			});
+			files = [];
+		}
+		previousSelectedModelIds = [...selectedModelIds];
+	} else if (selectedModelIds && selectedModelIds.length > 0) {
+		// 初次设置，不清空文件
+		previousSelectedModelIds = [...selectedModelIds];
+	}
+
 	// 模型能力配置
 	$: modelCapabilities = selectedModelIds.length > 0
 		? $models.find((m) => m.id === selectedModelIds[0])?.info?.meta?.capabilities ?? {}
