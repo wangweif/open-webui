@@ -97,6 +97,10 @@
 	$: allowedImageTypes = selectedModelIds.length > 0
 		? $models.find((m) => m.id === selectedModelIds[0])?.info?.meta?.allowedImageTypes ?? []
 		: [];
+	// 获取是否必须上传附件的配置
+	$: requireAttachment = selectedModelIds.length > 0
+		? $models.find((m) => m.id === selectedModelIds[0])?.info?.meta?.requireAttachment ?? false
+		: false;
 
 	// 文件类型映射
 	const FILE_TYPE_MAPPING = {
@@ -834,6 +838,14 @@
 						<form
 							class="w-full flex gap-1.5"
 							on:submit|preventDefault={() => {
+								// 检查是否必须上传附件
+								if (requireAttachment && (!files || files.length === 0)) {
+									const attachmentTypeText = attachmentUploadType === 'file' ? '文件' : 
+																attachmentUploadType === 'image' ? '图片' : '附件';
+									toast.error(`此应用必须上传${attachmentTypeText}才能发送消息`);
+									return;
+								}
+								
 								// 检查是否为模型输入，不需要在此处替换链接，因为在显示响应时会处理
 								// check if selectedModels support image input
 								dispatch('submit', prompt);
@@ -1092,6 +1104,13 @@
 															if (enterPressed) {
 																e.preventDefault();
 																if (prompt !== '' || files.length > 0) {
+																	// 检查是否必须上传附件
+																	if (requireAttachment && (!files || files.length === 0)) {
+																		const attachmentTypeText = attachmentUploadType === 'file' ? '文件' : 
+																									attachmentUploadType === 'image' ? '图片' : '附件';
+																		toast.error(`此应用必须上传${attachmentTypeText}才能发送消息`);
+																		return;
+																	}
 																	dispatch('submit', prompt);
 																}
 															}
@@ -1302,6 +1321,13 @@
 
 														// Submit the prompt when Enter key is pressed
 														if ((prompt !== '' || files.length > 0) && enterPressed) {
+															// 检查是否必须上传附件
+															if (requireAttachment && (!files || files.length === 0)) {
+																const attachmentTypeText = attachmentUploadType === 'file' ? '文件' : 
+																							attachmentUploadType === 'image' ? '图片' : '附件';
+																toast.error(`此应用必须上传${attachmentTypeText}才能发送消息`);
+																return;
+															}
 															dispatch('submit', prompt);
 														}
 													}

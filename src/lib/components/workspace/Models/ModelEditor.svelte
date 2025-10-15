@@ -119,6 +119,7 @@
 
 	let allowedFileTypes: string[] = [];
 	let allowedImageTypes: string[] = [];
+	let requireAttachment: boolean = false;
 
 	function handleUploadLimitInput(e: Event, type: 'file' | 'image') {
 		const inputEl = e.currentTarget as HTMLInputElement;
@@ -214,6 +215,13 @@
 			(info.meta as any).allowedImageTypes = allowedImageTypes;
 		} else if ((info.meta as any).allowedImageTypes !== undefined) {
 			delete (info.meta as any).allowedImageTypes;
+		}
+
+		// 保存必须上传附件配置
+		if (attachmentUploadType !== 'none' && requireAttachment) {
+			(info.meta as any).requireAttachment = requireAttachment;
+		} else if ((info.meta as any).requireAttachment !== undefined) {
+			delete (info.meta as any).requireAttachment;
 		}
 
 		if (enableDescription) {
@@ -349,6 +357,7 @@
 			// 恢复文件类型配置
 			allowedFileTypes = (model?.meta as any)?.allowedFileTypes ?? [];
 			allowedImageTypes = (model?.meta as any)?.allowedImageTypes ?? [];
+			requireAttachment = (model?.meta as any)?.requireAttachment ?? false;
 
 			if ('access_control' in model) {
 				accessControl = model.access_control;
@@ -918,6 +927,21 @@
 										</label>
 									{/each}
 								</div>
+							</div>
+						{/if}
+						
+						{#if attachmentUploadType !== 'none'}
+							<div class="my-3 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+								<div class="flex items-center space-x-2 text-sm">
+									<Checkbox
+										state={requireAttachment ? 'checked' : 'unchecked'}
+										on:change={(e) => {
+											requireAttachment = e.detail === 'checked';
+										}}
+									/>
+									<span>必须上传附件</span>
+								</div>
+								<div class="text-xs text-gray-500 mt-1">启用后，用户必须上传文件或图片才能发送消息</div>
 							</div>
 						{/if}
 					</div>
