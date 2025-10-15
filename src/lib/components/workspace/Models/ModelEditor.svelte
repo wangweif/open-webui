@@ -90,6 +90,36 @@
 	let imageUploadLimit: number | undefined = undefined;
 	let attachmentUploadType: 'file' | 'image' | 'none' = 'none';
 
+	// 文件类型配置
+	const FILE_TYPE_OPTIONS = [
+		{ value: 'docx', label: 'DOCX', mimeTypes: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'] },
+		{ value: 'doc', label: 'DOC', mimeTypes: ['application/msword'] },
+		{ value: 'pdf', label: 'PDF', mimeTypes: ['application/pdf'] },
+		{ value: 'txt', label: 'TXT', mimeTypes: ['text/plain'] },
+		{ value: 'csv', label: 'CSV', mimeTypes: ['text/csv'] },
+		{ value: 'xlsx', label: 'XLSX', mimeTypes: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'] },
+		{ value: 'xls', label: 'XLS', mimeTypes: ['application/vnd.ms-excel'] },
+		{ value: 'pptx', label: 'PPTX', mimeTypes: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'] },
+		{ value: 'ppt', label: 'PPT', mimeTypes: ['application/vnd.ms-powerpoint'] },
+		{ value: 'md', label: 'Markdown', mimeTypes: ['text/markdown'] },
+		{ value: 'html', label: 'HTML', mimeTypes: ['text/html'] },
+		{ value: 'xml', label: 'XML', mimeTypes: ['text/xml'] },
+		{ value: 'json', label: 'JSON', mimeTypes: ['application/json'] }
+	];
+
+	const IMAGE_TYPE_OPTIONS = [
+		{ value: 'png', label: 'PNG', mimeTypes: ['image/png'] },
+		{ value: 'jpg', label: 'JPG', mimeTypes: ['image/jpeg'] },
+		{ value: 'jpeg', label: 'JPEG', mimeTypes: ['image/jpeg'] },
+		{ value: 'gif', label: 'GIF', mimeTypes: ['image/gif'] },
+		{ value: 'webp', label: 'WebP', mimeTypes: ['image/webp'] },
+		{ value: 'avif', label: 'AVIF', mimeTypes: ['image/avif'] },
+		{ value: 'svg', label: 'SVG', mimeTypes: ['image/svg+xml'] }
+	];
+
+	let allowedFileTypes: string[] = [];
+	let allowedImageTypes: string[] = [];
+
 	function handleUploadLimitInput(e: Event, type: 'file' | 'image') {
 		const inputEl = e.currentTarget as HTMLInputElement;
 		const raw = (inputEl?.value ?? '').trim();
@@ -170,6 +200,20 @@
 			(info.meta as any).attachmentUploadType = attachmentUploadType;
 		} else if ((info.meta as any).attachmentUploadType !== undefined) {
 			delete (info.meta as any).attachmentUploadType;
+		}
+
+		// 保存文件类型配置
+		if (attachmentUploadType === 'file' && allowedFileTypes.length > 0) {
+			(info.meta as any).allowedFileTypes = allowedFileTypes;
+		} else if ((info.meta as any).allowedFileTypes !== undefined) {
+			delete (info.meta as any).allowedFileTypes;
+		}
+
+		// 保存图片类型配置
+		if (attachmentUploadType === 'image' && allowedImageTypes.length > 0) {
+			(info.meta as any).allowedImageTypes = allowedImageTypes;
+		} else if ((info.meta as any).allowedImageTypes !== undefined) {
+			delete (info.meta as any).allowedImageTypes;
 		}
 
 		if (enableDescription) {
@@ -301,6 +345,10 @@
 			} else {
 				attachmentUploadType = 'none';
 			}
+
+			// 恢复文件类型配置
+			allowedFileTypes = (model?.meta as any)?.allowedFileTypes ?? [];
+			allowedImageTypes = (model?.meta as any)?.allowedImageTypes ?? [];
 
 			if ('access_control' in model) {
 				accessControl = model.access_control;
@@ -825,6 +873,22 @@
 									value={fileUploadLimit ?? ''}
 									on:input={(e) => handleUploadLimitInput(e, 'file')}
 								/>
+								
+								<div class="text-xs font-semibold mb-2 mt-3">允许的文件类型</div>
+								<div class="text-xs text-gray-500 mb-2">选择允许上传的文件类型（不选择则允许所有类型）</div>
+								<div class="grid grid-cols-3 gap-2">
+									{#each FILE_TYPE_OPTIONS as fileType}
+										<label class="flex items-center space-x-2 text-xs">
+											<input
+												type="checkbox"
+												bind:group={allowedFileTypes}
+												value={fileType.value}
+												class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+											<span>{fileType.label}</span>
+										</label>
+									{/each}
+								</div>
 							</div>
 						{:else if attachmentUploadType === 'image'}
 							<div class="my-1 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
@@ -838,6 +902,22 @@
 									value={imageUploadLimit ?? ''}
 									on:input={(e) => handleUploadLimitInput(e, 'image')}
 								/>
+								
+								<div class="text-xs font-semibold mb-2 mt-3">允许的图片类型</div>
+								<div class="text-xs text-gray-500 mb-2">选择允许上传的图片类型（不选择则允许所有类型）</div>
+								<div class="grid grid-cols-3 gap-2">
+									{#each IMAGE_TYPE_OPTIONS as imageType}
+										<label class="flex items-center space-x-2 text-xs">
+											<input
+												type="checkbox"
+												bind:group={allowedImageTypes}
+												value={imageType.value}
+												class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+											<span>{imageType.label}</span>
+										</label>
+									{/each}
+								</div>
 							</div>
 						{/if}
 					</div>

@@ -90,6 +90,68 @@
 	$: attachmentUploadType = selectedModelIds.length > 0
 		? $models.find((m) => m.id === selectedModelIds[0])?.info?.meta?.attachmentUploadType
 		: undefined;
+	// 获取允许的文件类型配置
+	$: allowedFileTypes = selectedModelIds.length > 0
+		? $models.find((m) => m.id === selectedModelIds[0])?.info?.meta?.allowedFileTypes ?? []
+		: [];
+	$: allowedImageTypes = selectedModelIds.length > 0
+		? $models.find((m) => m.id === selectedModelIds[0])?.info?.meta?.allowedImageTypes ?? []
+		: [];
+
+	// 文件类型映射
+	const FILE_TYPE_MAPPING = {
+		'docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+		'doc': ['application/msword'],
+		'pdf': ['application/pdf'],
+		'txt': ['text/plain'],
+		'csv': ['text/csv'],
+		'xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+		'xls': ['application/vnd.ms-excel'],
+		'pptx': ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+		'ppt': ['application/vnd.ms-powerpoint'],
+		'md': ['text/markdown'],
+		'html': ['text/html'],
+		'xml': ['text/xml'],
+		'json': ['application/json']
+	};
+
+	const IMAGE_TYPE_MAPPING = {
+		'png': ['image/png'],
+		'jpg': ['image/jpeg'],
+		'jpeg': ['image/jpeg'],
+		'gif': ['image/gif'],
+		'webp': ['image/webp'],
+		'avif': ['image/avif'],
+		'svg': ['image/svg+xml']
+	};
+
+	// 验证文件类型是否被允许
+	function isFileTypeAllowed(file: File): boolean {
+		// 如果没有配置文件类型限制，则允许所有类型
+		if (attachmentUploadType === 'file') {
+			if (allowedFileTypes.length === 0) return true;
+			
+			// 检查文件扩展名
+			const extension = file.name.split('.').pop()?.toLowerCase();
+			if (!extension) return false;
+			
+			// 检查是否在允许的文件类型列表中
+			return allowedFileTypes.some(type => {
+				const mimeTypes = FILE_TYPE_MAPPING[type];
+				return mimeTypes ? mimeTypes.includes(file.type) : false;
+			});
+		} else if (attachmentUploadType === 'image') {
+			if (allowedImageTypes.length === 0) return true;
+			
+			// 检查图片类型
+			return allowedImageTypes.some(type => {
+				const mimeTypes = IMAGE_TYPE_MAPPING[type];
+				return mimeTypes ? mimeTypes.includes(file.type) : false;
+			});
+		}
+		
+		return true;
+	}
 
 	// 按钮显示控制
 	$: showWebSearchButton = modelCapabilities.webSearch ?? false;
@@ -461,6 +523,20 @@
 				size: file.size,
 				extension: file.name.split('.').at(-1)
 			});
+
+			// 验证文件类型是否被允许
+			if (!isFileTypeAllowed(file)) {
+				const fileExtension = file.name.split('.').pop()?.toLowerCase() || '未知';
+				const allowedTypes = attachmentUploadType === 'file' ? allowedFileTypes : allowedImageTypes;
+				const typeDescription = attachmentUploadType === 'file' ? '文件' : '图片';
+				
+				if (allowedTypes.length > 0) {
+					toast.error(`不支持的${typeDescription}类型：${fileExtension}。允许的类型：${allowedTypes.join(', ')}`);
+				} else {
+					toast.error(`当前模型不支持${typeDescription}上传`);
+				}
+				return;
+			}
 
 			if (
 				($config?.file?.max_size ?? null) !== null &&
