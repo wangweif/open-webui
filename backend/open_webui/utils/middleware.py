@@ -606,33 +606,33 @@ async def chat_completion_files_handler(
 
     if files := body.get("metadata", {}).get("files", None):
         queries = []
-        try:
-            queries_response = await generate_queries(
-                request,
-                {
-                    "model": body["model"],
-                    "messages": body["messages"],
-                    "type": "retrieval",
-                },
-                user,
-            )
-            queries_response = queries_response["choices"][0]["message"]["content"]
-
-            try:
-                bracket_start = queries_response.find("{")
-                bracket_end = queries_response.rfind("}") + 1
-
-                if bracket_start == -1 or bracket_end == -1:
-                    raise Exception("No JSON object found in the response")
-
-                queries_response = queries_response[bracket_start:bracket_end]
-                queries_response = json.loads(queries_response)
-            except Exception as e:
-                queries_response = {"queries": [queries_response]}
-
-            queries = queries_response.get("queries", [])
-        except:
-            pass
+        # try:
+        #     queries_response = await generate_queries(
+        #         request,
+        #         {
+        #             "model": body["model"],
+        #             "messages": body["messages"],
+        #             "type": "retrieval",
+        #         },
+        #         user,
+        #     )
+        #     queries_response = queries_response["choices"][0]["message"]["content"]
+        #
+        #     try:
+        #         bracket_start = queries_response.find("{")
+        #         bracket_end = queries_response.rfind("}") + 1
+        #
+        #         if bracket_start == -1 or bracket_end == -1:
+        #             raise Exception("No JSON object found in the response")
+        #
+        #         queries_response = queries_response[bracket_start:bracket_end]
+        #         queries_response = json.loads(queries_response)
+        #     except Exception as e:
+        #         queries_response = {"queries": [queries_response]}
+        #
+        #     queries = queries_response.get("queries", [])
+        # except:
+        #     pass
 
         if len(queries) == 0:
             queries = [get_last_user_message(body["messages"])]
@@ -1495,8 +1495,12 @@ async def process_chat_response(
 
                         # Update the global content to remove processed content
                         # Find and remove the complete tag from content
-                        tag_pattern = rf"<{re.escape(start_tag)}(.*?)>.*?<{re.escape(end_tag)}>"
-                        content = re.sub(tag_pattern, "", content, count=1, flags=re.DOTALL)
+                        tag_pattern = (
+                            rf"<{re.escape(start_tag)}(.*?)>.*?<{re.escape(end_tag)}>"
+                        )
+                        content = re.sub(
+                            tag_pattern, "", content, count=1, flags=re.DOTALL
+                        )
 
                 return content, content_blocks, end_flag
 
