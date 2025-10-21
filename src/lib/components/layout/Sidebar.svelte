@@ -589,7 +589,6 @@
 				class="flex items-center flex-1 rounded-lg px-2 py-1 h-full gap-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition no-drag-region"
 				href="/"
 				draggable="false"
-				style="display: none;"
 				on:click={async () => {
 					selectedChatId = null;
 					await goto('/');
