@@ -216,7 +216,7 @@
 						</div>
 					</div>
 				{:else}
-					<div class="my-auto pb-10 w-full dark:text-gray-100">
+					<div class="mt-5 pb-10 w-full dark:text-gray-100">
 						<div class="mb-8 flex items-center justify-center">
 							<div class="flex-shrink-0">
 								<img 
