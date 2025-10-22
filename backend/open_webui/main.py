@@ -79,6 +79,7 @@ from open_webui.routers import (
     utils,
     ragflow,
     page_views,
+    qa_records,
 )
 
 from open_webui.routers.retrieval import (
@@ -1022,6 +1023,7 @@ app.include_router(evaluations.router, prefix="/api/v1/evaluations", tags=["eval
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 app.include_router(ragflow.router, prefix="/api/v1/ragflow", tags=["ragflow"])
 app.include_router(page_views.router, prefix="/api/v1/page-views", tags=["page-views"])
+app.include_router(qa_records.router, prefix="/api/v1/qa-records", tags=["qa-records"])
 
 
 try:
