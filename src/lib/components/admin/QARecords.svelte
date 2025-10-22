@@ -226,7 +226,7 @@
 					<div class="flex gap-1.5 items-center">附件</div>
 				</th>
 				<th scope="col" class="px-3 py-1.5">
-					<div class="flex gap-1.5 items-center">模型</div>
+					<div class="flex gap-1.5 items-center">应用</div>
 				</th>
 				<th
 					scope="col"
@@ -293,7 +293,7 @@
 					</td>
 					<td class="px-3 py-2">
 						<span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded">
-							{record.model}
+							{record.model_name || record.model}
 						</span>
 					</td>
 					<td class="px-3 py-2">{dayjs(record.created_at * 1000).format('YYYY-MM-DD HH:mm')}</td>

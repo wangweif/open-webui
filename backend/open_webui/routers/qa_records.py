@@ -35,6 +35,7 @@ class QARecord(BaseModel):
     created_at: int
     updated_at: int
     model: str
+    model_name: Optional[str] = None
     chat_id: Optional[str] = None
 
 
@@ -136,8 +137,7 @@ def extract_qa_records_from_chats() -> List[QARecord]:
                         
                         # 提取模型信息
                         model = next_msg.get('model', chat.chat.get('models', ['unknown'])[0] if isinstance(chat.chat.get('models'), list) else chat.chat.get('models', 'unknown'))
-                        if isinstance(model, dict):
-                            model = model.get('id', 'unknown')
+                        model_name = next_msg.get('modelName', None)
                         
                         # 创建问答记录
                         qa_record = QARecord(
@@ -151,6 +151,7 @@ def extract_qa_records_from_chats() -> List[QARecord]:
                             created_at=chat.created_at,
                             updated_at=chat.updated_at,
                             model=str(model),
+                            model_name=model_name,
                             chat_id=chat.id
                         )
                         

@@ -21,6 +21,7 @@ export interface QARecord {
 	created_at: number;
 	updated_at: number;
 	model: string;
+	model_name?: string;
 	chat_id?: string;
 }
 

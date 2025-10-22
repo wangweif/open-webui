@@ -30,6 +30,7 @@
 		attachments: AttachmentInfo[];
 		created_at: number;
 		model: string;
+		model_name?: string;
 	}
 
 	export let show = false;
@@ -138,9 +139,9 @@
 								</span>
 							</div>
 							<div class="flex flex-col gap-1">
-								<span class="text-xs text-gray-500 dark:text-gray-500">使用模型</span>
+								<span class="text-xs text-gray-500 dark:text-gray-500">应用名称</span>
 								<span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2.5 py-1 rounded-lg w-fit font-medium">
-									{record.model}
+									{record.model_name || record.model}
 								</span>
 							</div>
 						</div>
