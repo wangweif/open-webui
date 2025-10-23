@@ -7,6 +7,7 @@ from open_webui.models.chats import Chats
 from open_webui.models.users import Users
 from open_webui.utils.auth import get_admin_user
 from open_webui.constants import ERROR_MESSAGES
+import time
 
 log = logging.getLogger(__name__)
 
@@ -52,10 +53,16 @@ def extract_qa_records_from_chats() -> List[QARecord]:
         # 获取所有聊天记录
         all_chats = Chats.get_chats()
         
+        # users缓存
+        user_cache = {}
         for chat in all_chats:
             try:
                 # 获取用户信息
-                user = Users.get_user_by_id(chat.user_id)
+                if chat.user_id not in user_cache:
+                    user = Users.get_user_by_id(chat.user_id)
+                    user_cache[chat.user_id] = user
+                else:
+                    user = user_cache[chat.user_id]
                 if not user:
                     continue
                 
@@ -165,7 +172,6 @@ def extract_qa_records_from_chats() -> List[QARecord]:
             except Exception as e:
                 log.error(f"处理聊天记录 {chat.id} 时出错: {str(e)}")
                 continue
-                
     except Exception as e:
         log.error(f"提取问答记录时出错: {str(e)}")
     
