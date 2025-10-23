@@ -15,6 +15,7 @@
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 	import QARecordDetailModal from './QARecords/QARecordDetailModal.svelte';
 	import { searchQARecords, type QARecord } from '$lib/apis/qa-records';
+	import { removeAllDetails } from '$lib/utils';
 
 	const i18n = getContext('i18n');
 
@@ -49,6 +50,12 @@
 		page = 1;
 	}
 
+	const removeDetail = async() => {
+		qaRecords.forEach(record => {
+			record.answer = removeAllDetails(record.answer);
+		});
+	};
+
 	const fetchQARecords = async () => {
 		if (!isInitialized) return;
 		
@@ -63,6 +70,7 @@
 				sortOrder
 			);
 			qaRecords = response.records;
+			await removeDetail()
 			totalRecords = response.total;
 			
 			// 更新上次的值
