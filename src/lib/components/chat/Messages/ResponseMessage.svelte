@@ -975,7 +975,7 @@
 									{/if}
 								{:else if message.content && message.error !== true || isGeneratingWithOutline}
 									<!-- 检查是否包含搜索文本或大纲数据 -->
-									{#if message.hasOutline || message.content == "正在生成大纲，请稍等..." || isGeneratingWithOutline || generationProgress < 100}
+									{#if message.hasOutline || message.content == "正在生成大纲，请稍等..." || isGeneratingWithOutline}
 										<div class="outline-container mt-2 w-full max-w-full">
 											{#if message.outlineDone == undefined || message.outlineDone == false }
 												<div class="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 w-full">
