@@ -98,6 +98,8 @@
 		isGeneratingWithOutline?: boolean;
 		generationProgress?: number;
 		currentProcessing?: string;
+		// 添加取消标识
+		cancelled?: boolean;
 		code_executions?: {
 			uuid: string;
 			name: string;
@@ -1047,6 +1049,13 @@
 													</div>
 												{/if}
 											{/if}
+											
+											<!-- 大纲区域的取消标识 -->
+											{#if message.cancelled && message.done}
+												<div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+													<span class="text-sm text-yellow-800 dark:text-yellow-200">已取消</span>
+												</div>
+											{/if}
 										</div>
 									{:else}
 										<!-- always show message contents even if there's an error -->
@@ -1113,6 +1122,13 @@
 												}
 											}}
 										/>
+										
+										<!-- 显示取消标识 -->
+										{#if message.cancelled && message.done}
+											<div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+												<span class="text-sm text-yellow-800 dark:text-yellow-200">已取消</span>
+											</div>
+										{/if}
 									{/if}
 								{/if}
 

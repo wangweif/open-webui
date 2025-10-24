@@ -1844,9 +1844,17 @@
 			// Set all response messages to done
 			for (const messageId of history.messages[responseMessage.parentId].childrenIds) {
 				history.messages[messageId].done = true;
+				// 添加取消标识
+				history.messages[messageId].cancelled = true;
+				// 停止大纲生成的 spinner
+				history.messages[messageId].outlineDone = true;
+				history.messages[messageId].isGeneratingWithOutline = false;
 			}
 
 			history.messages[history.currentId] = responseMessage;
+
+			// 保存聊天记录，确保取消标识被保存到数据库
+			await saveChatHandler($chatId, history);
 
 			if (autoScroll) {
 				scrollToBottom();
