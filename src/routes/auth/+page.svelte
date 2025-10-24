@@ -219,9 +219,9 @@
 					<div class="mt-5 pb-10 w-full dark:text-gray-100">
 						<div class="mb-8 flex items-center justify-center">
 							<div class="flex-shrink-0">
-								<img 
-									src="/login.jpg" 
-									alt="农科小智" 
+								<img
+									src="/login.jpg"
+									alt="农科小智"
 									class="w-40 h-40 object-contain"
 								/>
 							</div>
@@ -231,7 +231,7 @@
 								</div>
 							</div> -->
 						</div>
-						
+
 						<!-- 登录表单区域，添加圆角矩形框 -->
 						<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
 							<form
@@ -267,8 +267,9 @@
 								{#if $config?.features.enable_login_form || $config?.features.enable_ldap}
 									<div class="flex flex-col mt-6">
 										{#if mode === 'signup'}
-											<div class="mb-4">
-												<div class="text-base font-medium text-left mb-2">{$i18n.t('Name')}</div>
+											<div class="mb-4 flex items-center">
+												<!--<div class="text-base font-medium text-left mb-2">{$i18n.t('Name')}</div>-->
+                                                <label class="text-base font-medium w-20 mr-4">{$i18n.t('Name')}</label>
 												<div class="relative">
 													<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 														<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -308,8 +309,9 @@
 												</div>
 											</div>
 										{:else}
-											<div class="mb-4">
-												<div class="text-base font-medium text-left mb-2">{$i18n.t('Email')}</div>
+											<div class="mb-4 flex items-center">
+												<!--<div class="text-base font-medium text-left mb-2">{$i18n.t('Email')}</div>-->
+                                                <label class="text-base font-medium w-20 mr-4">邮箱</label>
 												<div class="relative">
 													<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 														<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -329,8 +331,9 @@
 											</div>
 										{/if}
 
-										<div class="mb-4">
-											<div class="text-base font-medium text-left mb-2">密码</div>
+										<div class="mb-4 flex items-center">
+											<!--<div class="text-base font-medium text-left mb-2">密码</div>-->
+                                            <label class="text-base font-medium w-20 mr-4">密码</label>
 											<div class="relative">
 												<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 													<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -378,7 +381,7 @@
 										</div>
 									</div>
 								{/if}
-								
+
 								<div class="mt-6">
 									{#if $config?.features.enable_login_form || $config?.features.enable_ldap}
 										{#if mode === 'ldap'}
