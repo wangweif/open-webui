@@ -1,4 +1,5 @@
 import logging
+import mimetypes
 import os
 import uuid
 from fnmatch import fnmatch
@@ -14,7 +15,7 @@ from fastapi import (
     Request,
     UploadFile,
     status,
-    Query,
+    Query, Form,
 )
 from fastapi.responses import FileResponse, StreamingResponse
 from open_webui.constants import ERROR_MESSAGES
@@ -78,6 +79,30 @@ def has_access_to_file(
 # Upload File
 ############################
 
+@router.post("/get_original_file")
+async def get_original_file(
+        file_id: str = Form(...),
+        filename: str = Form(...)
+):
+    realname = f"{file_id}_{filename}"
+    #realpath = f"E:/work/git/open-webui/backend/data/uploads/{realname}"
+    upload_file_base_path = Path(__file__).resolve().parent.parent.parent/"data"/"uploads"
+    realpath = str(upload_file_base_path / realname)
+    logging.info(f"Uploading {realpath}")
+    # 检查文件是否存在
+    if not os.path.exists(realpath):
+        raise HTTPException(status_code=404, detail="文件不存在")
+
+    # 自动检测文件类型
+    media_type, _ = mimetypes.guess_type(realpath)
+    if media_type is None:
+        media_type = 'application/octet-stream'
+
+    return FileResponse(
+        path=realpath,
+        filename=filename,
+        media_type=media_type
+    )
 
 @router.post("/", response_model=FileModelResponse)
 async def upload_file(
