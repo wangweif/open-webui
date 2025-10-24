@@ -966,10 +966,16 @@
 						{:else}
 							<div class="w-full flex flex-col relative" id="response-content-container">
 								{#if message.content === '' && !message.error && !isGeneratingWithOutline}
-									<Skeleton />
+									{#if message.cancelled}
+										<div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+											<span class="text-sm text-yellow-800 dark:text-yellow-200">已取消</span>
+										</div>
+									{:else}
+										<Skeleton />
+									{/if}
 								{:else if message.content && message.error !== true || isGeneratingWithOutline}
 									<!-- 检查是否包含搜索文本或大纲数据 -->
-									{#if message.hasOutline || message.content == "正在生成大纲，请稍等..." || isGeneratingWithOutline}
+									{#if message.hasOutline || message.content == "正在生成大纲，请稍等..." || isGeneratingWithOutline || generationProgress < 100}
 										<div class="outline-container mt-2 w-full max-w-full">
 											{#if message.outlineDone == undefined || message.outlineDone == false }
 												<div class="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 w-full">
@@ -1051,7 +1057,7 @@
 											{/if}
 											
 											<!-- 大纲区域的取消标识 -->
-											{#if message.cancelled && message.done}
+											{#if message.cancelled}
 												<div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
 													<span class="text-sm text-yellow-800 dark:text-yellow-200">已取消</span>
 												</div>
@@ -1124,7 +1130,7 @@
 										/>
 										
 										<!-- 显示取消标识 -->
-										{#if message.cancelled && message.done}
+										{#if message.cancelled}
 											<div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
 												<span class="text-sm text-yellow-800 dark:text-yellow-200">已取消</span>
 											</div>
