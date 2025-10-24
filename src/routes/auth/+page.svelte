@@ -414,16 +414,6 @@
 														? $i18n.t('Create Admin Account')
 														: $i18n.t('Create Account')}
 											</button>
-                                             <!-- 添加游客登录按钮 -->
-                                            {#if mode === 'signin'}
-                                                <button
-                                                        class="mt-3 bg-blue-500/10 hover:bg-blue-500/20 dark:bg-blue-400/10 dark:hover:bg-blue-400/20 text-blue-600 dark:text-blue-400 transition w-full rounded-full font-medium text-sm py-2.5"
-                                                        type="button"
-                                                        on:click={guestSignInHandler}
-                                                >
-                                                    {$i18n.t('游客登录')}
-                                                </button>
-                                            {/if}
 
                                             {#if $config?.features.enable_signup && !($config?.onboarding ?? false)}
 												<div class="mt-6 text-base text-center">
@@ -444,6 +434,16 @@
 													>
 														{mode === 'signin' ? $i18n.t('Sign up') : $i18n.t('Sign in')}
 													</button>
+													{#if mode === 'signin'}
+														<span class="mx-2">|</span>
+														<button
+																class="font-medium underline"
+																type="button"
+																on:click={guestSignInHandler}
+														>
+															{$i18n.t('游客登录')}
+														</button>
+													{/if}
 												</div>
 											{/if}
 										{/if}
