@@ -83,6 +83,17 @@
 		});
 		await setSessionUser(sessionUser);
 	};
+    const guestSignInHandler = async () => {
+        const guestEmail = 'guest@bjzntd.com';
+        const guestPassword = '123456';
+
+        const sessionUser = await userSignIn(guestEmail, guestPassword).catch((error) => {
+            toast.error(`${error}`);
+            return null;
+        });
+
+        await setSessionUser(sessionUser);
+    };
 
 	const submitHandler = async () => {
 		if (mode === 'ldap') {
@@ -269,7 +280,7 @@
 										{#if mode === 'signup'}
 											<div class="mb-4 flex items-center">
 												<!--<div class="text-base font-medium text-left mb-2">{$i18n.t('Name')}</div>-->
-                                                <label class="text-base font-medium w-20 mr-4">{$i18n.t('Name')}</label>
+                                                <label class="text-base font-medium mr-4">{$i18n.t('Name')}</label>
 												<div class="relative">
 													<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 														<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,7 +322,7 @@
 										{:else}
 											<div class="mb-4 flex items-center">
 												<!--<div class="text-base font-medium text-left mb-2">{$i18n.t('Email')}</div>-->
-                                                <label class="text-base font-medium w-20 mr-4">邮箱</label>
+                                                <label class="text-base font-medium mr-4">邮箱</label>
 												<div class="relative">
 													<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 														<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,7 +344,7 @@
 
 										<div class="mb-4 flex items-center">
 											<!--<div class="text-base font-medium text-left mb-2">密码</div>-->
-                                            <label class="text-base font-medium w-20 mr-4">密码</label>
+                                            <label class="text-base font-medium mr-4">密码</label>
 											<div class="relative">
 												<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 													<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -344,7 +355,7 @@
 													<input
 														bind:value={password}
 														type="text"
-														class="w-full text-base bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg py-3 pl-10 pr-12 focus:outline-none focus:border-2 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 focus:shadow-lg"
+														class="w-full text-base bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:border-2 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 focus:shadow-lg"
 														placeholder="请输入密码"
 														autocomplete="current-password"
 														name="current-password"
@@ -354,7 +365,7 @@
 													<input
 														bind:value={password}
 														type="password"
-														class="w-full text-base bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg py-3 pl-10 pr-12 focus:outline-none focus:border-2 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 focus:shadow-lg"
+														class="w-full text-base bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:border-2 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 focus:shadow-lg"
 														placeholder="请输入密码"
 														autocomplete="current-password"
 														name="current-password"
@@ -391,6 +402,7 @@
 											>
 												{$i18n.t('Authenticate')}
 											</button>
+
 										{:else}
 											<button
 												class="bg-primary-500 hover:bg-primary-600 text-white transition w-full rounded-full font-medium text-base py-3"
@@ -402,8 +414,18 @@
 														? $i18n.t('Create Admin Account')
 														: $i18n.t('Create Account')}
 											</button>
+                                             <!-- 添加游客登录按钮 -->
+                                            {#if mode === 'signin'}
+                                                <button
+                                                        class="mt-3 bg-blue-500/10 hover:bg-blue-500/20 dark:bg-blue-400/10 dark:hover:bg-blue-400/20 text-blue-600 dark:text-blue-400 transition w-full rounded-full font-medium text-sm py-2.5"
+                                                        type="button"
+                                                        on:click={guestSignInHandler}
+                                                >
+                                                    {$i18n.t('游客登录')}
+                                                </button>
+                                            {/if}
 
-											{#if $config?.features.enable_signup && !($config?.onboarding ?? false)}
+                                            {#if $config?.features.enable_signup && !($config?.onboarding ?? false)}
 												<div class="mt-6 text-base text-center">
 													{mode === 'signin'
 														? $i18n.t("Don't have an account?")

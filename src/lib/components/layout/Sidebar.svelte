@@ -609,9 +609,9 @@
 						alt="logo"
 					/> -->
 				</div>
-				<div class=" self-center font-medium text-sm text-gray-850 dark:text-white font-primary">
+				<!--<div class=" self-center font-medium text-sm text-gray-850 dark:text-white font-primary">
 					{$i18n.t('New Chat')}
-				</div>
+				</div>-->
 				<div>
 					<PencilSquare className=" size-5" strokeWidth="2" />
 				</div>
