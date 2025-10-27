@@ -117,11 +117,7 @@
 			setTimeout(() => {
 				const templateFound = selectNextTemplate(editor.view.state, editor.view.dispatch);
 				if (!templateFound) {
-					// If no template found, set cursor at the end
-					const endPos = editor.view.state.doc.content.size;
-					editor.view.dispatch(
-						editor.view.state.tr.setSelection(TextSelection.create(editor.view.state.doc, endPos))
-					);
+					editor.commands.focus('end');
 				}
 			}, 0);
 		}
