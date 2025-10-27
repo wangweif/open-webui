@@ -417,9 +417,7 @@
 
                                             {#if $config?.features.enable_signup && !($config?.onboarding ?? false)}
 												<div class="mt-6 text-base text-center">
-													{mode === 'signin'
-														? $i18n.t("Don't have an account?")
-														: $i18n.t('Already have an account?')}
+
 
 													<button
 														class="font-medium underline"
