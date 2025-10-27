@@ -686,6 +686,9 @@ async def generate_chat_completion(
             convert_logit_bias_input_to_json(payload["logit_bias"])
         )
 
+    # temprature 设置为0    
+    payload["temperature"] = 0
+
     payload = json.dumps(payload)
 
     r = None
