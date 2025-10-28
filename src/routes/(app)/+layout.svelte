@@ -1,20 +1,11 @@
 <script lang="ts">
 	import { toast, Toaster } from 'svelte-sonner';
 	import { onMount, tick, getContext } from 'svelte';
-	import { openDB, deleteDB } from 'idb';
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
-	import mermaid from 'mermaid';
-
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { fade } from 'svelte/transition';
 
-	import { getKnowledgeBases } from '$lib/apis/knowledge';
-	import { getFunctions } from '$lib/apis/functions';
 	import { getModels, getToolServersData, getVersionUpdates } from '$lib/apis';
-	import { getAllTags } from '$lib/apis/chats';
-	import { getPrompts } from '$lib/apis/prompts';
 	import { getTools } from '$lib/apis/tools';
 	import { getBanners } from '$lib/apis/configs';
 	import { getUserSettings } from '$lib/apis/users';
@@ -28,14 +19,9 @@
 		user,
 		settings,
 		models,
-		prompts,
-		knowledge,
 		tools,
-		functions,
-		tags,
 		banners,
 		showSettings,
-		showChangelog,
 		temporaryChatEnabled,
 		toolServers,
 		WEBUI_NAME,
@@ -44,17 +30,13 @@
 
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import SettingsModal from '$lib/components/chat/SettingsModal.svelte';
-	import ChangelogModal from '$lib/components/ChangelogModal.svelte';
 	import AccountPending from '$lib/components/layout/Overlay/AccountPending.svelte';
 	import UpdateInfoToast from '$lib/components/layout/UpdateInfoToast.svelte';
-	import { get } from 'svelte/store';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
 	const i18n = getContext('i18n');
 
 	let loaded = false;
-	let DB = null;
-	let localDBChats = [];
 
 	let version;
 
@@ -62,32 +44,8 @@
 		if ($user === undefined || $user === null) {
 			await goto('/auth');
 		} else if (['user', 'admin'].includes($user?.role)) {
-			// 根据用户的is_bjny状态动态设置应用名称
-			if ($user?.is_bjny) {
-				WEBUI_NAME.set('北京市农业农村局');
-				// 动态设置页面标题
-				document.title = '北京市农业农村局';
-			} else {
-				WEBUI_NAME.set('农科小智大模型');
-				document.title = '农科小智大模型';
-			}
-			try {
-				// Check if IndexedDB exists
-				DB = await openDB('Chats', 1);
-
-				if (DB) {
-					const chats = await DB.getAllFromIndex('chats', 'timestamp');
-					localDBChats = chats.map((item, idx) => chats[chats.length - 1 - idx]);
-
-					if (localDBChats.length === 0) {
-						await deleteDB('Chats');
-					}
-				}
-
-				console.log(DB);
-			} catch (error) {
-				// IndexedDB Not Found
-			}
+			WEBUI_NAME.set('农科小智大模型');
+			document.title = '农科小智大模型';
 
 			const userSettings = await getUserSettings(localStorage.token).catch((error) => {
 				console.error(error);
@@ -257,7 +215,6 @@
 </script>
 
 <SettingsModal bind:show={$showSettings} />
-<ChangelogModal bind:show={$showChangelog} />
 
 {#if version && compareVersion(version.latest, version.current) && ($settings?.showUpdateToast ?? true)}
 	<div class=" absolute bottom-8 right-8 z-50" in:fade={{ duration: 100 }}>
@@ -277,60 +234,7 @@
 	>
 		{#if !['user', 'admin'].includes($user?.role)}
 			<AccountPending />
-		{:else if localDBChats.length > 0}
-			<div class="fixed w-full h-full flex z-50">
-				<div
-					class="absolute w-full h-full backdrop-blur-md bg-white/20 dark:bg-gray-900/50 flex justify-center"
-				>
-					<div class="m-auto pb-44 flex flex-col justify-center">
-						<div class="max-w-md">
-							<div class="text-center dark:text-white text-2xl font-medium z-50">
-								Important Update<br /> Action Required for Chat Log Storage
-							</div>
-
-							<div class=" mt-4 text-center text-sm dark:text-gray-200 w-full">
-								{$i18n.t(
-									"Saving chat logs directly to your browser's storage is no longer supported. Please take a moment to download and delete your chat logs by clicking the button below. Don't worry, you can easily re-import your chat logs to the backend through"
-								)}
-								<span class="font-semibold dark:text-white"
-									>{$i18n.t('Settings')} > {$i18n.t('Chats')} > {$i18n.t('Import Chats')}</span
-								>. {$i18n.t(
-									'This ensures that your valuable conversations are securely saved to your backend database. Thank you!'
-								)}
-							</div>
-
-							<div class=" mt-6 mx-auto relative group w-fit">
-								<button
-									class="relative z-20 flex px-5 py-2 rounded-full bg-white border border-gray-100 dark:border-none hover:bg-gray-100 transition font-medium text-sm"
-									on:click={async () => {
-										let blob = new Blob([JSON.stringify(localDBChats)], {
-											type: 'application/json'
-										});
-										saveAs(blob, `chat-export-${Date.now()}.json`);
-
-										const tx = DB.transaction('chats', 'readwrite');
-										await Promise.all([tx.store.clear(), tx.done]);
-										await deleteDB('Chats');
-
-										localDBChats = [];
-									}}
-								>
-									Download & Delete
-								</button>
-
-								<button
-									class="text-xs text-center w-full mt-2 text-gray-400 underline"
-									on:click={async () => {
-										localDBChats = [];
-									}}>{$i18n.t('Close')}</button
-								>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
 		{/if}
-
 		<Sidebar />
 
 		{#if loaded}
