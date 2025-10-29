@@ -1098,12 +1098,12 @@ USER_PERMISSIONS_FEATURES_WEB_SEARCH = (
 )
 
 USER_PERMISSIONS_FEATURES_IMAGE_GENERATION = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_IMAGE_GENERATION", "True").lower()
+    os.environ.get("USER_PERMISSIONS_FEATURES_IMAGE_GENERATION", "False").lower()
     == "true"
 )
 
 USER_PERMISSIONS_FEATURES_CODE_INTERPRETER = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_CODE_INTERPRETER", "True").lower()
+    os.environ.get("USER_PERMISSIONS_FEATURES_CODE_INTERPRETER", "False").lower()
     == "true"
 )
 
@@ -1157,7 +1157,7 @@ ENABLE_CHANNELS = PersistentConfig(
 ENABLE_EVALUATION_ARENA_MODELS = PersistentConfig(
     "ENABLE_EVALUATION_ARENA_MODELS",
     "evaluation.arena.enable",
-    os.environ.get("ENABLE_EVALUATION_ARENA_MODELS", "True").lower() == "true",
+    os.environ.get("ENABLE_EVALUATION_ARENA_MODELS", "False").lower() == "true",
 )
 EVALUATION_ARENA_MODELS = PersistentConfig(
     "EVALUATION_ARENA_MODELS",
@@ -1531,7 +1531,7 @@ Responses from models: {{responses}}"""
 ENABLE_CODE_EXECUTION = PersistentConfig(
     "ENABLE_CODE_EXECUTION",
     "code_execution.enable",
-    os.environ.get("ENABLE_CODE_EXECUTION", "True").lower() == "true",
+    os.environ.get("ENABLE_CODE_EXECUTION", "False").lower() == "true",
 )
 
 CODE_EXECUTION_ENGINE = PersistentConfig(
@@ -1574,7 +1574,7 @@ CODE_EXECUTION_JUPYTER_TIMEOUT = PersistentConfig(
 ENABLE_CODE_INTERPRETER = PersistentConfig(
     "ENABLE_CODE_INTERPRETER",
     "code_interpreter.enable",
-    os.environ.get("ENABLE_CODE_INTERPRETER", "True").lower() == "true",
+    os.environ.get("ENABLE_CODE_INTERPRETER", "False").lower() == "true",
 )
 
 CODE_INTERPRETER_ENGINE = PersistentConfig(
