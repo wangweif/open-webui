@@ -86,7 +86,8 @@ async def get_original_file(
 ):
     realname = f"{file_id}_{filename}"
     #realpath = f"E:/work/git/open-webui/backend/data/uploads/{realname}"
-    upload_file_base_path = Path(__file__).resolve().parent.parent.parent/"data"/"uploads"
+    upload_file_base_path = Path(__file__).resolve().parent.parent.parent.parent.parent / "xiaozhi_data/uploads"
+    # print("f{upload_file_base_path}")
     realpath = str(upload_file_base_path / realname)
     logging.info(f"Uploading {realpath}")
     # 检查文件是否存在
