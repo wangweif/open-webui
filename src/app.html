@@ -32,6 +32,189 @@
 		</script>
 
 		<script>
+			// 浏览器兼容性检测 - 使用ES5语法以兼容IE
+			(function() {
+				// 检测必需的浏览器特性
+				var requiredFeatures = {
+					'Promise 支持': function() {
+						return typeof Promise !== 'undefined';
+					},
+					'Fetch API': function() {
+						return typeof fetch !== 'undefined';
+					},
+					'localStorage': function() {
+						try {
+							return typeof localStorage !== 'undefined' && localStorage !== null;
+						} catch(e) {
+							return false;
+						}
+					},
+					'WebSocket': function() {
+						return typeof WebSocket !== 'undefined';
+					}
+				};
+
+				// 检测所有特性
+				var unsupportedFeatures = [];
+				for (var featureName in requiredFeatures) {
+					if (requiredFeatures.hasOwnProperty(featureName)) {
+						if (!requiredFeatures[featureName]()) {
+							unsupportedFeatures.push(featureName);
+						}
+					}
+				}
+
+				// 如果有不支持的特性，显示警告
+				if (unsupportedFeatures.length > 0) {
+					// 创建警告样式
+					var style = document.createElement('style');
+					var cssText = '#browser-warning {' +
+						'position: fixed;' +
+						'top: 0;' +
+						'left: 0;' +
+						'right: 0;' +
+						'bottom: 0;' +
+						'background: rgba(0, 0, 0, 0.95);' +
+						'color: white;' +
+						'z-index: 99999;' +
+						'text-align: center;' +
+						'font-family: Arial, sans-serif;' +
+						'}' +
+						'#browser-warning-content {' +
+						'position: absolute;' +
+						'top: 50%;' +
+						'left: 50%;' +
+						'transform: translate(-50%, -50%);' +
+						'max-width: 600px;' +
+						'padding: 40px;' +
+						'background: #1e1e1e;' +
+						'border-radius: 8px;' +
+						'}' +
+						'#browser-warning h1 {' +
+						'font-size: 24px;' +
+						'margin-bottom: 20px;' +
+						'color: #ff6b6b;' +
+						'}' +
+						'#browser-warning p {' +
+						'font-size: 16px;' +
+						'line-height: 1.6;' +
+						'margin-bottom: 20px;' +
+						'}' +
+						'#browser-warning ul {' +
+						'text-align: left;' +
+						'margin: 20px auto;' +
+						'list-style: none;' +
+						'padding: 0;' +
+						'}' +
+						'#browser-warning li {' +
+						'padding: 8px 0;' +
+						'color: #ffd93d;' +
+						'}' +
+						'#browser-warning-recommended {' +
+						'margin-top: 30px;' +
+						'padding-top: 20px;' +
+						'border-top: 1px solid #444;' +
+						'}' +
+						'#browser-warning-recommended h2 {' +
+						'font-size: 18px;' +
+						'margin-bottom: 15px;' +
+						'color: #4ecdc4;' +
+						'}' +
+						'#browser-warning-close {' +
+						'margin-top: 20px;' +
+						'padding: 10px 30px;' +
+						'background: #444;' +
+						'border: none;' +
+						'border-radius: 4px;' +
+						'color: white;' +
+						'cursor: pointer;' +
+						'font-size: 14px;' +
+						'}' +
+						'#browser-warning-close:hover {' +
+						'background: #555;' +
+						'}';
+					
+					if (style.styleSheet) {
+						// IE8及以下
+						style.styleSheet.cssText = cssText;
+					} else {
+						style.appendChild(document.createTextNode(cssText));
+					}
+					document.getElementsByTagName('head')[0].appendChild(style);
+
+					// 创建警告HTML
+					var warningDiv = document.createElement('div');
+					warningDiv.id = 'browser-warning';
+					
+					// 构建不支持特性的列表
+					var featureListHTML = '';
+					for (var i = 0; i < unsupportedFeatures.length; i++) {
+						featureListHTML += '<li>✗ ' + unsupportedFeatures[i] + '</li>';
+					}
+					
+					var warningHTML = '<div id="browser-warning-content">' +
+						'<h1>⚠️ 浏览器兼容性警告</h1>' +
+						'<p>您的浏览器版本过旧，无法正常使用本网站。</p>' +
+						'<p>检测到以下不支持的特性：</p>' +
+						'<ul>' + featureListHTML + '</ul>' +
+						'<div id="browser-warning-recommended">' +
+						'<h2>请更新浏览器</h2>' +
+						'</div>' +
+						'<button id="browser-warning-close">我知道了，继续访问</button>' +
+						'</div>';
+					
+					warningDiv.innerHTML = warningHTML;
+
+					// 在DOM加载后插入警告
+					function insertWarning() {
+						document.body.appendChild(warningDiv);
+						
+						// 关闭按钮事件
+						var closeBtn = document.getElementById('browser-warning-close');
+						if (closeBtn) {
+							if (closeBtn.addEventListener) {
+								closeBtn.addEventListener('click', function() {
+									var warning = document.getElementById('browser-warning');
+									if (warning) {
+										warning.style.display = 'none';
+									}
+								});
+							} else if (closeBtn.attachEvent) {
+								// IE8及以下
+								closeBtn.attachEvent('onclick', function() {
+									var warning = document.getElementById('browser-warning');
+									if (warning) {
+										warning.style.display = 'none';
+									}
+								});
+							}
+						}
+					}
+					
+					if (document.body) {
+						insertWarning();
+					} else {
+						if (document.addEventListener) {
+							document.addEventListener('DOMContentLoaded', insertWarning);
+						} else if (document.attachEvent) {
+							// IE8及以下
+							document.attachEvent('onreadystatechange', function() {
+								if (document.readyState === 'complete') {
+									insertWarning();
+								}
+							});
+						}
+					}
+
+					// 打印警告到控制台
+					if (window.console && console.warn) {
+						console.warn('浏览器兼容性警告：不支持的特性', unsupportedFeatures);
+					}
+				}
+			})();
+		</script>
+
+		<script>
 			// On page load or when changing themes, best to add inline in `head` to avoid FOUC
 			(() => {
 				const metaThemeColorTag = document.querySelector('meta[name="theme-color"]');
