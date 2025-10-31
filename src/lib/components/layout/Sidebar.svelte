@@ -559,7 +559,7 @@
 			? ''
 			: 'invisible'}"
 	>
-		<div class="px-1.5 flex justify-between space-x-1 text-gray-600 dark:text-gray-400">
+		<div class="px-1.5 flex justify-start space-x-1 text-gray-600 dark:text-gray-400">
 			<button
 				class=" cursor-pointer p-[7px] flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-900 transition"
 				on:click={() => {
@@ -586,7 +586,7 @@
 
 			<a
 				id="sidebar-new-chat-button"
-				class="flex items-center flex-1 rounded-lg px-2 py-1 h-full gap-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition no-drag-region"
+				class="flex items-center rounded-lg px-2 py-1 h-full gap-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition no-drag-region"
 				href="/"
 				draggable="false"
 				on:click={async () => {
@@ -601,14 +601,14 @@
 					}, 0);
 				}}
 			>
-				<div class="self-center mx-1.5">
-					<!-- <img
+				<!-- <div class="self-center mx-1.5">
+					<img
 						crossorigin="anonymous"
 						src="/favicon.png"
 						class=" size-5 -translate-x-1.5 rounded-full"
 						alt="logo"
-					/> -->
-				</div>
+					/>
+				</div> -->
 				<!--<div class=" self-center font-medium text-sm text-gray-850 dark:text-white font-primary">
 					{$i18n.t('New Chat')}
 				</div>-->
