@@ -34,181 +34,203 @@
 		<script>
 			// 浏览器兼容性检测 - 使用ES5语法以兼容IE
 			(function() {
-				// 检测必需的浏览器特性
-				var requiredFeatures = {
-					'Promise 支持': function() {
-						return typeof Promise !== 'undefined';
-					},
-					'Fetch API': function() {
-						return typeof fetch !== 'undefined';
-					},
-					'localStorage': function() {
-						try {
-							return typeof localStorage !== 'undefined' && localStorage !== null;
-						} catch(e) {
-							return false;
-						}
-					},
-					'WebSocket': function() {
-						return typeof WebSocket !== 'undefined';
+				// 检测是否为IE浏览器（通过User-Agent）
+				var userAgent = window.navigator.userAgent;
+				var isIE = false;
+				var ieVersion = 0;
+				
+				// 检测IE浏览器
+				// IE 10 及以下: 包含 "MSIE"
+				// IE 11: 包含 "Trident/" 和 "rv:11.0"
+				if (userAgent.indexOf('MSIE') > -1) {
+					// IE 10 及以下
+					isIE = true;
+					var match = userAgent.match(/MSIE (\d+\.\d+)/);
+					if (match) {
+						ieVersion = parseFloat(match[1]);
 					}
-				};
-
-				// 检测所有特性
-				var unsupportedFeatures = [];
-				for (var featureName in requiredFeatures) {
-					if (requiredFeatures.hasOwnProperty(featureName)) {
-						if (!requiredFeatures[featureName]()) {
-							unsupportedFeatures.push(featureName);
-						}
-					}
+				} else if (userAgent.indexOf('Trident/') > -1 && userAgent.indexOf('rv:11.0') > -1) {
+					// IE 11
+					isIE = true;
+					ieVersion = 11;
 				}
 
-				// 如果有不支持的特性，显示警告
-				if (unsupportedFeatures.length > 0) {
-					// 创建警告样式
-					var style = document.createElement('style');
-					var cssText = '#browser-warning {' +
-						'position: fixed;' +
-						'top: 0;' +
-						'left: 0;' +
-						'right: 0;' +
-						'bottom: 0;' +
-						'background: rgba(0, 0, 0, 0.95);' +
-						'color: white;' +
-						'z-index: 99999;' +
-						'text-align: center;' +
-						'font-family: Arial, sans-serif;' +
-						'}' +
-						'#browser-warning-content {' +
-						'position: absolute;' +
-						'top: 50%;' +
-						'left: 50%;' +
-						'transform: translate(-50%, -50%);' +
-						'max-width: 600px;' +
-						'padding: 40px;' +
-						'background: #1e1e1e;' +
-						'border-radius: 8px;' +
-						'}' +
-						'#browser-warning h1 {' +
-						'font-size: 24px;' +
-						'margin-bottom: 20px;' +
-						'color: #ff6b6b;' +
-						'}' +
-						'#browser-warning p {' +
-						'font-size: 16px;' +
-						'line-height: 1.6;' +
-						'margin-bottom: 20px;' +
-						'}' +
-						'#browser-warning ul {' +
-						'text-align: left;' +
-						'margin: 20px auto;' +
-						'list-style: none;' +
-						'padding: 0;' +
-						'}' +
-						'#browser-warning li {' +
-						'padding: 8px 0;' +
-						'color: #ffd93d;' +
-						'}' +
-						'#browser-warning-recommended {' +
-						'margin-top: 30px;' +
-						'padding-top: 20px;' +
-						'border-top: 1px solid #444;' +
-						'}' +
-						'#browser-warning-recommended h2 {' +
-						'font-size: 18px;' +
-						'margin-bottom: 15px;' +
-						'color: #4ecdc4;' +
-						'}' +
-						'#browser-warning-close {' +
-						'margin-top: 20px;' +
-						'padding: 10px 30px;' +
-						'background: #444;' +
-						'border: none;' +
-						'border-radius: 4px;' +
-						'color: white;' +
-						'cursor: pointer;' +
-						'font-size: 14px;' +
-						'}' +
-						'#browser-warning-close:hover {' +
-						'background: #555;' +
-						'}';
-					
-					if (style.styleSheet) {
-						// IE8及以下
-						style.styleSheet.cssText = cssText;
-					} else {
-						style.appendChild(document.createTextNode(cssText));
-					}
-					document.getElementsByTagName('head')[0].appendChild(style);
-
-					// 创建警告HTML
-					var warningDiv = document.createElement('div');
-					warningDiv.id = 'browser-warning';
-					
-					// 构建不支持特性的列表
-					var featureListHTML = '';
-					for (var i = 0; i < unsupportedFeatures.length; i++) {
-						featureListHTML += '<li>✗ ' + unsupportedFeatures[i] + '</li>';
-					}
-					
-					var warningHTML = '<div id="browser-warning-content">' +
-						'<h1>⚠️ 浏览器兼容性警告</h1>' +
-						'<p>您的浏览器版本过旧，无法正常使用本网站。</p>' +
-						'<p>检测到以下不支持的特性：</p>' +
-						'<ul>' + featureListHTML + '</ul>' +
-						'<div id="browser-warning-recommended">' +
-						'<h2>请更新浏览器</h2>' +
-						'</div>' +
-						'<button id="browser-warning-close">我知道了，继续访问</button>' +
-						'</div>';
-					
-					warningDiv.innerHTML = warningHTML;
-
+				// 如果是IE浏览器，显示警告
+				if (isIE) {
 					// 在DOM加载后插入警告
 					function insertWarning() {
-						document.body.appendChild(warningDiv);
+						// 创建警告样式 - 使用更兼容的CSS
+						var style = document.createElement('style');
+						style.type = 'text/css';
 						
-						// 关闭按钮事件
-						var closeBtn = document.getElementById('browser-warning-close');
-						if (closeBtn) {
-							if (closeBtn.addEventListener) {
-								closeBtn.addEventListener('click', function() {
-									var warning = document.getElementById('browser-warning');
-									if (warning) {
-										warning.style.display = 'none';
-									}
-								});
-							} else if (closeBtn.attachEvent) {
-								// IE8及以下
-								closeBtn.attachEvent('onclick', function() {
-									var warning = document.getElementById('browser-warning');
-									if (warning) {
-										warning.style.display = 'none';
-									}
-								});
+						var cssText = '#browser-warning {' +
+							'position: fixed;' +
+							'top: 0;' +
+							'left: 0;' +
+							'width: 100%;' +
+							'height: 100%;' +
+							'background-color: #000;' +
+							'background-color: rgba(0, 0, 0, 0.95);' +
+							'color: #fff;' +
+							'z-index: 999999;' +
+							'text-align: center;' +
+							'font-family: Arial, sans-serif;' +
+							'overflow: auto;' +
+							'}' +
+							'#browser-warning-content {' +
+							'width: 90%;' +
+							'max-width: 600px;' +
+							'margin: 100px auto;' +
+							'padding: 40px;' +
+							'background: #1e1e1e;' +
+							'}' +
+							'#browser-warning h1 {' +
+							'font-size: 24px;' +
+							'margin: 0 0 20px 0;' +
+							'color: #ff6b6b;' +
+							'}' +
+							'#browser-warning p {' +
+							'font-size: 16px;' +
+							'line-height: 1.6;' +
+							'margin: 0 0 20px 0;' +
+							'}' +
+							'#browser-warning ul {' +
+							'text-align: left;' +
+							'margin: 20px auto;' +
+							'list-style: none;' +
+							'padding: 0;' +
+							'max-width: 400px;' +
+							'}' +
+							'#browser-warning li {' +
+							'padding: 8px 0;' +
+							'color: #ffd93d;' +
+							'}' +
+							'#browser-warning-recommended {' +
+							'margin-top: 30px;' +
+							'padding-top: 20px;' +
+							'border-top: 1px solid #444;' +
+							'}' +
+							'#browser-warning-recommended h2 {' +
+							'font-size: 18px;' +
+							'margin: 0 0 15px 0;' +
+							'color: #4ecdc4;' +
+							'}' +
+							'#browser-warning-close {' +
+							'margin-top: 20px;' +
+							'padding: 10px 30px;' +
+							'background: #444;' +
+							'border: none;' +
+							'color: white;' +
+							'cursor: pointer;' +
+							'font-size: 14px;' +
+							'}';
+						
+						// 多种方式尝试插入CSS，确保在所有IE版本中都能工作
+						try {
+							if (style.styleSheet) {
+								// IE8及以下的方式
+								style.styleSheet.cssText = cssText;
+							} else if (style.innerHTML !== undefined) {
+								// 尝试使用innerHTML（某些IE版本支持）
+								style.innerHTML = cssText;
+							} else {
+								// 标准方式
+								style.appendChild(document.createTextNode(cssText));
 							}
+						} catch (e) {
+							// 如果以上都失败，尝试最后的方法
+							try {
+								style.setAttribute('type', 'text/css');
+								if (style.styleSheet) {
+									style.styleSheet.cssText = cssText;
+								} else {
+									style.innerHTML = cssText;
+								}
+							} catch (ex) {
+								// 如果还是失败，使用内联样式作为备用方案
+								console.error('无法插入样式表');
+							}
+						}
+						
+						// 确保head存在并插入样式
+						var head = document.getElementsByTagName('head')[0];
+						if (head) {
+							head.appendChild(style);
+						}
+
+						// 创建警告HTML
+						var warningDiv = document.createElement('div');
+						warningDiv.id = 'browser-warning';
+						
+						// 构建版本信息
+						var versionInfo = ieVersion > 0 ? '(IE ' + ieVersion + ')' : '';
+						
+						var warningHTML = '<div id="browser-warning-content">' +
+							'<h1>浏览器兼容性警告</h1>' +
+							'<p>检测到您正在使用 Internet Explorer 浏览器，请更换到现代浏览器。</p>' +
+							'<div id="browser-warning-recommended">' +
+							'<h2>请更换到现代浏览器</h2>' +
+							'<p>推荐使用以下浏览器：</p>' +
+							'<ul>' +
+							'<li>• Microsoft Edge（推荐，Windows 10/11自带）</li>' +
+							'<li>• Google Chrome</li>' +
+							'<li>• Mozilla Firefox</li>' +
+							'</ul>' +
+							'</div>' +
+							'<button id="browser-warning-close">我知道了，继续访问</button>' +
+							'</div>';
+						
+						warningDiv.innerHTML = warningHTML;
+
+						// 插入到body
+						if (document.body) {
+							document.body.appendChild(warningDiv);
+							
+							// 关闭按钮事件
+							setTimeout(function() {
+								var closeBtn = document.getElementById('browser-warning-close');
+								if (closeBtn) {
+									if (closeBtn.addEventListener) {
+										closeBtn.addEventListener('click', function() {
+											var warning = document.getElementById('browser-warning');
+											if (warning && warning.parentNode) {
+												warning.parentNode.removeChild(warning);
+											}
+										});
+									} else if (closeBtn.attachEvent) {
+										// IE8及以下
+										closeBtn.attachEvent('onclick', function() {
+											var warning = document.getElementById('browser-warning');
+											if (warning && warning.parentNode) {
+												warning.parentNode.removeChild(warning);
+											}
+										});
+									}
+								}
+							}, 100);
 						}
 					}
 					
+					// 等待DOM准备好
 					if (document.body) {
 						insertWarning();
+					} else if (document.addEventListener) {
+						document.addEventListener('DOMContentLoaded', insertWarning);
+					} else if (document.attachEvent) {
+						// IE8及以下
+						document.attachEvent('onreadystatechange', function() {
+							if (document.readyState === 'complete' || document.readyState === 'interactive') {
+								insertWarning();
+							}
+						});
 					} else {
-						if (document.addEventListener) {
-							document.addEventListener('DOMContentLoaded', insertWarning);
-						} else if (document.attachEvent) {
-							// IE8及以下
-							document.attachEvent('onreadystatechange', function() {
-								if (document.readyState === 'complete') {
-									insertWarning();
-								}
-							});
-						}
+						// 最后的备用方案
+						window.onload = insertWarning;
 					}
 
 					// 打印警告到控制台
 					if (window.console && console.warn) {
-						console.warn('浏览器兼容性警告：不支持的特性', unsupportedFeatures);
+						console.warn('浏览器兼容性警告：检测到 IE 浏览器（版本 ' + ieVersion + '），建议使用现代浏览器访问本网站。');
 					}
 				}
 			})();
