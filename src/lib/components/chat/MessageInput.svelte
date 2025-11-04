@@ -23,7 +23,8 @@
 		tools,
 		user as _user,
 		showControls,
-		TTSWorker
+		TTSWorker,
+		showPressToTalk
 	} from '$lib/stores';
 
 	import {
@@ -343,6 +344,13 @@
 
 	let user = null;
 	export let placeholder = '';
+	// 移动端长按录音相关变量
+	let isPressingVoice = false;
+	let pressTimer: ReturnType<typeof setTimeout> | null = null;
+	// showPressToTalk 已经从 $lib/stores 导入，作为全局状态使用
+	// 这个字段用来暂存语音输入切换时输入框中的内容
+	let promptText = '';
+
 
 	let visionCapableModels = [];
 	$: visionCapableModels = [...(atSelectedModel ? [atSelectedModel] : selectedModels)].filter(
@@ -832,34 +840,6 @@
 							filesInputElement.value = '';
 						}}
 					/>
-
-					{#if recording}
-						<!-- 移除语音录制按钮 -->
-						<!--
-						<VoiceRecording
-							bind:recording
-							on:cancel={async () => {
-								recording = false;
-
-								await tick();
-								document.getElementById('chat-input')?.focus();
-							}}
-							on:confirm={async (e) => {
-								const { text, filename } = e.detail;
-								prompt = `${prompt}${text} `;
-
-								recording = false;
-
-								await tick();
-								document.getElementById('chat-input')?.focus();
-
-								if ($settings?.speechAutoSend ?? false) {
-									dispatch('submit', prompt);
-								}
-							}}
-						/>
-						-->
-					{:else}
 						<form
 							class="w-full flex gap-1.5"
 							on:submit|preventDefault={() => {
@@ -969,8 +949,56 @@
 									</div>
 								{/if}
 
-								<div class="px-2.5">
-									{#if $settings?.richTextInput ?? true}
+								{#if recording || $showPressToTalk}
+									<div class="px-2.5 pt-2.5">
+										<VoiceRecording
+											bind:recording
+											showPressToTalk={$showPressToTalk}
+											bind:isPressingVoice
+											className="p-2.5 w-full max-w-full"
+											on:cancel={async () => {
+												recording = false;
+												$showPressToTalk = false;
+
+												await tick();
+												document.getElementById('chat-input')?.focus();
+											}}
+											on:confirm={async (e) => {
+												console.log("confirmed");
+												const { text, filename } = e.detail;
+												
+												// 检查是否有有效的文本内容
+												if (!text || !text.trim()) {
+													recording = false;
+													await tick();
+													document.getElementById('chat-input')?.focus();
+													return;
+												}
+												
+												prompt = `${prompt}${text} `;
+												recording = false;
+
+												await tick();
+												document.getElementById('chat-input')?.focus();
+												
+												if($mobile){
+													// 如果正在回答，则暂停回答
+													if(history?.currentId && history.messages[history.currentId]?.done != true){
+														await stopResponse();
+													}
+													await tick();
+													dispatch('submit', prompt);
+												}
+
+												if ($settings?.speechAutoSend ?? false) {
+													dispatch('submit', prompt);
+												}
+											}}
+										/>
+									</div>
+								{:else}
+									<div class="px-2.5">
+										{#if $settings?.richTextInput ?? true}
 										<div
 											class="scrollbar-hidden text-left bg-transparent dark:text-gray-100 outline-hidden w-full pt-3 px-1 resize-none h-fit max-h-80 overflow-auto"
 											id="chat-input-container"
@@ -1462,6 +1490,7 @@
 										/>
 									{/if}
 								</div>
+								{/if}
 
 								<div class=" flex justify-between mt-1 mb-2.5 mx-0.5 max-w-full" dir="ltr">
 									<div class="ml-1 self-end flex items-start flex-1 max-w-[80%] gap-0.5">
@@ -1656,9 +1685,34 @@
 									</div>
 
 									<div class="self-end flex space-x-1 mr-1 shrink-0">
-										{#if !history?.currentId || history.messages[history.currentId]?.done == true}
-											<!-- 移除语音录制按钮 -->
-											<!--
+										{#if $showPressToTalk}
+											<!-- 按住说话模式：显示键盘输入按钮 -->
+											<Tooltip content="键盘输入">
+												<button
+													id="keyboard-input-button"
+													class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
+													type="button"
+													on:click={() => {
+														$showPressToTalk = false;
+														recording = false;
+														prompt = promptText;
+														promptText = '';
+													}}
+													aria-label="Keyboard Input"
+												>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														fill="none"
+														viewBox="0 0 24 24"
+														stroke-width="1.5"
+														stroke="currentColor"
+														class="w-5 h-5"
+													>
+														<path stroke-linecap="round" stroke-linejoin="round" d="M3 8.25V17c0 .966.784 1.75 1.75 1.75h14.5A1.75 1.75 0 0021 17V8.25M3 8.25V6.75A1.75 1.75 0 014.75 5h14.5c.966 0 1.75.784 1.75 1.75V8.25M3 8.25h18M7.5 10.5v1M12 10.5v1M16.5 10.5v1M7.5 14.5v1M12 14.5v1M16.5 14.5v1" />
+													</svg>
+												</button>
+											</Tooltip>
+										{:else if !history?.currentId || history.messages[history.currentId]?.done == true}
 											<Tooltip content={$i18n.t('Record voice')}>
 												<button
 													id="voice-input-button"
@@ -1681,9 +1735,14 @@
 																});
 
 															if (stream) {
+																if($mobile) {
+																	$showPressToTalk = true;
+																}
 																recording = true;
 																const tracks = stream.getTracks();
 																tracks.forEach((track) => track.stop());
+																promptText = prompt;
+																prompt = '';
 															}
 															stream = null;
 														} catch {
@@ -1705,7 +1764,6 @@
 													</svg>
 												</button>
 											</Tooltip>
-											-->
 										{/if}
 
 										{#if !history.currentId || history.messages[history.currentId]?.done == true}
@@ -1782,7 +1840,7 @@
 													<Tooltip content={$i18n.t('Send message')}>
 														<button
 															id="send-message-button"
-															class="text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled transition rounded-full p-1.5 self-center"
+															class="{$showPressToTalk ? 'hidden' : 'text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled transition rounded-full p-1.5 self-center'}"
 															type="submit"
 															disabled={true}
 														>
@@ -1806,7 +1864,7 @@
 													<Tooltip content={$i18n.t('Send message')}>
 														<button
 															id="send-message-button"
-															class="{!(prompt === '' && files.length === 0)
+															class="{$showPressToTalk ? 'hidden' : !(prompt === '' && files.length === 0)
 																? webSearchEnabled || ($settings?.webSearch ?? false) === 'always'
 																	? 'bg-primary-500 text-white hover:bg-primary-400 '
 																	: 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100 '
@@ -1859,7 +1917,6 @@
 								</div>
 							</div>
 						</form>
-					{/if}
 				</div>
 			</div>
 		</div>

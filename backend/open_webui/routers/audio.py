@@ -500,7 +500,9 @@ def transcribe(request: Request, file_path):
         segments, info = model.transcribe(
             file_path,
             beam_size=5,
+            language="zh",
             vad_filter=request.app.state.config.WHISPER_VAD_FILTER,
+            initial_prompt="以下是普通话的句子"
         )
         log.info(
             "Detected language '%s' with probability %f"
