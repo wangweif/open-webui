@@ -7,6 +7,7 @@
 	import { onMount, tick, getContext, afterUpdate } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import type { i18n as i18nType, t } from 'i18next';
+	import Info from '$lib/components/icons/Info.svelte';
 
 	const i18n = getContext<Writable<i18nType>>('i18n');
 	
@@ -967,8 +968,13 @@
 							<div class="w-full flex flex-col relative" id="response-content-container">
 								{#if message.content === '' && !message.error && !isGeneratingWithOutline}
 									{#if message.cancelled}
-										<div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-											<span class="text-sm text-yellow-800 dark:text-yellow-200">已取消</span>
+										<div class="flex my-2 gap-2.5 border px-4 py-3 border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950 rounded-lg">
+											<div class="self-start mt-0.5">
+												<Info className="size-5 text-yellow-700 dark:text-yellow-400" />
+											</div>
+											<div class="self-center text-sm text-yellow-800 dark:text-yellow-200">
+												已取消
+											</div>
 										</div>
 									{:else}
 										<Skeleton />
@@ -1058,8 +1064,13 @@
 											
 											<!-- 大纲区域的取消标识 -->
 											{#if message.cancelled}
-												<div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-													<span class="text-sm text-yellow-800 dark:text-yellow-200">已取消</span>
+												<div class="flex my-2 gap-2.5 border px-4 py-3 border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950 rounded-lg">
+													<div class="self-start mt-0.5">
+														<Info className="size-5 text-yellow-700 dark:text-yellow-400" />
+													</div>
+													<div class="self-center text-sm text-yellow-800 dark:text-yellow-200">
+														已取消
+													</div>
 												</div>
 											{/if}
 										</div>
@@ -1131,8 +1142,13 @@
 										
 										<!-- 显示取消标识 -->
 										{#if message.cancelled}
-											<div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-												<span class="text-sm text-yellow-800 dark:text-yellow-200">已取消</span>
+											<div class="flex my-2 gap-2.5 border px-4 py-3 border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950 rounded-lg">
+												<div class="self-start mt-0.5">
+													<Info className="size-5 text-yellow-700 dark:text-yellow-400" />
+												</div>
+												<div class="self-center text-sm text-yellow-800 dark:text-yellow-200">
+													已取消
+												</div>
 											</div>
 										{/if}
 									{/if}

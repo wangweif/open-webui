@@ -34,6 +34,32 @@ export default {
 					800: 'var(--color-primary-800, #003a8c)',
 					900: 'var(--color-primary-900, #002766)',
 					950: 'var(--color-primary-950, #001529)'
+				},
+				yellow: {
+					50:  'var(--color-yellow-50,  #fffdea)',
+					100: 'var(--color-yellow-100, #fff9c4)',
+					200: 'var(--color-yellow-200, #fff59d)',
+					300: 'var(--color-yellow-300, #fff176)',
+					400: 'var(--color-yellow-400, #ffee58)',
+					500: 'var(--color-yellow-500, #ffeb3b)',
+					600: 'var(--color-yellow-600, #fdd835)',
+					700: 'var(--color-yellow-700, #fbc02d)',
+					800: 'var(--color-yellow-800, #f9a825)',
+					900: 'var(--color-yellow-900, #f57f17)',
+					950: 'var(--color-yellow-950, #f57f17)'
+				},  
+				red: {
+					50: 'var(--color-red-50, #ffe3e3)',
+					100: 'var(--color-red-100, #ffcccc)',
+					200: 'var(--color-red-200, #ff9999)',
+					300: 'var(--color-red-300, #ff6666)',
+					400: 'var(--color-red-400, #ff3333)',
+					500: 'var(--color-red-500, #ff0000)',
+					600: 'var(--color-red-600, #cc0000)',
+					700: 'var(--color-red-700, #990000)',
+					800: 'var(--color-red-800, #660000)',
+					900: 'var(--color-red-900, #330000)',
+					950: 'var(--color-red-950, #1a0000)'
 				}
 			},
 			typography: {
