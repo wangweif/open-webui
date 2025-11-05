@@ -66,6 +66,8 @@
 	let currentY = 0; // 记录当前的Y坐标
 	let isCancelGesture = false; // 是否触发了取消手势
 	const CANCEL_THRESHOLD = 80; // 上滑多少像素取消（可调整）
+	let pressStartTime = 0; // 记录按下时的时间戳
+	const MIN_PRESS_DURATION = 300; // 最小按压时长（毫秒）
 
 	// Function to calculate the RMS level from time domain data
 	const calculateRMS = (data: Uint8Array) => {
@@ -186,7 +188,13 @@
 			startDurationCounter();
 
 			audioChunks = [];
-			analyseAudio(stream);
+			// 检查 stream 是否仍然有效，避免在快速短按时出现错误
+			if (stream) {
+				analyseAudio(stream);
+				if(!isPressingVoice && !recording){
+					stopRecording();
+				}
+			}
 		};
 		mediaRecorder.ondataavailable = (event) => audioChunks.push(event.data);
 		mediaRecorder.onstop = async () => {
@@ -267,7 +275,7 @@
 	};
 
 	const stopRecording = async () => {
-		if (recording && mediaRecorder) {
+		if (mediaRecorder && mediaRecorder.state !== 'inactive') {
 			await mediaRecorder.stop();
 		}
 
@@ -404,6 +412,7 @@
 					isCancelGesture = false;
 					pressStartY = e.clientY;
 					currentY = e.clientY;
+					pressStartTime = Date.now(); // 记录按下时间
 				}}
 				on:pointermove={(e) => {
 					if (isPressingVoice) {
@@ -425,7 +434,19 @@
 					console.log("pointerup");
 					if (!isPressingVoice) return;
 					
+					const pressDuration = Date.now() - pressStartTime; // 计算按压时长
 					isPressingVoice = false;
+					
+					// 检查按压时长是否满足最小要求
+					if (pressDuration < MIN_PRESS_DURATION) {
+						toast.warning("说话时间太短");
+						// 按压时长不足，取消录音
+						if (recording) {
+							recording = false;
+						}
+						isCancelGesture = false;
+						return;
+					}
 					
 					// 只有在松手时才真正执行取消或发送操作
 					// 如果此时处于取消手势状态（上滑超过阈值），则取消录音
@@ -449,9 +470,22 @@
 				on:pointercancel={async () => {
 					if (!isPressingVoice) return;
 					
+					const pressDuration = Date.now() - pressStartTime; // 计算按压时长
+					isPressingVoice = false;
+					
+					// 检查按压时长是否满足最小要求
+					if (pressDuration < MIN_PRESS_DURATION) {
+						toast.warning("说话时间太短");
+						// 按压时长不足，取消录音
+						if (recording) {
+							recording = false;
+						}
+						isCancelGesture = false;
+						return;
+					}
+					
 					// 将 pointercancel 视为类似 pointerup 的情况
 					// 根据当前的手势状态来决定是取消还是继续录音
-					isPressingVoice = false;
 					
 					if (isCancelGesture) {
 						// 如果处于取消手势状态，则取消录音
