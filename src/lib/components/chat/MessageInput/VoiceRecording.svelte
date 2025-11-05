@@ -404,8 +404,8 @@
 		<div class="w-full relative">
 			<button
 				type="button"
-				class="w-full py-4 {isCancelGesture ? 'bg-red-500 hover:bg-red-600' : 'bg-primary-500 hover:bg-primary-600 active:bg-primary-700'} text-white rounded-2xl font-medium text-base transition-all duration-150 relative"
-				style="touch-action: none;"
+				class="w-full py-4 {isCancelGesture ? 'bg-red-500 hover:bg-red-600' : 'bg-primary-500 hover:bg-primary-600 active:bg-primary-700'} text-white rounded-2xl font-medium text-base transition-all duration-150 relative select-none"
+				style="touch-action: none; -webkit-user-select: none;"
 				on:pointerdown={async (e) => {
 					e.preventDefault(); // 阻止默认行为
 					isPressingVoice = true;
