@@ -12,6 +12,8 @@ import aiohttp
 import aiofiles
 import requests
 import mimetypes
+from opencc import OpenCC
+cc = OpenCC('t2s')  # t2s = 繁体转简体  
 
 from fastapi import (
     Depends,
@@ -502,7 +504,6 @@ def transcribe(request: Request, file_path):
             beam_size=5,
             language="zh",
             vad_filter=request.app.state.config.WHISPER_VAD_FILTER,
-            initial_prompt="以下是普通话的句子"
         )
         log.info(
             "Detected language '%s' with probability %f"
@@ -511,6 +512,7 @@ def transcribe(request: Request, file_path):
 
         transcript = "".join([segment.text for segment in list(segments)])
         data = {"text": transcript.strip()}
+        data["text"] = cc.convert(data["text"])
 
         # save the transcript to a json file
         transcript_file = f"{file_dir}/{id}.json"
@@ -538,11 +540,13 @@ def transcribe(request: Request, file_path):
                     "Authorization": f"Bearer {request.app.state.config.STT_OPENAI_API_KEY}"
                 },
                 files={"file": (filename, open(file_path, "rb"))},
-                data={"model": request.app.state.config.STT_MODEL},
+                data={"model": request.app.state.config.STT_MODEL, "language": "zh"},
             )
 
             r.raise_for_status()
             data = r.json()
+            # 如果是中文，则运行繁体转简体
+            data["text"] = cc.convert(data["text"])
 
             # save the transcript to a json file
             transcript_file = f"{file_dir}/{id}.json"
