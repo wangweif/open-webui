@@ -7,7 +7,10 @@ from open_webui.models.chats import Chats
 from open_webui.models.users import Users
 from open_webui.utils.auth import get_admin_user
 from open_webui.constants import ERROR_MESSAGES
+from diskcache import Cache
 import time
+
+cache = Cache('/tmp/qa_cache')
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +47,7 @@ class QARecordsSearchResponse(BaseModel):
     records: List[QARecord]
     total: int
 
-
+@cache.memoize(expire=180)  # 缓存 3 分钟（180 秒）
 def extract_qa_records_from_chats() -> List[QARecord]:
     """从所有聊天记录中提取问答对"""
     qa_records = []
@@ -231,7 +234,8 @@ async def search_qa_records(
                 if (query_lower in record.question.lower() or
                     query_lower in record.answer.lower() or
                     query_lower in record.user_name.lower() or
-                    query_lower in record.user_email.lower())
+                    query_lower in record.user_email.lower() or
+                    query_lower in record.model_name.lower())
             ]
         else:
             filtered_records = qa_records
