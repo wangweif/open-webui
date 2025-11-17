@@ -28,6 +28,7 @@
 	import AdjustmentsHorizontal from '../icons/AdjustmentsHorizontal.svelte';
 
 	import PencilSquare from '../icons/PencilSquare.svelte';
+	import ChatBubble from '../icons/ChatBubble.svelte';
 	import Banner from '../common/Banner.svelte';
 
 	const i18n = getContext('i18n');
@@ -171,6 +172,24 @@
 					</Tooltip>
 
 					{#if $user !== undefined && $user !== null}
+						<Tooltip content="用户反馈">
+							<button
+								class="flex cursor-pointer px-2 py-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-850 transition"
+								on:click={() => {
+									// 触发反馈弹窗逻辑
+									const event = new CustomEvent('open-feedback-modal', {
+										bubbles: true
+									});
+									document.dispatchEvent(event);
+								}}
+								aria-label="用户反馈"
+							>
+								<div class=" m-auto self-center">
+									<ChatBubble className=" size-5" strokeWidth="1.5" />
+								</div>
+							</button>
+						</Tooltip>
+
 						<UserMenu
 							className="max-w-[200px]"
 							role={$user?.role}

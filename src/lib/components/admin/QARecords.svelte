@@ -258,27 +258,37 @@
 						{/if}
 					</div>
 				</th>
-				<th scope="col" class="px-3 py-1.5 text-right">操作</th>
 			</tr>
 		</thead>
 		<tbody>
 			{#each qaRecords as record}
-				<tr class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs hover:bg-gray-50 dark:hover:bg-gray-850 transition">
-					<td class="px-3 py-2 font-medium text-gray-900 dark:text-white">
+				<tr
+					class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs hover:bg-gray-50 dark:hover:bg-gray-850 transition cursor-pointer"
+					on:click={() => showDetail(record)}
+					role="button"
+					tabindex="0"
+					on:keydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							showDetail(record);
+						}
+					}}
+				>
+					<td class="px-3 py-3 font-medium text-gray-900 dark:text-white">
 						{record.user_name}
 					</td>
-					<td class="px-3 py-2">{record.user_email}</td>
-					<td class="px-3 py-2 max-w-xs">
+					<td class="px-3 py-3">{record.user_email}</td>
+					<td class="px-3 py-3 max-w-xs">
 						<div class="truncate" title={record.question}>
 							{truncateText(record.question, 40)}
 						</div>
 					</td>
-					<td class="px-3 py-2 max-w-md">
+					<td class="px-3 py-3 max-w-md">
 						<div class="truncate" title={record.answer}>
 							{truncateText(record.answer, 60)}
 						</div>
 					</td>
-					<td class="px-3 py-2">
+					<td class="px-3 py-3">
 						{#if record.attachments && record.attachments.length > 0}
 							<div class="flex items-center gap-1">
 								<svg
@@ -299,20 +309,12 @@
 							<span class="text-gray-400">-</span>
 						{/if}
 					</td>
-					<td class="px-3 py-2">
+					<td class="px-3 py-3">
 						<span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded">
 							{record.model_name || record.model}
 						</span>
 					</td>
-					<td class="px-3 py-2">{dayjs(record.created_at * 1000).format('YYYY-MM-DD HH:mm')}</td>
-					<td class="px-3 py-2 text-right">
-						<button
-							class="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded transition"
-							on:click={() => showDetail(record)}
-						>
-							查看详情
-						</button>
-					</td>
+					<td class="px-3 py-3">{dayjs(record.created_at * 1000).format('YYYY-MM-DD HH:mm')}</td>
 				</tr>
 			{/each}
 		</tbody>

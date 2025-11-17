@@ -3,12 +3,13 @@
 	import { toast } from 'svelte-sonner';
 	import Leaderboard from './Evaluations/Leaderboard.svelte';
 	import Feedbacks from './Evaluations/Feedbacks.svelte';
+	import UserFeedbacks from './Evaluations/UserFeedbacks.svelte';
 
 	import { getAllFeedbacks } from '$lib/apis/evaluations';
 
 	const i18n = getContext('i18n');
 
-	let selectedTab = 'leaderboard';
+	let selectedTab = 'user_feedbacks';
 
 	let loaded = false;
 	let feedbacks = [];
@@ -31,18 +32,19 @@
 </script>
 
 {#if loaded}
-	<div class="flex flex-col lg:flex-row w-full h-full pb-2 lg:space-x-4">
+<UserFeedbacks {feedbacks} />
+	<!-- <div class="flex flex-col lg:flex-row w-full h-full pb-2 lg:space-x-4">
 		<div
 			id="users-tabs-container"
 			class="tabs flex flex-row overflow-x-auto gap-2.5 max-w-full lg:gap-1 lg:flex-col lg:flex-none lg:w-40 dark:text-gray-200 text-sm font-medium text-left scrollbar-none"
 		>
 			<button
 				class="px-0.5 py-1 min-w-fit rounded-lg lg:flex-none flex text-right transition {selectedTab ===
-				'leaderboard'
+				'user_feedbacks'
 					? ''
 					: ' text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'}"
 				on:click={() => {
-					selectedTab = 'leaderboard';
+					selectedTab = 'user_feedbacks';
 				}}
 			>
 				<div class=" self-center mr-2">
@@ -59,7 +61,7 @@
 						/>
 					</svg>
 				</div>
-				<div class=" self-center">{$i18n.t('Leaderboard')}</div>
+				<div class=" self-center">用户反馈</div>
 			</button>
 
 			<button
@@ -85,16 +87,18 @@
 						/>
 					</svg>
 				</div>
-				<div class=" self-center">{$i18n.t('Feedbacks')}</div>
+				<div class=" self-center">模型评价</div>
 			</button>
 		</div>
 
 		<div class="flex-1 mt-1 lg:mt-0 overflow-y-scroll">
-			{#if selectedTab === 'leaderboard'}
+			{#if selectedTab === 'user_feedbacks'}
+				<UserFeedbacks {feedbacks} />
+			{:else if selectedTab === 'leaderboard'}
 				<Leaderboard {feedbacks} />
 			{:else if selectedTab === 'feedbacks'}
 				<Feedbacks {feedbacks} />
 			{/if}
 		</div>
-	</div>
+	</div> -->
 {/if}

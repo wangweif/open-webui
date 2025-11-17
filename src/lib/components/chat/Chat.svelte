@@ -96,6 +96,7 @@
 	import NotificationToast from '../NotificationToast.svelte';
 	import Spinner from '../common/Spinner.svelte';
 	import OutlineEditor from './OutlineEditor.svelte';
+	import FeedbackModal from '../common/FeedbackModal.svelte';
 	import { detectAndParseOutlineData } from '$lib/utils';
 
 	export let chatIdProp = '';
@@ -119,6 +120,13 @@
 	let eventConfirmationInputPlaceholder = '';
 	let eventConfirmationInputValue = '';
 	let eventCallback = null;
+
+	let showFeedbackModal = false;
+
+	// 处理反馈弹窗的函数
+	const handleFeedbackModal = () => {
+		showFeedbackModal = true;
+	};
 
 	let chatIdUnsubscriber: Unsubscriber | undefined;
 
@@ -416,6 +424,9 @@
 		window.addEventListener('message', onMessageHandler);
 		$socket?.on('chat-events', chatEventHandler);
 
+		// 监听用户反馈弹窗事件
+		document.addEventListener('open-feedback-modal', handleFeedbackModal);
+
 		if (!$chatId) {
 			chatIdUnsubscriber = chatId.subscribe(async (value) => {
 				if (!value) {
@@ -476,6 +487,7 @@
 		chatIdUnsubscriber?.();
 		window.removeEventListener('message', onMessageHandler);
 		$socket?.off('chat-events', chatEventHandler);
+		document.removeEventListener('open-feedback-modal', handleFeedbackModal);
 	});
 
 	// File upload functions
@@ -2062,6 +2074,8 @@
 		eventCallback(false);
 	}}
 />
+
+<FeedbackModal bind:show={showFeedbackModal} />
 
 <div
 	class="h-screen max-h-[100dvh] transition-width duration-200 ease-in-out {$showSidebar

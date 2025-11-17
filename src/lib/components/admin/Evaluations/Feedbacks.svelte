@@ -19,11 +19,39 @@
 	import Pagination from '$lib/components/common/Pagination.svelte';
 	import FeedbackMenu from './FeedbackMenu.svelte';
 	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
+	import Model from '../Settings/Evaluations/Model.svelte';
+	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
+	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 
-	export let feedbacks = [];
+	export let feedbacks: any[] = [];
+
+	$: model_feedbacks = feedbacks.filter((f: any) => f.type === 'rating');
 
 	let page = 1;
-	$: paginatedFeedbacks = feedbacks.slice((page - 1) * 10, page * 10);
+
+	// 搜索
+	let searchInput = '';
+	let search = '';
+
+	// 排序
+	type SortKey = 'user_name' | 'user_email' | 'model' | 'rating' | 'updated_at';
+	let sortKey: SortKey = 'updated_at';
+	let sortOrder: 'asc' | 'desc' = 'desc';
+
+	function setSortKey(key: SortKey) {
+		if (sortKey === key) {
+			sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+		} else {
+			sortKey = key;
+			sortOrder = key === 'updated_at' ? 'desc' : 'asc';
+		}
+		page = 1;
+	}
+
+	const handleSearch = () => {
+		search = searchInput.trim();
+		page = 1;
+	};
 
 	type Feedback = {
 		id: string;
@@ -38,9 +66,66 @@
 		user: {
 			name: string;
 			profile_image_url: string;
+		email?: string;
 		};
 		updated_at: number;
 	};
+
+	const getUserName = (feedback: Feedback) => feedback?.user?.name || 'Unknown User';
+	const getUserEmail = (feedback: Feedback) => feedback?.user?.email || '-';
+	const getModelName = (feedback: Feedback) => feedback?.data?.model_id || '-';
+	const getComment = (feedback: Feedback) => feedback?.data?.comment || feedback?.data?.reason || '-';
+	const getRatingValue = (feedback) => {
+		const rating = Number(feedback?.data?.details?.rating);
+		return Number.isFinite(rating) ? rating : null;
+	};
+
+	$: filteredFeedbacks = model_feedbacks
+		.filter((f: Feedback) => {
+			if (!search) return true;
+			const query = search.toLowerCase();
+			const name = getUserName(f).toLowerCase();
+			const email = getUserEmail(f).toLowerCase();
+			const modelName = getModelName(f).toLowerCase();
+			const comment = getComment(f).toLowerCase();
+			const rating = getRatingValue(f);
+
+			return (
+				name.includes(query) ||
+				email.includes(query) ||
+				modelName.includes(query) ||
+				comment.includes(query) ||
+				(rating !== null && rating.toString().includes(query))
+			);
+		})
+		.sort((a: Feedback, b: Feedback) => {
+			const getSortValue = (feedback: Feedback) => {
+				switch (sortKey) {
+					case 'user_name':
+						return getUserName(feedback).toLowerCase();
+					case 'user_email':
+						return getUserEmail(feedback).toLowerCase();
+					case 'model':
+						return getModelName(feedback).toLowerCase();
+					case 'rating': {
+						const rating = getRatingValue(feedback);
+						return rating !== null ? rating : Number.NEGATIVE_INFINITY;
+					}
+					case 'updated_at':
+					default:
+						return feedback.updated_at || 0;
+				}
+			};
+
+			const aValue = getSortValue(a);
+			const bValue = getSortValue(b);
+
+			if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+			if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+			return 0;
+		});
+
+	$: paginatedFeedbacks = filteredFeedbacks.slice((page - 1) * 20, page * 20);
 
 	type ModelStats = {
 		rating: number;
@@ -106,132 +191,259 @@
 	};
 </script>
 
-<div class="mt-0.5 mb-2 gap-1 flex flex-row justify-between">
+<div class="mt-0.5 mb-2 gap-2 flex flex-col md:flex-row justify-between">
 	<div class="flex md:self-center text-lg font-medium px-0.5">
-		{$i18n.t('Feedback History')}
+		{$i18n.t('模型评价')}
 
 		<div class="flex self-center w-[1px] h-6 mx-2.5 bg-gray-50 dark:bg-gray-850" />
 
-		<span class="text-lg font-medium text-gray-500 dark:text-gray-300">{feedbacks.length}</span>
+		<span class="text-lg font-medium text-gray-500 dark:text-gray-300">{filteredFeedbacks.length}</span>
 	</div>
 
-	{#if feedbacks.length > 0}
-		<div>
-			<Tooltip content={$i18n.t('Export')}>
-				<button
-					class=" p-2 rounded-xl hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-850 transition font-medium text-sm flex items-center space-x-1"
-					on:click={() => {
-						exportHandler();
-					}}
+	<div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+		<div class="flex flex-1 min-w-[220px]">
+			<div class="self-center ml-1 mr-3 text-gray-400">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+					class="w-4 h-4"
 				>
-					<ArrowDownTray className="size-3" />
-				</button>
-			</Tooltip>
+					<path
+						fill-rule="evenodd"
+						d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
+						clip-rule="evenodd"
+					/>
+				</svg>
+			</div>
+			<input
+				class="w-full text-sm pr-4 py-1 rounded-r-xl outline-hidden bg-transparent border-b border-gray-200 dark:border-gray-800 focus:border-gray-400"
+				bind:value={searchInput}
+				placeholder="搜索用户名、邮箱、模型名称、评价内容（Enter确认）..."
+				on:keydown={(e) => {
+					if (e.key === 'Enter') {
+						handleSearch();
+					}
+				}}
+			/>
 		</div>
-	{/if}
+
+		{#if feedbacks.length > 0}
+			<div class="flex justify-end">
+				<Tooltip content={$i18n.t('Export')}>
+					<button
+						class="p-2 rounded-xl hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-850 transition font-medium text-sm flex items-center space-x-1"
+						on:click={() => {
+							exportHandler();
+						}}
+					>
+						<ArrowDownTray className="size-3" />
+					</button>
+				</Tooltip>
+			</div>
+		{/if}
+	</div>
 </div>
 
 <div
 	class="scrollbar-hidden relative whitespace-nowrap overflow-x-auto max-w-full rounded-sm pt-0.5"
 >
-	{#if (feedbacks ?? []).length === 0}
+	{#if filteredFeedbacks.length === 0}
 		<div class="text-center text-xs text-gray-500 dark:text-gray-400 py-1">
-			{$i18n.t('No feedbacks found')}
+			{search ? $i18n.t('未找到匹配的评价') : $i18n.t('暂无模型评价')}
 		</div>
 	{:else}
 		<table
-			class="w-full text-sm text-left text-gray-500 dark:text-gray-400 table-auto max-w-full rounded-sm"
+			class="w-full text-sm text-left text-gray-500 dark:text-gray-400 table-fixed max-w-full rounded-sm"
 		>
+			<colgroup>
+				<col style="width: 16%;" />
+				<col style="width: 18%;" />
+				<col style="width: 18%;" />
+				<col style="width: 28%;" />
+				<col style="width: 10%;" />
+				<col style="width: 10%;" />
+			</colgroup>
 			<thead
 				class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-850 dark:text-gray-400 -translate-y-0.5"
 			>
 				<tr class="">
-					<th scope="col" class="px-3 text-right cursor-pointer select-none w-0">
-						{$i18n.t('User')}
+					<th
+						scope="col"
+						class="px-3 py-1.5 cursor-pointer select-none"
+						on:click={() => setSortKey('user_name')}
+					>
+						<div class="flex gap-1.5 items-center">
+							{$i18n.t('用户名')}
+							{#if sortKey === 'user_name'}
+								<span class="font-normal">
+									{#if sortOrder === 'asc'}
+										<ChevronUp className="size-2" />
+									{:else}
+										<ChevronDown className="size-2" />
+									{/if}
+								</span>
+							{:else}
+								<span class="invisible">
+									<ChevronUp className="size-2" />
+								</span>
+							{/if}
+						</div>
 					</th>
 
-					<th scope="col" class="px-3 pr-1.5 cursor-pointer select-none">
-						{$i18n.t('Models')}
+					<th
+						scope="col"
+						class="px-3 py-1.5 cursor-pointer select-none"
+						on:click={() => setSortKey('user_email')}
+					>
+						<div class="flex gap-1.5 items-center">
+							{$i18n.t('邮箱')}
+							{#if sortKey === 'user_email'}
+								<span class="font-normal">
+									{#if sortOrder === 'asc'}
+										<ChevronUp className="size-2" />
+									{:else}
+										<ChevronDown className="size-2" />
+									{/if}
+								</span>
+							{:else}
+								<span class="invisible">
+									<ChevronUp className="size-2" />
+								</span>
+							{/if}
+						</div>
 					</th>
 
-					<th scope="col" class="px-3 py-1.5 text-right cursor-pointer select-none w-fit">
-						{$i18n.t('Result')}
+					<th
+						scope="col"
+						class="px-3 py-1.5 cursor-pointer select-none"
+						on:click={() => setSortKey('model')}
+					>
+						<div class="flex gap-1.5 items-center">
+							{$i18n.t('模型名称')}
+							{#if sortKey === 'model'}
+								<span class="font-normal">
+									{#if sortOrder === 'asc'}
+										<ChevronUp className="size-2" />
+									{:else}
+										<ChevronDown className="size-2" />
+									{/if}
+								</span>
+							{:else}
+								<span class="invisible">
+									<ChevronUp className="size-2" />
+								</span>
+							{/if}
+						</div>
 					</th>
 
-					<th scope="col" class="px-3 py-1.5 text-right cursor-pointer select-none w-0">
-						{$i18n.t('Updated At')}
+					<th scope="col" class="px-3 py-1.5 select-none">
+						{$i18n.t('评价内容')}
 					</th>
 
-					<th scope="col" class="px-3 py-1.5 text-right cursor-pointer select-none w-0"> </th>
+					<th
+						scope="col"
+						class="px-3 py-1.5 text-right cursor-pointer select-none"
+						on:click={() => setSortKey('rating')}
+					>
+						<div class="flex gap-1.5 items-center justify-end">
+							{$i18n.t('评价分')}
+							{#if sortKey === 'rating'}
+								<span class="font-normal">
+									{#if sortOrder === 'asc'}
+										<ChevronUp className="size-2" />
+									{:else}
+										<ChevronDown className="size-2" />
+									{/if}
+								</span>
+							{:else}
+								<span class="invisible">
+									<ChevronUp className="size-2" />
+								</span>
+							{/if}
+						</div>
+					</th>
+
+					<th
+						scope="col"
+						class="px-3 py-1.5 text-right cursor-pointer select-none"
+						on:click={() => setSortKey('updated_at')}
+					>
+						<div class="flex gap-1.5 items-center justify-end">
+							{$i18n.t('更新时间')}
+							{#if sortKey === 'updated_at'}
+								<span class="font-normal">
+									{#if sortOrder === 'asc'}
+										<ChevronUp className="size-2" />
+									{:else}
+										<ChevronDown className="size-2" />
+									{/if}
+								</span>
+							{:else}
+								<span class="invisible">
+									<ChevronUp className="size-2" />
+								</span>
+							{/if}
+						</div>
+					</th>
+
+					<th scope="col" class="px-3 py-1.5 text-right cursor-pointer select-none"> </th>
 				</tr>
 			</thead>
 			<tbody class="">
 				{#each paginatedFeedbacks as feedback (feedback.id)}
 					<tr class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs">
-						<td class=" py-0.5 text-right font-semibold">
-							<div class="flex justify-center">
-								<Tooltip content={feedback?.user?.name}>
-									<div class="shrink-0">
-										<img
-											src={feedback?.user?.profile_image_url ?? '/user.png'}
-											alt={feedback?.user?.name}
-											class="size-5 rounded-full object-cover shrink-0"
-										/>
-									</div>
-								</Tooltip>
-							</div>
+						<td class="px-3 py-3 text-gray-900 dark:text-white truncate">
+							{getUserName(feedback)}
 						</td>
 
-						<td class=" py-1 pl-3 flex flex-col">
-							<div class="flex flex-col items-start gap-0.5 h-full">
-								<div class="flex flex-col h-full">
-									{#if feedback.data?.sibling_model_ids}
-										<div class="font-semibold text-gray-600 dark:text-gray-400 flex-1">
-											{feedback.data?.model_id}
-										</div>
-
-										<Tooltip content={feedback.data.sibling_model_ids.join(', ')}>
-											<div class=" text-[0.65rem] text-gray-600 dark:text-gray-400 line-clamp-1">
-												{#if feedback.data.sibling_model_ids.length > 2}
-													<!-- {$i18n.t('and {{COUNT}} more')} -->
-													{feedback.data.sibling_model_ids.slice(0, 2).join(', ')}, {$i18n.t(
-														'and {{COUNT}} more',
-														{ COUNT: feedback.data.sibling_model_ids.length - 2 }
-													)}
-												{:else}
-													{feedback.data.sibling_model_ids.join(', ')}
-												{/if}
-											</div>
-										</Tooltip>
-									{:else}
-										<div
-											class=" text-sm font-medium text-gray-600 dark:text-gray-400 flex-1 py-1.5"
-										>
-											{feedback.data?.model_id}
-										</div>
-									{/if}
-								</div>
-							</div>
+						<td class="px-3 py-3 text-gray-900 dark:text-white truncate">
+							{getUserEmail(feedback)}
 						</td>
-						<td class="px-3 py-1 text-right font-medium text-gray-900 dark:text-white w-max">
-							<div class=" flex justify-end">
-								{#if feedback.data.rating.toString() === '1'}
-									<Badge type="info" content={$i18n.t('Won')} />
-								{:else if feedback.data.rating.toString() === '0'}
-									<Badge type="muted" content={$i18n.t('Draw')} />
-								{:else if feedback.data.rating.toString() === '-1'}
-									<Badge type="error" content={$i18n.t('Lost')} />
+
+						<td class="px-3 py-3 text-gray-900 dark:text-white truncate">
+							<div class="flex flex-col gap-0.5">
+								<span class="font-medium">{getModelName(feedback)}</span>
+								{#if feedback.data?.sibling_model_ids?.length}
+									<Tooltip content={feedback.data.sibling_model_ids.join(', ')}>
+										<span class="text-[0.65rem] text-gray-500 dark:text-gray-400 line-clamp-1">
+											{#if feedback.data.sibling_model_ids.length > 2}
+												{feedback.data.sibling_model_ids.slice(0, 2).join(', ')}, {$i18n.t(
+													'and {{COUNT}} more',
+													{ COUNT: feedback.data.sibling_model_ids.length - 2 }
+												)}
+											{:else}
+												{feedback.data.sibling_model_ids.join(', ')}
+											{/if}
+										</span>
+									</Tooltip>
 								{/if}
 							</div>
 						</td>
 
-						<td class=" px-3 py-1 text-right font-medium">
+						<td class="px-3 py-3 text-gray-900 dark:text-white">
+							<div class="line-clamp-2 break-words">{getComment(feedback)}</div>
+						</td>
+
+						<td class="px-3 py-3 text-right font-medium text-gray-900 dark:text-white">
+							<div class="flex flex-col items-end gap-1">
+								<div>
+									{#if getRatingValue(feedback) >= 5}
+										<Badge type="info" content={getRatingValue(feedback)} />
+									{:else}
+										<Badge type="error" content={getRatingValue(feedback)} />
+									{/if}
+								</div>
+							</div>
+						</td>
+
+						<td class="px-3 py-3 text-right font-medium">
 							{dayjs(feedback.updated_at * 1000).fromNow()}
 						</td>
 
-						<td class=" px-3 py-1 text-right font-semibold">
+						<td class="px-3 py-1 text-right font-semibold">
 							<FeedbackMenu
-								on:delete={(e) => {
+								on:delete={() => {
 									deleteFeedbackHandler(feedback.id);
 								}}
 							>
@@ -249,37 +461,6 @@
 	{/if}
 </div>
 
-{#if feedbacks.length > 0}
-	<div class=" flex flex-col justify-end w-full text-right gap-1">
-		<div class="line-clamp-1 text-gray-500 text-xs">
-			{$i18n.t('Help us create the best community leaderboard by sharing your feedback history!')}
-		</div>
-
-		<div class="flex space-x-1 ml-auto">
-			<Tooltip
-				content={$i18n.t(
-					'To protect your privacy, only ratings, model IDs, tags, and metadata are shared from your feedback—your chat logs remain private and are not included.'
-				)}
-			>
-				<button
-					class="flex text-xs items-center px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200 transition"
-					on:click={async () => {
-						shareHandler();
-					}}
-				>
-					<div class=" self-center mr-2 font-medium line-clamp-1">
-						{$i18n.t('Share to Open WebUI Community')}
-					</div>
-
-					<div class=" self-center">
-						<CloudArrowUp className="size-3" strokeWidth="3" />
-					</div>
-				</button>
-			</Tooltip>
-		</div>
-	</div>
-{/if}
-
-{#if feedbacks.length > 10}
-	<Pagination bind:page count={feedbacks.length} perPage={10} />
+{#if filteredFeedbacks.length > 20}
+	<Pagination bind:page count={filteredFeedbacks.length} perPage={20} />
 {/if}
