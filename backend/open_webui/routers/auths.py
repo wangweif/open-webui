@@ -23,6 +23,7 @@ from open_webui.models.auths import (
 )
 from open_webui.models.users import Users
 from open_webui.models.groups import Groups
+from open_webui.models.user_logins import UserLogins
 
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from open_webui.env import (
@@ -323,6 +324,30 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
                     user.id, request.app.state.config.USER_PERMISSIONS
                 )
 
+                # 记录登录日志
+                try:
+                    def get_client_ip(req: Request) -> str:
+                        forwarded_for = req.headers.get("X-Forwarded-For")
+                        if forwarded_for:
+                            return forwarded_for.split(",")[0].strip()
+                        real_ip = req.headers.get("X-Real-IP")
+                        if real_ip:
+                            return real_ip
+                        return req.client.host if req.client else "unknown"
+                    
+                    ip_address = get_client_ip(request)
+                    user_agent = request.headers.get("User-Agent")
+                    
+                    UserLogins.record_login(
+                        user_id=user.id,
+                        ip_address=ip_address,
+                        user_agent=user_agent,
+                        login_method='ldap',
+                        success=True
+                    )
+                except Exception as e:
+                    log.error(f"记录LDAP登录日志失败: {str(e)}")
+
                 return {
                     "token": token,
                     "token_type": "Bearer",
@@ -438,6 +463,39 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             except Exception as e:
                 log.error(f"检查用户是否属于农业局组错误: {str(e)}", exc_info=True)
                 is_bjny = False
+
+        # 记录登录日志
+        try:
+            # 获取客户端IP地址
+            def get_client_ip(req: Request) -> str:
+                forwarded_for = req.headers.get("X-Forwarded-For")
+                if forwarded_for:
+                    return forwarded_for.split(",")[0].strip()
+                real_ip = req.headers.get("X-Real-IP")
+                if real_ip:
+                    return real_ip
+                return req.client.host if req.client else "unknown"
+            
+            ip_address = get_client_ip(request)
+            user_agent = request.headers.get("User-Agent")
+            
+            # 确定登录方式
+            login_method = 'password'
+            if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
+                login_method = 'trusted_header'
+            elif ENABLE_LDAP:
+                # 这里需要根据实际LDAP登录逻辑判断
+                login_method = 'ldap'
+            
+            UserLogins.record_login(
+                user_id=user.id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                login_method=login_method,
+                success=True
+            )
+        except Exception as e:
+            log.error(f"记录登录日志失败: {str(e)}")
 
         return {
             "token": token,
