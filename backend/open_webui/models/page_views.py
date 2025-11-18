@@ -197,23 +197,47 @@ class PageViewsTable:
         self, 
         start_time: int, 
         end_time: int,
+        user_id: Optional[str] = None,
         skip: int = 0,
         limit: int = 1000
     ) -> List[PageViewModel]:
         """获取时间范围内的访问记录"""
         with get_db() as db:
+            query = db.query(PageView).filter(
+                PageView.created_at >= start_time,
+                PageView.created_at <= end_time
+            )
+            
+            if user_id:
+                query = query.filter(PageView.user_id == user_id)
+            
             views = (
-                db.query(PageView)
-                .filter(
-                    PageView.created_at >= start_time,
-                    PageView.created_at <= end_time
-                )
+                query
                 .order_by(PageView.created_at.desc())
                 .offset(skip)
                 .limit(limit)
                 .all()
             )
             return [PageViewModel.model_validate(view) for view in views]
+
+    def count_page_views(
+        self,
+        user_id: Optional[str] = None,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None
+    ) -> int:
+        """获取页面访问记录总数"""
+        with get_db() as db:
+            query = db.query(func.count(PageView.id))
+            
+            if user_id:
+                query = query.filter(PageView.user_id == user_id)
+            if start_time:
+                query = query.filter(PageView.created_at >= start_time)
+            if end_time:
+                query = query.filter(PageView.created_at <= end_time)
+            
+            return query.scalar() or 0
 
     def get_total_views_count(self) -> int:
         """获取总访问次数"""
