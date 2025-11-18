@@ -11,7 +11,7 @@
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
 
-	import { generateInitialsImage, canvasPixelTest } from '$lib/utils';
+	import { generateInitialsImage, canvasPixelTest, validatePasswordStrength } from '$lib/utils';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import OnBoarding from '$lib/components/OnBoarding.svelte';
@@ -26,6 +26,8 @@
 	let email = '';
 	let password = '';
 	let showPassword = false;
+	let passwordValidation = null;
+	let showPasswordHint = false;
 
 	let ldapUsername = '';
 
@@ -66,6 +68,13 @@
 	};
 
 	const signUpHandler = async () => {
+		// 验证密码强度
+		const validation = validatePasswordStrength(password);
+		if (!validation.isValid) {
+			toast.error(validation.errors.join('；'));
+			return;
+		}
+
 		const sessionUser = await userSignUp(name, email, password, generateInitialsImage(name)).catch(
 			(error) => {
 				toast.error(`${error}`);
@@ -75,6 +84,14 @@
 
 		await setSessionUser(sessionUser);
 	};
+
+	$: if (password) {
+		passwordValidation = validatePasswordStrength(password);
+		showPasswordHint = true;
+	} else {
+		passwordValidation = null;
+		showPasswordHint = false;
+	}
 
 	const ldapSignInHandler = async () => {
 		const sessionUser = await ldapUserSignIn(ldapUsername, password).catch((error) => {
@@ -355,20 +372,20 @@
 													<input
 														bind:value={password}
 														type="text"
-														class="w-full text-base bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:border-2 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 focus:shadow-lg"
+														class="w-full text-base bg-transparent border {passwordValidation && !passwordValidation.isValid ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:border-2 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 focus:shadow-lg"
 														placeholder="请输入密码"
-														autocomplete="current-password"
-														name="current-password"
+														autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
+														name={mode === 'signup' ? 'new-password' : 'current-password'}
 														required
 													/>
 												{:else}
 													<input
 														bind:value={password}
 														type="password"
-														class="w-full text-base bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:border-2 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 focus:shadow-lg"
+														class="w-full text-base bg-transparent border {passwordValidation && !passwordValidation.isValid ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:border-2 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 focus:shadow-lg"
 														placeholder="请输入密码"
-														autocomplete="current-password"
-														name="current-password"
+														autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
+														name={mode === 'signup' ? 'new-password' : 'current-password'}
 														required
 													/>
 												{/if}
@@ -390,6 +407,37 @@
 												</div>
 											</div>
 										</div>
+										{#if mode === 'signup' && showPasswordHint && passwordValidation}
+											<div class="mb-4 text-xs text-gray-500 dark:text-gray-400">
+												<div class="mb-2">密码要求：</div>
+												<div class="space-y-1">
+													<div class="flex items-center">
+														<span class="mr-2">{passwordValidation.strength.length ? '✓' : '✗'}</span>
+														<span class={passwordValidation.strength.length ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>至少8位</span>
+													</div>
+													<div class="flex items-center">
+														<span class="mr-2">{passwordValidation.strength.upper ? '✓' : '✗'}</span>
+														<span class={passwordValidation.strength.upper ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>包含大写字母</span>
+													</div>
+													<div class="flex items-center">
+														<span class="mr-2">{passwordValidation.strength.lower ? '✓' : '✗'}</span>
+														<span class={passwordValidation.strength.lower ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>包含小写字母</span>
+													</div>
+													<div class="flex items-center">
+														<span class="mr-2">{passwordValidation.strength.digit ? '✓' : '✗'}</span>
+														<span class={passwordValidation.strength.digit ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>包含数字</span>
+													</div>
+													<div class="flex items-center">
+														<span class="mr-2">{passwordValidation.strength.special ? '✓' : '✗'}</span>
+														<span class={passwordValidation.strength.special ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>包含特殊字符</span>
+													</div>
+													<div class="flex items-center mt-2">
+														<span class="mr-2">{passwordValidation.typeCount >= 3 ? '✓' : '✗'}</span>
+														<span class={passwordValidation.typeCount >= 3 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>至少包含3种字符类型（当前：{passwordValidation.typeCount}种）</span>
+													</div>
+												</div>
+											</div>
+										{/if}
 									</div>
 								{/if}
 

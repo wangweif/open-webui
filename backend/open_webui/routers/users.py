@@ -19,7 +19,7 @@ from open_webui.env import SRC_LOG_LEVELS
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
-from open_webui.utils.auth import get_admin_user, get_password_hash, get_verified_user
+from open_webui.utils.auth import get_admin_user, get_password_hash, get_verified_user, validate_password_strength
 from open_webui.utils.access_control import get_permissions
 
 
@@ -300,6 +300,21 @@ async def update_user_by_id(
                 )
 
         if form_data.password:
+            # 验证密码强度
+            is_valid, error_msg = validate_password_strength(form_data.password)
+            if not is_valid:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=error_msg or ERROR_MESSAGES.PASSWORD_TOO_WEAK,
+                )
+            
+            # 检查密码长度
+            if len(form_data.password.encode("utf-8")) > 72:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=ERROR_MESSAGES.PASSWORD_TOO_LONG,
+                )
+            
             hashed = get_password_hash(form_data.password)
             log.debug(f"hashed: {hashed}")
             Auths.update_user_password_by_id(user_id, hashed)
