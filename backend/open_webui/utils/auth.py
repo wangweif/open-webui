@@ -115,6 +115,49 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
+def validate_password_strength(password: str) -> tuple[bool, Optional[str]]:
+    """
+    验证密码强度
+    要求：
+    - 最少8位
+    - 由大写、小写、数字、特殊字符中的3种及以上组成
+    
+    返回: (是否有效, 错误消息)
+    """
+    if len(password) < 8:
+        return False, "密码长度至少需要8位"
+    
+    # 检查字符类型
+    has_upper = any(c.isupper() for c in password)
+    has_lower = any(c.islower() for c in password)
+    has_digit = any(c.isdigit() for c in password)
+    has_special = any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?/~`" for c in password)
+    
+    type_count = sum([has_upper, has_lower, has_digit, has_special])
+    
+    if type_count < 3:
+        return False, "密码必须包含大写字母、小写字母、数字、特殊字符中的至少3种"
+    
+    return True, None
+
+
+def is_password_expired(password_changed_at: Optional[int], days: int = 90) -> bool:
+    """
+    检查密码是否过期
+    password_changed_at: 密码最后修改时间（时间戳）
+    days: 密码有效期（天数），默认90天
+    返回: True表示已过期，False表示未过期
+    """
+    if password_changed_at is None:
+        # 如果没有记录修改时间，认为未过期（兼容旧数据）
+        return False
+    
+    import time
+    current_time = int(time.time())
+    days_in_seconds = days * 24 * 60 * 60
+    return (current_time - password_changed_at) > days_in_seconds
+
+
 def create_token(data: dict, expires_delta: Union[timedelta, None] = None) -> str:
     payload = data.copy()
 

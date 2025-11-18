@@ -24,6 +24,7 @@ from open_webui.models.auths import (
 from open_webui.models.users import Users
 from open_webui.models.groups import Groups
 from open_webui.models.user_logins import UserLogins
+from open_webui.internal.db import get_db
 
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from open_webui.env import (
@@ -46,6 +47,8 @@ from open_webui.utils.auth import (
     get_verified_user,
     get_current_user,
     get_password_hash,
+    validate_password_strength,
+    is_password_expired,
 )
 from open_webui.utils.webhook import post_webhook
 from open_webui.utils.access_control import get_permissions
@@ -170,6 +173,21 @@ async def update_password(
         user = Auths.authenticate_user(session_user.email, form_data.password)
 
         if user:
+            # 验证新密码强度
+            is_valid, error_msg = validate_password_strength(form_data.new_password)
+            if not is_valid:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    detail=error_msg or ERROR_MESSAGES.PASSWORD_TOO_WEAK,
+                )
+            
+            # 检查新密码长度
+            if len(form_data.new_password.encode("utf-8")) > 72:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    detail=ERROR_MESSAGES.PASSWORD_TOO_LONG,
+                )
+            
             hashed = get_password_hash(form_data.new_password)
             return Auths.update_user_password_by_id(user.id, hashed)
         else:
@@ -412,7 +430,83 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
 
             user = Auths.authenticate_user(admin_email.lower(), admin_password)
     else:
+        # 检查账户是否被锁定和密码是否过期
+        from open_webui.models.auths import Auth
+        with get_db() as db:
+            auth = db.query(Auth).filter_by(email=form_data.email.lower(), active=True).first()
+            if auth:
+                current_time = int(time.time())
+                
+                # 检查账户是否被锁定
+                if auth.locked_until and auth.locked_until > current_time:
+                    remaining_time = auth.locked_until - current_time
+                    remaining_minutes = remaining_time // 60
+                    raise HTTPException(
+                        status.HTTP_403_FORBIDDEN,
+                        detail=f"{ERROR_MESSAGES.ACCOUNT_LOCKED} 剩余时间：{remaining_minutes}分钟"
+                    )
+        
         user = Auths.authenticate_user(form_data.email.lower(), form_data.password)
+        
+        # 如果登录失败，检查是否因为账户被锁定（authenticate_user已经处理了锁定逻辑）
+        if not user:
+            # 记录失败的登录尝试
+            try:
+                def get_client_ip(req: Request) -> str:
+                    forwarded_for = req.headers.get("X-Forwarded-For")
+                    if forwarded_for:
+                        return forwarded_for.split(",")[0].strip()
+                    real_ip = req.headers.get("X-Real-IP")
+                    if real_ip:
+                        return real_ip
+                    return req.client.host if req.client else "unknown"
+                
+                ip_address = get_client_ip(request)
+                user_agent = request.headers.get("User-Agent")
+                
+                # 尝试获取用户ID（如果用户存在）
+                with get_db() as db:
+                    auth = db.query(Auth).filter_by(email=form_data.email.lower(), active=True).first()
+                    if auth:
+                        current_time = int(time.time())
+                        if auth.locked_until and auth.locked_until > current_time:
+                            remaining_time = auth.locked_until - current_time
+                            remaining_minutes = remaining_time // 60
+                            # 记录失败的登录尝试
+                            UserLogins.record_login(
+                                user_id=auth.id,
+                                ip_address=ip_address,
+                                user_agent=user_agent,
+                                login_method='password',
+                                success=False
+                            )
+                            raise HTTPException(
+                                status.HTTP_403_FORBIDDEN,
+                                detail=f"{ERROR_MESSAGES.ACCOUNT_LOCKED} 剩余时间：{remaining_minutes}分钟"
+                            )
+                        else:
+                            # 记录失败的登录尝试
+                            UserLogins.record_login(
+                                user_id=auth.id,
+                                ip_address=ip_address,
+                                user_agent=user_agent,
+                                login_method='password',
+                                success=False
+                            )
+            except HTTPException:
+                raise
+            except Exception as e:
+                log.error(f"记录登录失败日志失败: {str(e)}")
+        
+        # 如果登录成功，检查密码是否过期
+        if user:
+            with get_db() as db:
+                auth = db.query(Auth).filter_by(id=user.id, active=True).first()
+                if auth and is_password_expired(auth.password_changed_at):
+                    raise HTTPException(
+                        status.HTTP_403_FORBIDDEN,
+                        detail=ERROR_MESSAGES.PASSWORD_EXPIRED
+                    )
 
     if user:
 
@@ -445,12 +539,12 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         user_permissions = get_permissions(
             user.id, request.app.state.config.USER_PERMISSIONS
         )
-        if user.assistant_id == None or user.assistant_id == "":
-            print("用户没有助手，创建助手") 
-            assistant_id = await create_assistant(user.ragflow_user_id)
-            user.assistant_id = assistant_id
-            # 更新用户
-            Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
+        # if user.assistant_id == None or user.assistant_id == "":
+        #     print("用户没有助手，创建助手") 
+        #     assistant_id = await create_assistant(user.ragflow_user_id)
+        #     user.assistant_id = assistant_id
+        #     # 更新用户
+        #     Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
 
         # 检查用户是否属于农业局组
         is_bjny = False
@@ -561,6 +655,14 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
                 detail=ERROR_MESSAGES.PASSWORD_TOO_LONG,
             )
 
+        # 验证密码强度
+        is_valid, error_msg = validate_password_strength(form_data.password)
+        if not is_valid:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail=error_msg or ERROR_MESSAGES.PASSWORD_TOO_WEAK,
+            )
+
         hashed = get_password_hash(form_data.password)
         user = Auths.insert_new_auth(
             form_data.email.lower(),
@@ -572,17 +674,17 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
             tenant_id=TENANT_ID,
         )
         # 如果是直接注册的，则分配默认知识库，否则不分配
-        if not request.headers.get('Authorization'):
-            log.info("-------------直接注册，开始分配知识库")
-            await assign_base_kb_permission(user.ragflow_user_id)
-            # 将用户添加到UserTenant表
-            await add_user_to_user_tenant(TENANT_ID,user.email)
-            # 将用户添加到游客权限组
-            await add_user_to_tourist_group(user.id)
+        # if not request.headers.get('Authorization'):
+        #     log.info("-------------直接注册，开始分配知识库")
+        #     await assign_base_kb_permission(user.ragflow_user_id)
+        #     # 将用户添加到UserTenant表
+        #     await add_user_to_user_tenant(TENANT_ID,user.email)
+        #     # 将用户添加到游客权限组
+        #     await add_user_to_tourist_group(user.id)
 
-        assistant_id = await create_assistant(user.ragflow_user_id)
+        assistant_id = None
 
-        Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
+        # Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
         if user:
             expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
             expires_at = None
@@ -695,6 +797,21 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
         raise HTTPException(400, detail=ERROR_MESSAGES.EMAIL_TAKEN)
 
     try:
+        # 验证密码强度
+        is_valid, error_msg = validate_password_strength(form_data.password)
+        if not is_valid:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail=error_msg or ERROR_MESSAGES.PASSWORD_TOO_WEAK,
+            )
+        
+        # 检查密码长度
+        if len(form_data.password.encode("utf-8")) > 72:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MESSAGES.PASSWORD_TOO_LONG,
+            )
+        
         hashed = get_password_hash(form_data.password)
         user = Auths.insert_new_auth(
             form_data.email.lower(),

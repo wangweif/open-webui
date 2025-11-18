@@ -3,6 +3,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { onMount, getContext } from 'svelte';
 	import { addUser } from '$lib/apis/auths';
+	import { validatePasswordStrength } from '$lib/utils';
 
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
@@ -16,6 +17,8 @@
 	let loading = false;
 	let tab = '';
 	let inputFiles;
+	let passwordValidation: ReturnType<typeof validatePasswordStrength> | null = null;
+	let showPasswordHint = false;
 
 	let _user = {
 		name: '',
@@ -31,6 +34,16 @@
 			password: '',
 			role: 'user'
 		};
+		passwordValidation = null;
+		showPasswordHint = false;
+	}
+
+	$: if (_user.password) {
+		passwordValidation = validatePasswordStrength(_user.password);
+		showPasswordHint = true;
+	} else {
+		passwordValidation = null;
+		showPasswordHint = false;
 	}
 
 	const submitHandler = async () => {
@@ -40,6 +53,15 @@
 		};
 
 		if (tab === '') {
+			// 验证密码强度
+			if (_user.password) {
+				const validation = validatePasswordStrength(_user.password);
+				if (!validation.isValid) {
+					toast.error(validation.errors.join('；'));
+					return;
+				}
+			}
+
 			loading = true;
 
 			const res = await addUser(
@@ -50,6 +72,8 @@
 				_user.role
 			).catch((error) => {
 				toast.error(`${error}`);
+				loading = false;
+				return null;
 			});
 
 			if (res) {
@@ -229,13 +253,44 @@
 
 								<div class="flex-1">
 									<input
-										class="w-full text-sm bg-transparent disabled:text-gray-500 dark:disabled:text-gray-500 outline-hidden"
+										class="w-full text-sm bg-transparent disabled:text-gray-500 dark:disabled:text-gray-500 outline-hidden border-b {passwordValidation && !passwordValidation.isValid ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}"
 										type="password"
 										bind:value={_user.password}
 										placeholder={$i18n.t('Enter Your Password')}
 										autocomplete="off"
 									/>
 								</div>
+								{#if showPasswordHint && passwordValidation}
+									<div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+										<div class="mb-1">密码要求：</div>
+										<div class="space-y-0.5">
+											<div class="flex items-center">
+												<span class="mr-2">{passwordValidation.strength.length ? '✓' : '✗'}</span>
+												<span class={passwordValidation.strength.length ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>至少8位</span>
+											</div>
+											<div class="flex items-center">
+												<span class="mr-2">{passwordValidation.strength.upper ? '✓' : '✗'}</span>
+												<span class={passwordValidation.strength.upper ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>包含大写字母</span>
+											</div>
+											<div class="flex items-center">
+												<span class="mr-2">{passwordValidation.strength.lower ? '✓' : '✗'}</span>
+												<span class={passwordValidation.strength.lower ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>包含小写字母</span>
+											</div>
+											<div class="flex items-center">
+												<span class="mr-2">{passwordValidation.strength.digit ? '✓' : '✗'}</span>
+												<span class={passwordValidation.strength.digit ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>包含数字</span>
+											</div>
+											<div class="flex items-center">
+												<span class="mr-2">{passwordValidation.strength.special ? '✓' : '✗'}</span>
+												<span class={passwordValidation.strength.special ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>包含特殊字符</span>
+											</div>
+											<div class="flex items-center mt-1">
+												<span class="mr-2">{passwordValidation.typeCount >= 3 ? '✓' : '✗'}</span>
+												<span class={passwordValidation.typeCount >= 3 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>至少包含3种字符类型（当前：{passwordValidation.typeCount}种）</span>
+											</div>
+										</div>
+									</div>
+								{/if}
 							</div>
 						{:else if tab === 'import'}
 							<div>

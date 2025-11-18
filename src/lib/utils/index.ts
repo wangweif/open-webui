@@ -1432,3 +1432,39 @@ export function detectAndParseOutlineData(content: string) {
 		outlineData: null
 	};
 }
+
+/**
+ * 验证密码强度
+ * 要求：
+ * - 最少8位
+ * - 由大写、小写、数字、特殊字符中的3种及以上组成
+ * 
+ * @param password 密码字符串
+ * @returns {isValid: boolean, errors: string[], strength: {length: boolean, upper: boolean, lower: boolean, digit: boolean, special: boolean}}
+ */
+export const validatePasswordStrength = (password: string) => {
+	const errors: string[] = [];
+	const strength = {
+		length: password.length >= 8,
+		upper: /[A-Z]/.test(password),
+		lower: /[a-z]/.test(password),
+		digit: /[0-9]/.test(password),
+		special: /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?/~`]/.test(password)
+	};
+
+	if (!strength.length) {
+		errors.push('密码长度至少需要8位');
+	}
+
+	const typeCount = [strength.upper, strength.lower, strength.digit, strength.special].filter(Boolean).length;
+	if (typeCount < 3) {
+		errors.push('密码必须包含大写字母、小写字母、数字、特殊字符中的至少3种');
+	}
+
+	return {
+		isValid: errors.length === 0,
+		errors,
+		strength,
+		typeCount
+	};
+};

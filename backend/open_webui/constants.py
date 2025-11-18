@@ -32,6 +32,9 @@ class ERROR_MESSAGES(str, Enum):
         "Uh-oh! This username is already registered. Please choose another username."
     )
     PASSWORD_TOO_LONG = "Uh-oh! The password you entered is too long. Please make sure your password is less than 72 bytes long."
+    PASSWORD_TOO_WEAK = "密码强度不符合要求：密码长度至少需要8位，且必须包含大写字母、小写字母、数字、特殊字符中的至少3种。"
+    PASSWORD_EXPIRED = "您的密码已过期（90天），请修改密码后再登录。"
+    ACCOUNT_LOCKED = "账户因登录失败次数过多已被锁定，请30分钟后再试。"
     COMMAND_TAKEN = "Uh-oh! This command is already registered. Please choose another command string."
     FILE_EXISTS = "Uh-oh! This file is already registered. Please choose another file."
 
