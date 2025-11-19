@@ -23,8 +23,8 @@ export default defineConfig(({ mode }) => {
 	const env = loadEnv(mode, process.cwd(), '');
 
 	// 根据环境变量设置不同的应用名称
-	// const APP_NAME = env.PUBLIC_APP_NAME || env.APP_NAME || (env.PUBLIC_BUILD_TARGET === 'bjny' || env.BUILD_TARGET === 'bjny' ? '北京市农业农村局' : '农科小智');
-	const APP_NAME = '农科小智大模型';
+	const APP_NAME = env.PUBLIC_APP_NAME
+	// const APP_NAME = '农科小智大模型';
 	console.log(`Building for: ${env.PUBLIC_BUILD_TARGET || env.BUILD_TARGET || 'default'}, APP_NAME: ${APP_NAME}`);
 
 	return {
