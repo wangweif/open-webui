@@ -226,7 +226,7 @@
 		</div>
 
 		<div
-			class="fixed bg-transparent min-h-screen w-full flex justify-center font-primary z-50 text-black dark:text-white"
+			class="fixed top-50 bg-transparent min-h-screen w-full flex justify-center font-primary z-50 text-black dark:text-white"
 		>
 			<div class="w-full sm:max-w-md px-10 min-h-screen flex flex-col text-center">
 				{#if ($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false}
@@ -246,13 +246,13 @@
 				{:else}
 					<div class="mt-5 pb-10 w-full dark:text-gray-100">
 						<div class="mb-8 flex items-center justify-center">
-							<div class="flex-shrink-0">
+							<!-- <div class="flex-shrink-0">
 								<img
 									src="/login.jpg"
 									alt="农科小智"
 									class="w-40 h-40 object-contain"
 								/>
-							</div>
+							</div> -->
 							<!-- <div class="ml-4">
 								<div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
 									农科小智
