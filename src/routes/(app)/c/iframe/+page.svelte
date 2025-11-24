@@ -90,7 +90,7 @@
         </div>
 
         <!-- 底部技术支持信息 -->
-        <div class="w-full py-2 px-4 text-center text-xs text-gray-500 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <div class="w-full py-2 px-4 text-center text-xs text-gray-500 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 whitespace-pre-wrap">
             {#if $user?.is_bjny}
                 {FOOTER_TEXT_BJNY || "内容由 AI大模型生成，请仔细甄别。技术支持:北京市农林科学院"}
             {:else}
