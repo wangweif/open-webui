@@ -44,9 +44,6 @@
 		if ($user === undefined || $user === null) {
 			await goto('/auth');
 		} else if (['user', 'admin'].includes($user?.role)) {
-			WEBUI_NAME.set('农科小智大模型');
-			document.title = '农科小智大模型';
-
 			const userSettings = await getUserSettings(localStorage.token).catch((error) => {
 				console.error(error);
 				return null;
