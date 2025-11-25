@@ -77,6 +77,7 @@ class SessionUserResponse(Token, UserResponse):
     permissions: Optional[dict] = None
     assistant_id: Optional[str] = None
     is_bjny: Optional[bool] = False
+    requires_password_change: Optional[bool] = False
 
 
 @router.get("/", response_model=SessionUserResponse)
@@ -591,6 +592,13 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         except Exception as e:
             log.error(f"记录登录日志失败: {str(e)}")
 
+        # 检测密码是否是初始密码"123456"
+        requires_password_change = False
+        if WEBUI_AUTH and not WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
+            # 只有在使用密码登录时才检测
+            if form_data.password == "123456":
+                requires_password_change = True
+
         return {
             "token": token,
             "token_type": "Bearer",
@@ -603,6 +611,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             "permissions": user_permissions,
             "assistant_id": user.assistant_id,
             "is_bjny": is_bjny,
+            "requires_password_change": requires_password_change,
         }
     else:
         raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)

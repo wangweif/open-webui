@@ -549,6 +549,13 @@
 					});
 
 					if (sessionUser) {
+						// 检查是否需要强制更改密码
+						if (sessionUser.requires_password_change) {
+							// 如果需要更改密码，跳转到登录页面并显示强制更改密码模态框
+							await goto(`/auth?redirect=${encodedUrl}&force_password_change=true`);
+							return;
+						}
+
 						// Save Session User to Store
 						$socket.emit('user-join', { auth: { token: sessionUser.token } });
 

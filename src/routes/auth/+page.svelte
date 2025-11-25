@@ -15,6 +15,7 @@
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import OnBoarding from '$lib/components/OnBoarding.svelte';
+	import ForcePasswordChangeModal from '$lib/components/ForcePasswordChangeModal.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -30,6 +31,9 @@
 	let showPasswordHint = false;
 
 	let ldapUsername = '';
+	let showForcePasswordChange = false;
+	let pendingSessionUser = null;
+	let pendingSessionToken = null;
 
 	const togglePasswordVisibility = () => {
 		showPassword = !showPassword;
@@ -44,17 +48,58 @@
 	const setSessionUser = async (sessionUser) => {
 		if (sessionUser) {
 			console.log(sessionUser);
+			
+			// 检查是否需要强制更改密码
+			if (sessionUser.requires_password_change) {
+				pendingSessionUser = sessionUser;
+				pendingSessionToken = sessionUser.token ?? null;
+				showForcePasswordChange = true;
+				return;
+			}
+
 			toast.success($i18n.t(`You're now logged in.`));
 			if (sessionUser.token) {
 				localStorage.token = sessionUser.token;
 			}
 
-			$socket.emit('user-join', { auth: { token: sessionUser.token } });
+			$socket?.emit('user-join', { auth: { token: sessionUser.token } });
 			await user.set(sessionUser);
 			await config.set(await getBackendConfig());
 
 			const redirectPath = querystringValue('redirect') || '/';
 			goto(redirectPath);
+		}
+	};
+
+	const handlePasswordChanged = async () => {
+		// 密码更改成功后，重新获取用户信息并跳转
+		if (pendingSessionUser) {
+			const token = pendingSessionToken ?? pendingSessionUser.token;
+			if (!token) {
+				toast.error($i18n.t('Missing authentication token. Please sign in again.'));
+				pendingSessionUser = null;
+				pendingSessionToken = null;
+				return;
+			}
+			const sessionUser = await getSessionUser(token).catch((error) => {
+				toast.error(`${error}`);
+				return null;
+			});
+
+			if (sessionUser) {
+				toast.success($i18n.t(`You're now logged in.`));
+				if (sessionUser.token) {
+					localStorage.token = sessionUser.token;
+				}
+				$socket?.emit('user-join', { auth: { token: sessionUser.token } });
+				await user.set(sessionUser);
+				await config.set(await getBackendConfig());
+
+				const redirectPath = querystringValue('redirect') || '/';
+				goto(redirectPath);
+			}
+			pendingSessionUser = null;
+			pendingSessionToken = null;
 		}
 	};
 
@@ -177,6 +222,20 @@
 			goto(redirectPath);
 		}
 		await checkOauthCallback();
+
+		// 检查是否需要强制更改密码
+		const forcePasswordChange = querystringValue('force_password_change') === 'true';
+		if (forcePasswordChange && localStorage.token) {
+			const sessionUser = await getSessionUser(localStorage.token).catch((error) => {
+				toast.error(`${error}`);
+				return null;
+			});
+			if (sessionUser && sessionUser.requires_password_change) {
+				pendingSessionUser = sessionUser;
+				pendingSessionToken = sessionUser.token ?? null;
+				showForcePasswordChange = true;
+			}
+		}
 
 		loaded = true;
 		setLogoImage();
@@ -632,4 +691,21 @@
 			</div>
 		</div>
 	{/if}
+
+	<div
+		class="absolute bottom-0 left-0 w-full bg-white/70 dark:bg-black/70 backdrop-blur border-t border-gray-200/60 dark:border-gray-700/60"
+	>
+		<div class="w-full py-2 px-4 text-center text-xs text-gray-500 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 mt-auto whitespace-pre-wrap">
+			{#if $user?.is_bjny}
+				{FOOTER_TEXT_BJNY || "内容由 AI大模型生成，请仔细甄别。技术支持:北京市农林科学院"}
+			{:else}
+				{FOOTER_TEXT || "内容由 AI大模型生成，请仔细甄别。技术支持:北京市农林科学院"}
+			{/if}
+		</div>
+	</div>
+	<ForcePasswordChangeModal
+		bind:show={showForcePasswordChange}
+		token={pendingSessionToken}
+		onPasswordChanged={handlePasswordChanged}
+	/>
 </div>
