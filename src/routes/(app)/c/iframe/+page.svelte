@@ -3,6 +3,7 @@
     import { showSidebar, user } from '$lib/stores';
     import { page } from '$app/stores';
     import Navbar from '$lib/components/chat/Navbar.svelte';
+	import Footer from '$lib/components/layout/Footer.svelte';
 
     // 全局环境变量
     declare global {
@@ -90,15 +91,6 @@
         </div>
 
         <!-- 底部技术支持信息 -->
-        <div class="w-full px-4 text-center text-xs text-gray-500 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 whitespace-pre-wrap">
-            {#if $user?.is_bjny}
-                {FOOTER_TEXT_BJNY || "内容由 AI大模型生成，请仔细甄别。技术支持:北京市农林科学院"}
-            {:else}
-                {FOOTER_TEXT || "内容由 AI大模型生成，请仔细甄别。技术支持:北京市农林科学院"}
-            {/if}
-        </div>
-        <div class="w-full px-4 text-center text-xs dark:border-gray-700 bg-white dark:bg-gray-900 mt-auto whitespace-pre-wrap text-red-500 dark:text-red-400">
-			{"禁止在系统内传输、存储、处理涉密文件和信息"}
-		</div>
+        <Footer is_bjny={$user?.is_bjny}/>
     </div>
 </div>
