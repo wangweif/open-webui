@@ -14,6 +14,7 @@ from pytz import UTC
 from typing import Optional, Union, List, Dict
 
 from open_webui.models.users import Users
+from open_webui.models.groups import Groups
 
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import (
@@ -298,3 +299,27 @@ def get_admin_user(user=Depends(get_current_user)):
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
         )
     return user
+
+
+def get_audit_user(user=Depends(get_current_user)):
+    """
+    检查用户是否是审计用户
+    审计用户是指属于审计权限组的用户
+    """
+    
+    # 检查用户是否属于审计权限组
+    try:
+        user_groups = Groups.get_groups_by_member_id(user.id)
+        user_group_names = [group.name for group in user_groups]
+        # 检查用户的任何组是否在审计权限组列表中
+        if any(group_name == "审计" for group_name in user_group_names):
+            return user
+    except Exception as e:
+        log = logging.getLogger(__name__)
+        log.error(f"检查用户是否属于审计权限组错误: {str(e)}", exc_info=True)
+    
+    # 不属于审计权限组，拒绝访问
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+    )

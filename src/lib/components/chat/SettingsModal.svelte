@@ -19,6 +19,7 @@
 	import Connections from './Settings/Connections.svelte';
 	import Tools from './Settings/Tools.svelte';
 	import Version from './Settings/Version.svelte';
+	import UserLogs from '../admin/Settings/UserLogs.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -303,6 +304,24 @@
 				'versioninfo',
 				'versiondetails',
 				'versionhistory'
+			]
+		},
+		{
+			id: 'user-logs',
+			title: '用户日志',
+			keywords: [
+				'user',
+				'logs',
+				'用户日志',
+				'日志',
+				'audit',
+				'审计',
+				'login',
+				'登录',
+				'page',
+				'view',
+				'访问',
+				'记录'
 			]
 		},
 		{
@@ -736,6 +755,34 @@
 								</div>
 								<div class=" self-center">{$i18n.t('Version')}</div>
 							</button>
+						{:else if tabId === 'user-logs'}
+							{#if $user?.is_audit}
+								<button
+									class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
+									'user-logs'
+										? ''
+										: ' text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'}"
+									on:click={() => {
+										selectedTab = 'user-logs';
+									}}
+								>
+									<div class=" self-center mr-2">
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 24 24"
+											fill="currentColor"
+											class="w-4 h-4"
+										>
+											<path
+												fill-rule="evenodd"
+												d="M4.125 3C3.089 3 2.25 3.84 2.25 4.875V18a3 3 0 0 0 3 3h15a3 3 0 0 1-3-3V4.875C17.25 3.839 16.41 3 15.375 3H4.125ZM12 9.75a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5H12Zm3.75-1.5a.75.75 0 0 0-1.5 0v1.5a.75.75 0 0 0 1.5 0V8.25Zm-6-1.5a.75.75 0 0 0-1.5 0v1.5a.75.75 0 0 0 1.5 0V6.75ZM9 12.75a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5H9Zm3-.75a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75Zm-3.75 3a.75.75 0 0 0-1.5 0v1.5a.75.75 0 0 0 1.5 0v-1.5Zm6 0a.75.75 0 0 0-1.5 0v1.5a.75.75 0 0 0 1.5 0v-1.5ZM9 15.75a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5H9Zm3-.75a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75Z"
+												clip-rule="evenodd"
+											/>
+										</svg>
+									</div>
+									<div class=" self-center">{$i18n.t('用户日志')}</div>
+								</button>
+							{/if}
 						{:else if tabId === 'about'}
 							<!-- <button
 								class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
@@ -860,6 +907,8 @@
 					/>
 				{:else if selectedTab === 'about'}
 					<About />
+				{:else if selectedTab === 'user-logs'}
+					<UserLogs />
 				{/if}
 			</div>
 		</div>

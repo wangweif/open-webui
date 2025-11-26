@@ -235,4 +235,5 @@ type SessionUser = {
 	profile_image_url: string;
 	assistant_id: string;
 	is_bjny?: boolean;
+	is_audit?: boolean;
 };

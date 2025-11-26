@@ -352,7 +352,7 @@
 			<div class=" self-center">{$i18n.t('Pipelines')}</div>
 		</button>
 
-		<button
+		<!-- <button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
 			'user-logs'
 				? ''
@@ -376,7 +376,7 @@
 				</svg>
 			</div>
 			<div class=" self-center">{$i18n.t('用户日志')}</div>
-		</button>
+		</button> -->
 
 		<!-- <button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===

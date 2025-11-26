@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from open_webui.models.page_views import PageViews, PageViewModel
-from open_webui.utils.auth import get_admin_user
+from open_webui.utils.auth import get_audit_user
 from open_webui.models.users import Users
 from open_webui.models.user_logins import UserLogins, UserLoginModel
 
@@ -132,10 +132,10 @@ async def get_all_user_logs(
     user_id: Optional[str] = Query(None, description="用户ID"),
     start_time: Optional[int] = Query(None, description="开始时间戳"),
     end_time: Optional[int] = Query(None, description="结束时间戳"),
-    user=Depends(get_admin_user)
+    user=Depends(get_audit_user)
 ):
     """
-    获取用户操作日志（仅管理员）
+    获取用户操作日志（审计用户）
     支持登录记录和页面访问记录，严格分页查询
     """
     try:

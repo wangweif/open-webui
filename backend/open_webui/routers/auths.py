@@ -77,6 +77,7 @@ class SessionUserResponse(Token, UserResponse):
     permissions: Optional[dict] = None
     assistant_id: Optional[str] = None
     is_bjny: Optional[bool] = False
+    is_audit: Optional[bool] = False
 
 
 @router.get("/", response_model=SessionUserResponse)
@@ -121,6 +122,13 @@ async def get_session_user(
         # 检查用户的任何组是否在农业局组列表中
         is_bjny = any(group_id in AGRICULTURE_BUREAU_GROUP_IDS for group_id in user_group_ids)
 
+    # 检查用户是否属于审计权限组
+    is_audit = False
+    user_groups = Groups.get_groups_by_member_id(user.id)
+    user_group_names = [group.name for group in user_groups]
+    # 检查用户的任何组是否在审计权限组列表中
+    is_audit = any(group_name == "审计" for group_name in user_group_names)
+
     return {
         "token": token,
         "token_type": "Bearer",
@@ -133,6 +141,7 @@ async def get_session_user(
         "permissions": user_permissions,
         "assistant_id": user.assistant_id,
         "is_bjny": is_bjny,
+        "is_audit": is_audit,
     }
 
 
@@ -342,6 +351,17 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
                     user.id, request.app.state.config.USER_PERMISSIONS
                 )
 
+                # 检查用户是否属于审计权限组
+                is_audit = False
+                try:
+                    user_groups = Groups.get_groups_by_member_id(user.id)
+                    user_group_names = [group.name for group in user_groups]
+                    # 检查用户的任何组是否在审计权限组列表中
+                    is_audit = any(group_name == "审计" for group_name in user_group_names)
+                except Exception as e:
+                    log.error(f"检查用户是否属于审计权限组错误: {str(e)}", exc_info=True)
+                    is_audit = False
+
                 # 记录登录日志
                 try:
                     def get_client_ip(req: Request) -> str:
@@ -376,6 +396,7 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
                     "profile_image_url": user.profile_image_url,
                     "permissions": user_permissions,
                     "assistant_id": user.assistant_id,
+                    "is_audit": is_audit,
                 }
             else:
                 raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
@@ -577,6 +598,17 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
                 log.error(f"检查用户是否属于农业局组错误: {str(e)}", exc_info=True)
                 is_bjny = False
 
+        # 检查用户是否属于审计权限组
+        is_audit = False
+        try:
+            user_groups = Groups.get_groups_by_member_id(user.id)
+            user_group_names = [group.name for group in user_groups]
+            # 检查用户的任何组是否在审计权限组列表中
+            is_audit = any(group_name == "审计" for group_name in user_group_names)
+        except Exception as e:
+            log.error(f"检查用户是否属于审计权限组错误: {str(e)}", exc_info=True)
+            is_audit = False
+
         # 记录登录日志
         try:
             # 获取客户端IP地址
@@ -622,6 +654,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             "permissions": user_permissions,
             "assistant_id": user.assistant_id,
             "is_bjny": is_bjny,
+            "is_audit": is_audit,
         }
     else:
         raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
