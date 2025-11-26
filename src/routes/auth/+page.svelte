@@ -102,7 +102,7 @@
 	};
     const guestSignInHandler = async () => {
         const guestEmail = 'guest@bjzntd.com';
-        const guestPassword = '123456';
+        const guestPassword = 'bjzntd@123456';
 
         const sessionUser = await userSignIn(guestEmail, guestPassword).catch((error) => {
             toast.error(`${error}`);
