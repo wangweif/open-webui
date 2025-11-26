@@ -493,10 +493,29 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
                                 login_method='password',
                                 success=False
                             )
+                            # 获取失败次数和剩余尝试次数
+                            failed_count = auth.failed_login_count or 0
+                            remaining_attempts = max(0, 5 - failed_count)
+                            error_detail = f"{ERROR_MESSAGES.INVALID_CRED}（失败次数：{failed_count}次，剩余尝试次数：{remaining_attempts}次）"
+                            raise HTTPException(
+                                status.HTTP_401_UNAUTHORIZED,
+                                detail=error_detail
+                            )
+                    else:
+                        # 用户不存在，返回通用错误
+                        raise HTTPException(
+                            status.HTTP_401_UNAUTHORIZED,
+                            detail=ERROR_MESSAGES.INVALID_CRED
+                        )
             except HTTPException:
                 raise
             except Exception as e:
                 log.error(f"记录登录失败日志失败: {str(e)}")
+                # 如果出现异常，返回通用错误
+                raise HTTPException(
+                    status.HTTP_401_UNAUTHORIZED,
+                    detail=ERROR_MESSAGES.INVALID_CRED
+                )
         
         # 如果登录成功，检查密码是否过期
         if user:
