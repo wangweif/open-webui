@@ -784,18 +784,9 @@
 									}}
 								>
 									<div class=" self-center mr-2">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											viewBox="0 0 16 16"
-											fill="currentColor"
-											class="w-4 h-4"
-										>
-											<path
-												fill-rule="evenodd"
-												d="M8.5 1.709a.75.75 0 0 0-1 0L3.75 4.5a.75.75 0 0 0-.5.707v3.5c0 .414.336.75.75.75h1.5v4.5c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75V9.457h1.5a.75.75 0 0 0 .75-.75v-3.5a.75.75 0 0 0-.5-.707L8.5 1.709ZM5.25 5.457h5.5v2.793h-1.5a.75.75 0 0 0-.75.75v4.5h-1.5v-4.5a.75.75 0 0 0-.75-.75h-1.5V5.457Z"
-												clip-rule="evenodd"
-											/>
-										</svg>
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4">
+											<path fill-rule="evenodd" d="M5 7V4a3 3 0 1 1 6 0v3h1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1Zm2 0h2V4a1 1 0 0 0-2 0v3Zm1 7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" clip-rule="evenodd" />
+										  </svg>
 									</div>
 									<div class=" self-center">安全</div>
 								</button>
