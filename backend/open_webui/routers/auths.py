@@ -49,6 +49,7 @@ from open_webui.utils.auth import (
     get_password_hash,
     validate_password_strength,
     is_password_expired,
+    get_security_admin_user,
 )
 from open_webui.utils.webhook import post_webhook
 from open_webui.utils.access_control import get_permissions
@@ -78,6 +79,7 @@ class SessionUserResponse(Token, UserResponse):
     assistant_id: Optional[str] = None
     is_bjny: Optional[bool] = False
     is_audit: Optional[bool] = False
+    is_security_admin: Optional[bool] = False
 
 
 @router.get("/", response_model=SessionUserResponse)
@@ -129,6 +131,9 @@ async def get_session_user(
     # 检查用户的任何组是否在审计权限组列表中
     is_audit = any(group_name == "审计" for group_name in user_group_names)
 
+    # 检查用户是否属于安全管理员组
+    is_security_admin = any(group_name == "安全管理员" for group_name in user_group_names)
+
     return {
         "token": token,
         "token_type": "Bearer",
@@ -142,6 +147,7 @@ async def get_session_user(
         "assistant_id": user.assistant_id,
         "is_bjny": is_bjny,
         "is_audit": is_audit,
+        "is_security_admin": is_security_admin,
     }
 
 
@@ -542,7 +548,8 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         if user:
             with get_db() as db:
                 auth = db.query(Auth).filter_by(id=user.id, active=True).first()
-                if auth and is_password_expired(auth.password_changed_at):
+                password_expires_days = int(request.app.state.config.PASSWORD_EXPIRES_IN_DAYS)
+                if auth and is_password_expired(auth.password_changed_at, days=password_expires_days):
                     raise HTTPException(
                         status.HTTP_403_FORBIDDEN,
                         detail=ERROR_MESSAGES.PASSWORD_EXPIRED
@@ -609,6 +616,17 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             log.error(f"检查用户是否属于审计权限组错误: {str(e)}", exc_info=True)
             is_audit = False
 
+        # 检查用户是否属于安全管理员组
+        is_security_admin = False
+        try:
+            user_groups = Groups.get_groups_by_member_id(user.id)
+            user_group_names = [group.name for group in user_groups]
+            # 检查用户的任何组是否在安全管理员组列表中
+            is_security_admin = any(group_name == "安全管理员" for group_name in user_group_names)
+        except Exception as e:
+            log.error(f"检查用户是否属于安全管理员组错误: {str(e)}", exc_info=True)
+            is_security_admin = False
+
         # 记录登录日志
         try:
             # 获取客户端IP地址
@@ -655,6 +673,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             "assistant_id": user.assistant_id,
             "is_bjny": is_bjny,
             "is_audit": is_audit,
+            "is_security_admin": is_security_admin,
         }
     else:
         raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
@@ -1153,3 +1172,53 @@ async def get_api_key(user=Depends(get_current_user)):
         }
     else:
         raise HTTPException(404, detail=ERROR_MESSAGES.API_KEY_NOT_FOUND)
+
+
+############################
+# Security Config
+############################
+
+
+class SecurityConfig(BaseModel):
+    JWT_EXPIRES_IN: str
+    PASSWORD_EXPIRES_IN_DAYS: str
+
+
+@router.get("/security/config", response_model=SecurityConfig)
+async def get_security_config(request: Request, user=Depends(get_security_admin_user)):
+    return {
+        "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
+        "PASSWORD_EXPIRES_IN_DAYS": request.app.state.config.PASSWORD_EXPIRES_IN_DAYS,
+    }
+
+
+@router.post("/security/config")
+async def update_security_config(
+    request: Request, form_data: SecurityConfig, user=Depends(get_security_admin_user)
+):
+    pattern = r"^(-1|0|(-?\d+(\.\d+)?)(ms|s|m|h|d|w))$"
+
+    # Check if the input string matches the pattern
+    if re.match(pattern, form_data.JWT_EXPIRES_IN):
+        request.app.state.config.JWT_EXPIRES_IN = form_data.JWT_EXPIRES_IN
+
+    # Validate password expires in days (should be a positive integer)
+    try:
+        password_days = int(form_data.PASSWORD_EXPIRES_IN_DAYS)
+        if password_days > 0:
+            request.app.state.config.PASSWORD_EXPIRES_IN_DAYS = form_data.PASSWORD_EXPIRES_IN_DAYS
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="密码过期天数必须大于0"
+            )
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="密码过期天数必须是有效的数字"
+        )
+
+    return {
+        "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
+        "PASSWORD_EXPIRES_IN_DAYS": request.app.state.config.PASSWORD_EXPIRES_IN_DAYS,
+    }

@@ -43,7 +43,7 @@ class ERROR_MESSAGES(str, Enum):
     NAME_TAG_TAKEN = "Uh-oh! This name tag is already registered. Please choose another name tag string."
 
     INVALID_TOKEN = (
-        "Your session has expired or the token is invalid. Please sign in again."
+        "JWT令牌过期，请重新登录。"
     )
     INVALID_CRED = "邮箱或密码错误，请检查后重试。"
     INVALID_EMAIL_FORMAT = "The email format you entered is invalid. Please double-check and make sure you're using a valid email address (e.g., yourname@example.com)."

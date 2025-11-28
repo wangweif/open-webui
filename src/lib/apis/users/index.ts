@@ -183,6 +183,10 @@ export const updateUserSettings = async (token: string, settings: object) => {
 		})
 	})
 		.then(async (res) => {
+			if (res.status === 401) {
+				window.location.href = '/';
+				return null;
+			}
 			if (!res.ok) throw await res.json();
 			return res.json();
 		})

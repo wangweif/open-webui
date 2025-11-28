@@ -331,6 +331,10 @@ JWT_EXPIRES_IN = PersistentConfig(
     "JWT_EXPIRES_IN", "auth.jwt_expiry", os.environ.get("JWT_EXPIRES_IN", "-1")
 )
 
+PASSWORD_EXPIRES_IN_DAYS = PersistentConfig(
+    "PASSWORD_EXPIRES_IN_DAYS", "auth.password_expiry_days", os.environ.get("PASSWORD_EXPIRES_IN_DAYS", "90")
+)
+
 ####################################
 # OAuth config
 ####################################

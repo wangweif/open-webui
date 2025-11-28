@@ -174,6 +174,8 @@ def decode_token(token: str) -> Optional[dict]:
     try:
         decoded = jwt.decode(token, SESSION_SECRET, algorithms=[ALGORITHM])
         return decoded
+    except jwt.ExpiredSignatureError:
+        return None
     except Exception:
         return None
 
@@ -249,7 +251,14 @@ def get_current_user(
             detail="Invalid token",
         )
 
-    if data is not None and "id" in data:
+    if data is None:
+        # Token无效或已过期
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=ERROR_MESSAGES.INVALID_TOKEN,
+        )
+
+    if "id" in data:
         user = Users.get_user_by_id(data["id"])
         if user is None:
             raise HTTPException(
@@ -319,6 +328,30 @@ def get_audit_user(user=Depends(get_current_user)):
         log.error(f"检查用户是否属于审计权限组错误: {str(e)}", exc_info=True)
     
     # 不属于审计权限组，拒绝访问
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+    )
+
+
+def get_security_admin_user(user=Depends(get_current_user)):
+    """
+    检查用户是否是安全管理员
+    安全管理员是指属于安全管理员组的用户
+    """
+    
+    # 检查用户是否属于安全管理员组
+    try:
+        user_groups = Groups.get_groups_by_member_id(user.id)
+        user_group_names = [group.name for group in user_groups]
+        # 检查用户的任何组是否在安全管理员组列表中
+        if any(group_name == "安全管理员" for group_name in user_group_names):
+            return user
+    except Exception as e:
+        log = logging.getLogger(__name__)
+        log.error(f"检查用户是否属于安全管理员组错误: {str(e)}", exc_info=True)
+    
+    # 不属于安全管理员组，拒绝访问
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail=ERROR_MESSAGES.ACCESS_PROHIBITED,

@@ -19,6 +19,7 @@
 	import Connections from './Settings/Connections.svelte';
 	import Tools from './Settings/Tools.svelte';
 	import Version from './Settings/Version.svelte';
+	import Security from './Settings/Security.svelte';
 	import UserLogs from '../admin/Settings/UserLogs.svelte';
 
 	const i18n = getContext('i18n');
@@ -304,6 +305,22 @@
 				'versioninfo',
 				'versiondetails',
 				'versionhistory'
+			]
+		},
+		{
+			id: 'security',
+			title: '系统安全',
+			keywords: [
+				'security',
+				'系统安全',
+				'安全',
+				'jwt',
+				'password',
+				'密码',
+				'expiration',
+				'过期',
+				'安全配置',
+				'securityconfig'
 			]
 		},
 		{
@@ -755,6 +772,34 @@
 								</div>
 								<div class=" self-center">{$i18n.t('Version')}</div>
 							</button>
+						{:else if tabId === 'security'}
+							{#if $user?.is_security_admin}
+								<button
+									class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
+									'security'
+										? ''
+										: ' text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'}"
+									on:click={() => {
+										selectedTab = 'security';
+									}}
+								>
+									<div class=" self-center mr-2">
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 16 16"
+											fill="currentColor"
+											class="w-4 h-4"
+										>
+											<path
+												fill-rule="evenodd"
+												d="M8.5 1.709a.75.75 0 0 0-1 0L3.75 4.5a.75.75 0 0 0-.5.707v3.5c0 .414.336.75.75.75h1.5v4.5c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75V9.457h1.5a.75.75 0 0 0 .75-.75v-3.5a.75.75 0 0 0-.5-.707L8.5 1.709ZM5.25 5.457h5.5v2.793h-1.5a.75.75 0 0 0-.75.75v4.5h-1.5v-4.5a.75.75 0 0 0-.75-.75h-1.5V5.457Z"
+												clip-rule="evenodd"
+											/>
+										</svg>
+									</div>
+									<div class=" self-center">安全</div>
+								</button>
+							{/if}
 						{:else if tabId === 'user-logs'}
 							{#if $user?.is_audit}
 								<button
@@ -903,6 +948,12 @@
 					<Version
 						on:save={() => {
 							show = false;
+						}}
+					/>
+				{:else if selectedTab === 'security'}
+					<Security
+						on:save={() => {
+							toast.success($i18n.t('Settings saved successfully!'));
 						}}
 					/>
 				{:else if selectedTab === 'about'}

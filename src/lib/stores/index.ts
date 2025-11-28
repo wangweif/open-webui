@@ -236,4 +236,5 @@ type SessionUser = {
 	assistant_id: string;
 	is_bjny?: boolean;
 	is_audit?: boolean;
+	is_security_admin?: boolean;
 };
