@@ -219,7 +219,7 @@
 			<input
 				class="w-full text-sm pr-4 py-1 rounded-r-xl outline-hidden bg-transparent border-b border-gray-200 dark:border-gray-800 focus:border-gray-400"
 				bind:value={searchInput}
-				placeholder="搜索用户名、邮箱、模型名称、评价内容（Enter确认）..."
+				placeholder="搜索用户、邮箱、模型或内容"
 				on:keydown={(e) => {
 					if (e.key === 'Enter') {
 						handleSearch();

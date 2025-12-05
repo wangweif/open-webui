@@ -191,7 +191,7 @@ const confirmDeleteFeedback = async () => {
 				<input
 					class="w-full text-sm pr-4 py-1 rounded-r-xl outline-hidden bg-transparent"
 					bind:value={searchInput}
-					placeholder="搜索用户名、邮箱、反馈类型、反馈内容（按Enter搜索）..."
+					placeholder="搜索用户、邮箱、类型或内容"
 					on:keydown={(e) => {
 						if (e.key === 'Enter') {
 							handleSearch();

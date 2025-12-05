@@ -160,7 +160,7 @@
 				<input
 					class="w-full text-sm pr-4 py-1 rounded-r-xl outline-hidden bg-transparent"
 					bind:value={searchInput}
-					placeholder="搜索问题、回答、用户（按Enter搜索）..."
+					placeholder="搜索问题、回答、用户"
 					on:keydown={(e) => {
 						if (e.key === 'Enter') {
 							handleSearch();
