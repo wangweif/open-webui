@@ -29,6 +29,8 @@
 	let selectedRecord: QARecord | null = null;
 	let showDetailModal = false;
 	let loading = false;
+	let startDate = '';
+	let endDate = '';
 
 	let sortKey = 'created_at';
 	let sortOrder: 'asc' | 'desc' = 'desc';
@@ -38,6 +40,8 @@
 	let lastPage = 1;
 	let lastSortKey = 'created_at';
 	let lastSortOrder: 'asc' | 'desc' = 'desc';
+	let lastStartDate = '';
+	let lastEndDate = '';
 
 	function setSortKey(key: string) {
 		if (sortKey === key) {
@@ -50,7 +54,7 @@
 		page = 1;
 	}
 
-	const removeDetail = async() => {
+	const removeDetail = async () => {
 		qaRecords.forEach(record => {
 			record.answer = removeAllDetails(record.answer);
 		});
@@ -58,26 +62,38 @@
 
 	const fetchQARecords = async () => {
 		if (!isInitialized) return;
-		
+
 		loading = true;
 		try {
+			const startTime = startDate ? dayjs(startDate).startOf('day').unix() : undefined;
+			const endTime = endDate ? dayjs(endDate).endOf('day').unix() : undefined;
+
+			if (startTime && endTime && startTime > endTime) {
+				toast.error('开始日期不能晚于结束日期');
+				return;
+			}
+
 			const response = await searchQARecords(
 				localStorage.token,
 				search,
 				page,
 				pageSize,
 				sortKey,
-				sortOrder
+				sortOrder,
+				startTime,
+				endTime
 			);
 			qaRecords = response.records;
-			await removeDetail()
+			await removeDetail();
 			totalRecords = response.total;
-			
+
 			// 更新上次的值
 			lastSearch = search;
 			lastPage = page;
 			lastSortKey = sortKey;
 			lastSortOrder = sortOrder;
+			lastStartDate = startDate;
+			lastEndDate = endDate;
 		} catch (error) {
 			console.error('获取问答记录失败:', error);
 			toast.error('获取问答记录失败，请稍后重试');
@@ -95,14 +111,17 @@
 	};
 
 	// 监听搜索变化
-	$: if (isInitialized && search !== lastSearch) {
+	$: if (isInitialized && (search !== lastSearch || startDate !== lastStartDate || endDate !== lastEndDate)) {
+		page = 1;
 		fetchQARecords();
 	}
 
 	// 监听页码、排序变化（不包括搜索）
 	$: if (isInitialized && 
 		(page !== lastPage || sortKey !== lastSortKey || sortOrder !== lastSortOrder) &&
-		search === lastSearch) {
+		search === lastSearch &&
+		startDate === lastStartDate &&
+		endDate === lastEndDate) {
 		fetchQARecords();
 	}
 
@@ -140,9 +159,9 @@
 		<span class="text-lg font-medium text-gray-500 dark:text-gray-300">{totalRecords}</span>
 	</div>
 
-	<div class="flex gap-1">
-		<div class="flex w-full space-x-2">
-			<div class="flex flex-1">
+	<div class="flex gap-2 flex-wrap md:justify-end">
+		<div class="flex w-full md:w-auto space-x-2">
+			<div class="flex flex-1 md:min-w-[240px]">
 				<div class="self-center ml-1 mr-3">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -168,6 +187,23 @@
 					}}
 				/>
 			</div>
+		</div>
+		<div class="flex items-center gap-2 flex-wrap">
+			<input
+				type="date"
+				class="px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent outline-none"
+				bind:value={startDate}
+				on:change={() => (page = 1)}
+				max={endDate || undefined}
+			/>
+			<span class="text-xs text-gray-500 dark:text-gray-400">至</span>
+			<input
+				type="date"
+				class="px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent outline-none"
+				bind:value={endDate}
+				on:change={() => (page = 1)}
+				min={startDate || undefined}
+			/>
 		</div>
 	</div>
 </div>

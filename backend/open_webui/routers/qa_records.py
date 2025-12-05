@@ -212,6 +212,8 @@ async def search_qa_records(
     limit: int = 20,
     sort_by: str = "created_at",
     sort_order: str = "desc",
+    start_time: Optional[int] = None,
+    end_time: Optional[int] = None,
     user=Depends(get_admin_user)
 ):
     """搜索问答记录（仅管理员）
@@ -225,6 +227,12 @@ async def search_qa_records(
     """
     try:
         qa_records = extract_qa_records_from_chats()
+
+        # 时间范围过滤（可选）
+        if start_time is not None:
+            qa_records = [record for record in qa_records if record.created_at >= start_time]
+        if end_time is not None:
+            qa_records = [record for record in qa_records if record.created_at <= end_time]
         
         # 如果有搜索关键词，进行过滤
         if query:
