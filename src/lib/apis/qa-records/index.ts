@@ -115,7 +115,9 @@ export const searchQARecords = async (
 	page: number = 1,
 	limit: number = 20,
 	sortBy: string = 'created_at',
-	sortOrder: string = 'desc'
+	sortOrder: string = 'desc',
+	startTime?: number,
+	endTime?: number
 ): Promise<{ records: QARecord[]; total: number }> => {
 	let error = null;
 
@@ -125,6 +127,12 @@ export const searchQARecords = async (
 	searchParams.append('limit', `${limit}`);
 	searchParams.append('sort_by', sortBy);
 	searchParams.append('sort_order', sortOrder);
+	if (typeof startTime === 'number') {
+		searchParams.append('start_time', `${startTime}`);
+	}
+	if (typeof endTime === 'number') {
+		searchParams.append('end_time', `${endTime}`);
+	}
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/qa-records/search?${searchParams.toString()}`, {
 		method: 'GET',
