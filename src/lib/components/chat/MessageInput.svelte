@@ -208,22 +208,9 @@
 	$: isN8nProjectResearchModel = selectedModelIds.includes('n8n_project_research');
 	$: isContractReviewModel = selectedModelIds.includes('contract_review');
 
-	// 初始化时从localStorage加载状态
-	let manuallyDisabledWebSearch = localStorage.getItem('deepseekWebSearchDisabled') === 'true';
-
-	// 当选择非联网搜索模型时，如果搜索功能已启用，则禁用它
-	$: if (!isWebSearchModel && webSearchEnabled) {
-		webSearchEnabled = false;
-	}
-
-	// 当选择联网搜索模型时，如果搜索功能未启用且未被手动禁用，则启用它
-	$: if (isWebSearchModel && !manuallyDisabledWebSearch && !webSearchEnabled) {
-		webSearchEnabled = true;
-	}
-
 	// 重置手动禁用标志，当模型改变时
-	$: if (!isWebSearchModel) {
-		manuallyDisabledWebSearch = false;
+	$: if (!showWebSearchButton) {
+		webSearchEnabled = false;
 	}
 
 	export let history;
@@ -1174,9 +1161,6 @@
 														console.log('Escape');
 														atSelectedModel = undefined;
 														selectedToolIds = [];
-														if (webSearchEnabled && isWebSearchModel) {
-															manuallyDisabledWebSearch = true;
-														}
 														webSearchEnabled = false;
 														imageGenerationEnabled = false;
 													}
@@ -1412,9 +1396,6 @@
 													console.log('Escape');
 													atSelectedModel = undefined;
 													selectedToolIds = [];
-													if (webSearchEnabled && isWebSearchModel) {
-														manuallyDisabledWebSearch = true;
-													}
 													webSearchEnabled = false;
 													imageGenerationEnabled = false;
 												}
@@ -1601,14 +1582,6 @@
 														<button
 															on:click|preventDefault={() => {
 																webSearchEnabled = !webSearchEnabled;
-																if (isWebSearchModel && !webSearchEnabled) {
-																	manuallyDisabledWebSearch = true;
-																	localStorage.setItem('deepseekWebSearchDisabled', 'true');
-																}
-																if (webSearchEnabled) {
-																	manuallyDisabledWebSearch = false;
-																	localStorage.setItem('deepseekWebSearchDisabled', 'false');
-																}
 															}}
 															type="button"
 															class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {webSearchEnabled ||
