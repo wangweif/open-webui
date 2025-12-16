@@ -84,6 +84,7 @@
 		enhancedSearch: false,
 		deepResearch: false,
 		knowledgeBase: false,
+		moreQuestions: false
 	};
 
 	let fileUploadLimit: number | undefined = undefined;

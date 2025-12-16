@@ -16,7 +16,8 @@
 		kb_webSearch: '知识库联网搜索',
 		enhancedSearch: '增强搜索',
 		deepResearch: '深度搜索',
-		knowledgeBase: '知识库选择器'
+		knowledgeBase: '知识库选择器',
+		moreQuestions: '在每次回答结束后，基于本轮问答自动生成三个“更多问题”供继续追问'
 	};
 
 	export let capabilities: {
@@ -28,6 +29,7 @@
 		enhancedSearch?: boolean;
 		deepResearch?: boolean;
 		knowledgeBase?: boolean;
+		moreQuestions?: boolean;
 	} = {};
 </script>
 

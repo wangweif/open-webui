@@ -42,6 +42,7 @@
 		removeAllDetails
 	} from '$lib/utils';
 	import { WEBUI_BASE_URL } from '$lib/constants';
+	import { generateQwen3ChatCompletion } from '$lib/apis/openai';
 
 	import Name from './Name.svelte';
 	import ProfileImage from './ProfileImage.svelte';
@@ -203,6 +204,28 @@
 
 	let showRateComment = false;
 	let showShareChatModal = false;
+
+	// “更多问题” 相关状态
+	let followupQuestions: string[] = [];
+	let loadingFollowups = false;
+	let followupsGenerated = false;
+	let followupsError: string | null = null;
+	// 追问生成只触发一次：记录上一轮 done 状态，避免打开历史消息时重复触发
+	let prevDone = message.done ?? false;
+
+	// 能力开关：是否启用“更多问题”
+	$: enableMoreQuestions = model?.info?.meta?.capabilities?.moreQuestions ?? false;
+
+	// 监听消息完成状态：在回答结束后触发一次“更多问题”生成
+	$: if (
+		enableMoreQuestions &&
+		!message.error &&
+		!followupsGenerated &&
+		prevDone === false &&
+		message.done === true
+	) {
+		generateFollowupQuestions();
+	}
 
 	const copyToClipboard = async (text) => {
 		text = removeAllDetails(text);
@@ -616,6 +639,70 @@
 		}
 
 		feedbackLoading = false;
+	};
+
+	// 生成“更多问题”
+	const generateFollowupQuestions = async () => {
+		// 只对最后一条、已完成且无错误的消息生成
+		if (!enableMoreQuestions || !message.done || message.error || followupsGenerated) return;
+
+		// 需要有用户问题（父消息为 user）
+		const parentMsg = history?.messages?.[message.parentId];
+		if (!parentMsg || parentMsg.role !== 'user') return;
+
+		loadingFollowups = true;
+		followupsError = null;
+
+		try {
+			const modelId = "Qwen3:8B";
+
+			const body = {
+				model: modelId,
+				messages: [
+					{
+						role: 'system',
+						content:
+							'你是一个对话助手。请根据给定的“用户问题”和“助手回答”，用中文生成 3 个简短的、互不重复的后续提问，帮助用户进一步深入了解或推进问题。只返回 JSON 数组，例如 ["问题1","问题2","问题3"]，不要输出任何解释或多余文本。'
+					},
+					{
+						role: 'user',
+						content: `用户问题：${parentMsg.content}\n助手回答：${removeAllDetails(
+							message.content
+						)}`
+					}
+				],
+				stream: false
+			};
+
+			const res = await generateQwen3ChatCompletion(localStorage.token, body);
+			const raw = res?.choices?.[0]?.message?.content ?? '';
+
+			let parsed: string[] = [];
+
+			try {
+				// 尝试从响应中提取 JSON 数组
+				const start = raw.indexOf('[');
+				const end = raw.lastIndexOf(']');
+				const jsonText = start !== -1 && end !== -1 ? raw.slice(start, end + 1) : raw;
+				const arr = JSON.parse(jsonText);
+
+				if (Array.isArray(arr)) {
+					parsed = arr.map((x) => String(x)).filter((x) => x.trim().length > 0).slice(0, 3);
+				}
+			} catch (e) {
+				console.error('Failed to parse followup questions:', e, raw);
+				followupsError = `${e}`;
+			}
+
+			followupQuestions = parsed;
+			followupsGenerated = true;
+		} catch (e) {
+			console.error(e);
+			followupsError = `${e}`;
+			followupsGenerated = true;
+		} finally {
+			loadingFollowups = false;
+		}
 	};
 
 	const deleteMessageHandler = async () => {
@@ -1164,6 +1251,36 @@
 
 								{#if message.code_executions}
 									<CodeExecutions codeExecutions={message.code_executions} />
+								{/if}
+
+								<!-- 更多问题：仅在能力开启且消息已完成时展示 -->
+								{#if enableMoreQuestions && message.done && !message.error}
+									{#if loadingFollowups}
+										<div class="mt-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+											<Spinner className="size-3" />
+											<span>正在为你生成更多问题…</span>
+										</div>
+									{:else if followupQuestions.length > 0}
+										<div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+											<span class="text-gray-500 dark:text-gray-400">更多问题：</span>
+											{#each followupQuestions as q}
+												<button
+													type="button"
+													class="px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-xs"
+													on:click={() => {
+														if (!readOnly && q.trim().length > 0) {
+															submitMessage(message.id, q);
+															// 点击后移除当前推荐，防止重复显示
+															followupQuestions = [];
+															followupsGenerated = true;
+														}
+													}}
+												>
+													{q}
+												</button>
+											{/each}
+										</div>
+									{/if}
 								{/if}
 							</div>
 						{/if}

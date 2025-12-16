@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Literal, Optional, overload
 
@@ -122,6 +123,10 @@ def openai_o1_o3_handler(payload):
 
 router = APIRouter()
 
+# Qwen3 (OpenAI format) direct endpoint
+QWEN3_API_BASE_URL = os.environ.get("QWEN3_API_BASE_URL", "http://192.168.8.88:8005/v1")
+QWEN3_API_KEY = os.environ.get("QWEN3_API_KEY", "")
+QWEN3_MODEL_NAME = os.environ.get("QWEN3_MODEL_NAME", "Qwen3:8B")
 
 @router.get("/config")
 async def get_config(request: Request, user=Depends(get_admin_user)):
@@ -762,6 +767,87 @@ async def generate_chat_completion(
         raise HTTPException(
             status_code=r.status if r else 500,
             detail=detail if detail else "Open WebUI: Server Connection Error",
+        )
+    finally:
+        if not streaming and session:
+            if r:
+                r.close()
+            await session.close()
+
+
+@router.post("/qwen3/chat/completions")
+async def generate_qwen3_chat_completion(
+    form_data: dict, user=Depends(get_verified_user)
+):
+    """
+    Call the Qwen3:8B model hosted at 192.168.8.88:8005 using OpenAI-compatible schema.
+    """
+
+    payload = {**form_data}
+    payload["model"] = payload.get("model") or QWEN3_MODEL_NAME
+
+    # Default to non-streaming if not provided
+    streaming = bool(payload.get("stream"))
+
+    payload_json = json.dumps(payload)
+    r = None
+    session = None
+
+    base_url = QWEN3_API_BASE_URL.rstrip("/")
+
+    try:
+        session = aiohttp.ClientSession(
+            trust_env=True, timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT)
+        )
+
+        r = await session.request(
+            method="POST",
+            url=f"{base_url}/chat/completions",
+            data=payload_json,
+            headers={
+                **({"Authorization": f"Bearer {QWEN3_API_KEY}"} if QWEN3_API_KEY else {}),
+                "Content-Type": "application/json",
+                **(
+                    {
+                        "X-OpenWebUI-User-Name": user.name,
+                        "X-OpenWebUI-User-Id": user.id,
+                        "X-OpenWebUI-User-Email": user.email,
+                        "X-OpenWebUI-User-Role": user.role,
+                    }
+                    if ENABLE_FORWARD_USER_INFO_HEADERS
+                    else {}
+                ),
+            },
+        )
+
+        if "text/event-stream" in r.headers.get("Content-Type", ""):
+            return StreamingResponse(
+                r.content,
+                status_code=r.status,
+                headers=dict(r.headers),
+                background=BackgroundTask(cleanup_response, response=r, session=session),
+            )
+
+        try:
+            response = await r.json()
+        except Exception:
+            response = await r.text()
+
+        r.raise_for_status()
+        return response
+    except Exception as e:
+        log.exception(e)
+        detail = None
+
+        try:
+            if r is not None:
+                detail = await r.text()
+        except Exception:
+            detail = None
+
+        raise HTTPException(
+            status_code=r.status if r else 500,
+            detail=detail if detail else "Open WebUI: Qwen3 server connection error",
         )
     finally:
         if not streaming and session:
