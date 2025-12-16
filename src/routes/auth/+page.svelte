@@ -8,7 +8,7 @@
 	import { getBackendConfig } from '$lib/apis';
 	import { ldapUserSignIn, getSessionUser, userSignIn, userSignUp } from '$lib/apis/auths';
 
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL, GUEST_CREDENTIALS } from '$lib/constants';
 	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
 
 	import { generateInitialsImage, canvasPixelTest, validatePasswordStrength } from '$lib/utils';
@@ -146,17 +146,16 @@
 		});
 		await setSessionUser(sessionUser);
 	};
-    const guestSignInHandler = async () => {
-        const guestEmail = 'guest@bjzntd.com';
-        const guestPassword = 'bjzntd@123456';
+	const guestSignInHandler = async () => {
+		const sessionUser = await userSignIn(GUEST_CREDENTIALS.email, GUEST_CREDENTIALS.password).catch(
+			(error) => {
+				toast.error(`${error}`);
+				return null;
+			}
+		);
 
-        const sessionUser = await userSignIn(guestEmail, guestPassword).catch((error) => {
-            toast.error(`${error}`);
-            return null;
-        });
-
-        await setSessionUser(sessionUser);
-    };
+		await setSessionUser(sessionUser);
+	};
 
 	const submitHandler = async () => {
 		if (mode === 'ldap') {

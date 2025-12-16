@@ -9,6 +9,7 @@
 	import { fade, slide } from 'svelte/transition';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { userSignOut } from '$lib/apis/auths';
+	import { GUEST_CREDENTIALS } from '$lib/constants';
 
 	const i18n = getContext('i18n');
 
@@ -17,6 +18,24 @@
 	export let className = 'max-w-[240px]';
 
 	const dispatch = createEventDispatcher();
+
+	let isGuestUser = false;
+
+	$: isGuestUser = $user?.email === GUEST_CREDENTIALS.email;
+
+	const gotoLoginPage = async () => {
+		try {
+			await userSignOut();
+		} catch (error) {
+			console.error('Guest session cleanup failed', error);
+		}
+
+		await user.set(undefined);
+		localStorage.removeItem('token');
+
+		show = false;
+		window.location.href = '/auth';
+	};
 </script>
 
 <DropdownMenu.Root
@@ -37,6 +56,36 @@
 			align="start"
 			transition={(e) => fade(e, { duration: 100 })}
 		>
+			{#if isGuestUser}
+				<button
+					class="flex rounded-md py-2 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+					on:click={gotoLoginPage}
+				>
+					<div class=" self-center mr-3">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							class="w-5 h-5"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M3 4.25A2.25 2.25 0 015.25 2h5.5A2.25 2.25 0 0113 4.25v2a.75.75 0 01-1.5 0v-2a.75.75 0 00-.75-.75h-5.5a.75.75 0 00-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 00.75-.75v-2a.75.75 0 011.5 0v2A2.25 2.25 0 0110.75 18h-5.5A2.25 2.25 0 013 15.75V4.25z"
+								clip-rule="evenodd"
+							/>
+							<path
+								fill-rule="evenodd"
+								d="M19 10a.75.75 0 00-.75-.75H8.704l1.048-.943a.75.75 0 10-1.004-1.114l-2.5 2.25a.75.75 0 000 1.114l2.5 2.25a.75.75 0 101.004-1.114l-1.048-.943h9.546A.75.75 0 0019 10z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+					</div>
+					<div class=" self-center truncate">{$i18n.t('登录')}</div>
+				</button>
+
+				<hr class=" border-gray-100 dark:border-gray-850 my-1 p-0" />
+			{/if}
+
 			<button
 				class="flex rounded-md py-2 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
 				on:click={async () => {
@@ -151,41 +200,43 @@
 				</a> -->
 			{/if}
 
-			<hr class=" border-gray-100 dark:border-gray-850 my-1 p-0" />
+			{#if !isGuestUser}
+				<hr class=" border-gray-100 dark:border-gray-850 my-1 p-0" />
 
-			<button
-				class="flex rounded-md py-2 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-				on:click={async () => {
-					await userSignOut();
-					user.set(null);
+				<button
+					class="flex rounded-md py-2 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+					on:click={async () => {
+						await userSignOut();
+						user.set(null);
 
-					localStorage.removeItem('token');
-					location.href = '/auth';
+						localStorage.removeItem('token');
+						location.href = '/auth';
 
-					show = false;
-				}}
-			>
-				<div class=" self-center mr-3">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-						class="w-5 h-5"
-					>
-						<path
-							fill-rule="evenodd"
-							d="M3 4.25A2.25 2.25 0 015.25 2h5.5A2.25 2.25 0 0113 4.25v2a.75.75 0 01-1.5 0v-2a.75.75 0 00-.75-.75h-5.5a.75.75 0 00-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 00.75-.75v-2a.75.75 0 011.5 0v2A2.25 2.25 0 0110.75 18h-5.5A2.25 2.25 0 013 15.75V4.25z"
-							clip-rule="evenodd"
-						/>
-						<path
-							fill-rule="evenodd"
-							d="M6 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H6.75A.75.75 0 016 10z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-				</div>
-				<div class=" self-center truncate">{$i18n.t('Sign Out')}</div>
-			</button>
+						show = false;
+					}}
+				>
+					<div class=" self-center mr-3">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							class="w-5 h-5"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M3 4.25A2.25 2.25 0 015.25 2h5.5A2.25 2.25 0 0113 4.25v2a.75.75 0 01-1.5 0v-2a.75.75 0 00-.75-.75h-5.5a.75.75 0 00-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 00.75-.75v-2a.75.75 0 011.5 0v2A2.25 2.25 0 0110.75 18h-5.5A2.25 2.25 0 013 15.75V4.25z"
+								clip-rule="evenodd"
+							/>
+							<path
+								fill-rule="evenodd"
+								d="M6 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H6.75A.75.75 0 016 10z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+					</div>
+					<div class=" self-center truncate">{$i18n.t('Sign Out')}</div>
+				</button>
+			{/if}
 
 			{#if $activeUserIds?.length > 0}
 				<hr class=" border-gray-100 dark:border-gray-850 my-1 p-0" />

@@ -33,14 +33,14 @@
 	import { Toaster, toast } from 'svelte-sonner';
 
 	import { executeToolServer, getBackendConfig } from '$lib/apis';
-	import { getSessionUser } from '$lib/apis/auths';
+	import { getSessionUser, userSignIn } from '$lib/apis/auths';
 
 	import '../tailwind.css';
 	import '../app.css';
 
 	import 'tippy.js/dist/tippy.css';
 
-	import { WEBUI_BASE_URL, WEBUI_HOSTNAME } from '$lib/constants';
+	import { WEBUI_BASE_URL, WEBUI_HOSTNAME, GUEST_CREDENTIALS } from '$lib/constants';
 	import i18n, { initI18n, getLanguages, changeLanguage } from '$lib/i18n';
 	import { bestMatchingLanguage } from '$lib/utils';
 	import { getAllTags, getChatList } from '$lib/apis/chats';
@@ -101,6 +101,27 @@
 			// console.log('usage', data);
 			USAGE_POOL.set(data['models']);
 		});
+	};
+
+	const autoGuestSignIn = async () => {
+		try {
+			const sessionUser = await userSignIn(GUEST_CREDENTIALS.email, GUEST_CREDENTIALS.password);
+
+			if (!sessionUser?.token) {
+				return false;
+			}
+
+			localStorage.token = sessionUser.token;
+			$socket?.emit('user-join', { auth: { token: sessionUser.token } });
+
+			await user.set(sessionUser);
+			await config.set(await getBackendConfig());
+
+			return true;
+		} catch (error) {
+			console.error('Auto guest sign-in failed:', error);
+			return false;
+		}
 	};
 
 	const executePythonAsWorker = async (id, code, cb) => {
@@ -540,6 +561,7 @@
 
 				const currentUrl = `${window.location.pathname}${window.location.search}`;
 				const encodedUrl = encodeURIComponent(currentUrl);
+				const isAuthRoute = $page.url.pathname === '/auth';
 
 				if (localStorage.token) {
 					// Get Session User Info
@@ -566,10 +588,10 @@
 						localStorage.removeItem('token');
 						await goto(`/auth?redirect=${encodedUrl}`);
 					}
-				} else {
-					// Don't redirect if we're already on the auth page
-					// Needed because we pass in tokens from OAuth logins via URL fragments
-					if ($page.url.pathname !== '/auth') {
+				} else if (!isAuthRoute && !isSharedChatRoute && !isGuestChatRoute) {
+					const guestLoggedIn = await autoGuestSignIn();
+
+					if (!guestLoggedIn) {
 						await goto(`/auth?redirect=${encodedUrl}`);
 					}
 				}
