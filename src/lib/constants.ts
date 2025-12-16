@@ -3,10 +3,10 @@ import { browser, dev } from '$app/environment';
 
 // 使用 Vite 定义的全局变量，如果不存在则使用默认值
 declare global {
-  const APP_NAME: string;
-  const BUILD_TARGET: string;
-  const APP_VERSION: string;
-  const APP_BUILD_HASH: string;
+	const APP_NAME: string;
+	const BUILD_TARGET: string;
+	const APP_VERSION: string;
+	const APP_BUILD_HASH: string;
 }
 
 // 导出应用名称，使用 Vite 定义的全局变量
@@ -29,6 +29,11 @@ export const RETRIEVAL_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1/retrieval`;
 export const WEBUI_VERSION = APP_VERSION;
 export const WEBUI_BUILD_HASH = APP_BUILD_HASH;
 export const REQUIRED_OLLAMA_VERSION = '0.1.16';
+
+export const GUEST_CREDENTIALS = {
+	email: 'guest@bjzntd.com',
+	password: 'bjzntd@123456'
+};
 
 export const SUPPORTED_FILE_TYPE = [
 	'application/epub+zip',
