@@ -1261,12 +1261,12 @@
 											<span>正在为你生成更多问题…</span>
 										</div>
 									{:else if followupQuestions.length > 0}
-										<div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+										<div class="mt-3 flex flex-col items-start gap-2 text-xs">
 											<span class="text-gray-500 dark:text-gray-400">更多问题：</span>
 											{#each followupQuestions as q}
 												<button
 													type="button"
-													class="px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-xs"
+													class="w-fit px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-xs"
 													on:click={() => {
 														if (!readOnly && q.trim().length > 0) {
 															submitMessage(message.id, q);
