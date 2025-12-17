@@ -662,7 +662,7 @@
 					{
 						role: 'system',
 						content:
-							'你是农科小智，一名面向农业生产一线的智能农技员。请根据给定的“用户问题”和“助手回答”，用中文生成 3 个简短的、互不重复的后续提问，避免抽象学术问法。帮助用户进一步深入了解或推进问题。只返回 JSON 数组，例如 ["问题1","问题2","问题3"]，不要输出任何解释或多余文本。'
+							'你是农科小智，一名面向农业生产一线的智能农技员。请根据给定的“用户问题”和“助手回答”，用中文生成 3 个简短的、互不重复的农户可能会问的后续提问，避免抽象学术问法。只返回 JSON 数组，例如 ["问题1","问题2","问题3"]，不要输出任何解释或多余文本。'
 					},
 					{
 						role: 'user',
@@ -1261,12 +1261,12 @@
 											<span>正在为你生成更多问题…</span>
 										</div>
 									{:else if followupQuestions.length > 0}
-										<div class="mt-3 flex flex-col items-start gap-2 text-xs">
+										<div class="mt-3 flex flex-col items-start gap-2 text-sm">
 											<span class="text-gray-500 dark:text-gray-400">更多问题：</span>
 											{#each followupQuestions as q}
 												<button
 													type="button"
-													class="w-fit px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-xs"
+													class="w-fit px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm"
 													on:click={() => {
 														if (!readOnly && q.trim().length > 0) {
 															submitMessage(message.id, q);
