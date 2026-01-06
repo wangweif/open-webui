@@ -4,6 +4,10 @@
 	import { goto } from '$app/navigation';
 	import { onMount, getContext } from 'svelte';
 
+	onMount(async () => {
+		await loadGroups();
+	});
+
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
@@ -13,6 +17,7 @@
 	import { toast } from 'svelte-sonner';
 
 	import { updateUserRole, getUsers, deleteUserById } from '$lib/apis/users';
+	import { getGroups } from '$lib/apis/groups';
 
 	import Pagination from '$lib/components/common/Pagination.svelte';
 	import ChatBubbles from '$lib/components/icons/ChatBubbles.svelte';
@@ -35,6 +40,8 @@
 
 	export let users = [];
 
+	let groups = [];
+
 	let search = '';
 	let selectedUser = null;
 
@@ -54,6 +61,7 @@
 
 		if (res) {
 			users = await getUsers(localStorage.token);
+			await loadGroups();
 		}
 	};
 
@@ -64,7 +72,25 @@
 		});
 		if (res) {
 			users = await getUsers(localStorage.token);
+			await loadGroups();
 		}
+	};
+
+	const loadGroups = async () => {
+		groups = await getGroups(localStorage.token).catch((error) => {
+			console.error('Failed to load groups:', error);
+			return [];
+		});
+	};
+
+	const getUserGroups = (userId) => {
+		const userGroups = groups.filter(group => group.user_ids && group.user_ids.includes(userId));
+		return userGroups;
+	};
+
+	const getUserGroupNames = (userId) => {
+		const userGroups = getUserGroups(userId);
+		return userGroups.map(group => group.name).join(', ') || '无权限组';
 	};
 
 	let sortKey = 'created_at'; // default sort key
@@ -93,8 +119,17 @@
 			}
 		})
 		.sort((a, b) => {
-			if (a[sortKey] < b[sortKey]) return sortOrder === 'asc' ? -1 : 1;
-			if (a[sortKey] > b[sortKey]) return sortOrder === 'asc' ? 1 : -1;
+			let aValue, bValue;
+			if (sortKey === 'groups') {
+				aValue = getUserGroupNames(a.id);
+				bValue = getUserGroupNames(b.id);
+			} else {
+				aValue = a[sortKey];
+				bValue = b[sortKey];
+			}
+			
+			if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+			if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
 			return 0;
 		})
 		.slice((page - 1) * 20, page * 20);
@@ -114,6 +149,7 @@
 		sessionUser={$user}
 		on:save={async () => {
 			users = await getUsers(localStorage.token);
+			await loadGroups();
 		}}
 	/>
 {/key}
@@ -122,6 +158,7 @@
 	bind:show={showAddUserModal}
 	on:save={async () => {
 		users = await getUsers(localStorage.token);
+		await loadGroups();
 	}}
 />
 <UserChatsModal bind:show={showUserChatsModal} user={selectedUser} />
@@ -219,12 +256,12 @@
 				<th
 					scope="col"
 					class="px-3 py-1.5 cursor-pointer select-none"
-					on:click={() => setSortKey('role')}
+					on:click={() => setSortKey('groups')}
 				>
 					<div class="flex gap-1.5 items-center">
-						{$i18n.t('Role')}
+						权限组
 
-						{#if sortKey === 'role'}
+						{#if sortKey === 'groups'}
 							<span class="font-normal"
 								>{#if sortOrder === 'asc'}
 									<ChevronUp className="size-2" />
@@ -332,29 +369,6 @@
 					</div>
 				</th>
 
-				<th
-					scope="col"
-					class="px-3 py-1.5 cursor-pointer select-none"
-					on:click={() => setSortKey('oauth_sub')}
-				>
-					<div class="flex gap-1.5 items-center">
-						{$i18n.t('OAuth ID')}
-
-						{#if sortKey === 'oauth_sub'}
-							<span class="font-normal"
-								>{#if sortOrder === 'asc'}
-									<ChevronUp className="size-2" />
-								{:else}
-									<ChevronDown className="size-2" />
-								{/if}
-							</span>
-						{:else}
-							<span class="invisible">
-								<ChevronUp className="size-2" />
-							</span>
-						{/if}
-					</div>
-				</th>
 
 				<th scope="col" class="px-3 py-2 text-right" />
 			</tr>
@@ -363,23 +377,19 @@
 			{#each filteredUsers as user, userIdx}
 				<tr class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs">
 					<td class="px-3 py-1 min-w-[7rem] w-28">
-						<button
-							class=" translate-y-0.5"
-							on:click={() => {
-								if (user.role === 'user') {
-									updateRoleHandler(user.id, 'admin');
-								} else if (user.role === 'pending') {
-									updateRoleHandler(user.id, 'user');
-								} else {
-									updateRoleHandler(user.id, 'pending');
-								}
-							}}
-						>
-							<Badge
-								type={user.role === 'admin' ? 'info' : user.role === 'user' ? 'success' : 'muted'}
-								content={$i18n.t(user.role)}
-							/>
-						</button>
+						<div class="flex flex-wrap gap-1">
+							{#each getUserGroups(user.id) as group}
+								<Badge
+									type="info"
+									content={group.name}
+								/>
+							{:else}
+								<Badge
+									type="muted"
+									content="无权限组"
+								/>
+							{/each}
+						</div>
 					</td>
 					<td class="px-3 py-1 font-medium text-gray-900 dark:text-white w-max">
 						<div class="flex flex-row w-max">
@@ -406,7 +416,6 @@
 						{dayjs(user.created_at * 1000).format('LL')}
 					</td>
 
-					<td class=" px-3 py-1"> {user.oauth_sub ?? ''} </td>
 
 					<td class="px-3 py-1 text-right">
 						<div class="flex justify-end w-full">
@@ -484,7 +493,7 @@
 </div>
 
 <div class=" text-gray-500 text-xs mt-1.5 text-right">
-	ⓘ {$i18n.t("Click on the user role button to change a user's role.")}
+	ⓘ 用户权限组显示用户所属的权限组名称
 </div>
 
 <Pagination bind:page count={users.length} />
