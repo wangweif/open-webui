@@ -30,11 +30,6 @@ export const WEBUI_VERSION = APP_VERSION;
 export const WEBUI_BUILD_HASH = APP_BUILD_HASH;
 export const REQUIRED_OLLAMA_VERSION = '0.1.16';
 
-export const GUEST_CREDENTIALS = {
-	email: 'guest@bjzntd.com',
-	password: 'bjzntd@123456'
-};
-
 export const SUPPORTED_FILE_TYPE = [
 	'application/epub+zip',
 	'application/pdf',

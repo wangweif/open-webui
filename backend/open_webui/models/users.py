@@ -9,7 +9,7 @@ from open_webui.models.groups import Groups
 
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Column, String, Text
+from sqlalchemy import BigInteger, Boolean, Column, String, Text
 
 ####################
 # User DB Schema
@@ -36,6 +36,8 @@ class User(Base):
     ragflow_user_id = Column(String, nullable=True)
     team_id = Column(String, nullable=True)
     tenant_id = Column(String, nullable=True)
+
+    is_guest = Column(Boolean, nullable=True)
 
     oauth_sub = Column(Text, unique=True)
 
@@ -67,6 +69,8 @@ class UserModel(BaseModel):
     team_id: Optional[str] = None
     tenant_id: Optional[str] = None
 
+    is_guest: Optional[bool] = False
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -81,6 +85,8 @@ class UserResponse(BaseModel):
     email: str
     role: str
     profile_image_url: str
+
+    is_guest: Optional[bool] = False
 
 
 class UserNameResponse(BaseModel):
@@ -114,7 +120,8 @@ class UsersTable:
         assistant_id: Optional[str] = None,
         ragflow_user_id: Optional[str] = None,
         team_id: Optional[str] = None,
-        tenant_id: Optional[str] = None
+        tenant_id: Optional[str] = None,
+        is_guest: Optional[bool] = False
     ) -> Optional[UserModel]:
         with get_db() as db:
             user = UserModel(
@@ -131,7 +138,8 @@ class UsersTable:
                     "assistant_id": assistant_id,
                     "ragflow_user_id": ragflow_user_id,
                     "team_id": team_id,
-                    "tenant_id": tenant_id
+                    "tenant_id": tenant_id,
+                    "is_guest": is_guest,
                 }
             )
             result = User(**user.model_dump())

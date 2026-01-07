@@ -49,6 +49,7 @@ from open_webui.utils.auth import (
     get_password_hash,
     validate_password_strength,
     is_password_expired,
+    decode_token,
 )
 from open_webui.utils.webhook import post_webhook
 from open_webui.utils.access_control import get_permissions
@@ -131,10 +132,109 @@ async def get_session_user(
         "name": user.name,
         "role": user.role,
         "profile_image_url": user.profile_image_url,
+        "is_guest": getattr(user, "is_guest", False),
         "permissions": user_permissions,
         "assistant_id": user.assistant_id,
         "is_bjny": is_bjny,
     }
+
+
+@router.post("/anonymous", response_model=SessionUserResponse)
+async def anonymous_signin(request: Request, response: Response):
+    try:
+        email = f"guest-{uuid.uuid4()}@guest.local"
+        password = str(uuid.uuid4())
+        hashed = get_password_hash(password)
+
+        user = Auths.insert_new_auth(
+            email=email,
+            password=hashed,
+            name="Guest",
+            profile_image_url="/user.png",
+            role="user",
+            team_id=BASE_TEAM_ID,
+            tenant_id=TENANT_ID,
+            is_guest=True,
+        )
+
+        if not user:
+            raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
+
+        try:
+            await add_user_to_tourist_group(user.id)
+        except Exception as e:
+            log.error(f"Failed to add guest user to tourist group: {str(e)}")
+
+        expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
+        expires_at = None
+        if expires_delta:
+            expires_at = int(time.time()) + int(expires_delta.total_seconds())
+
+        token = create_token(
+            data={"id": user.id},
+            expires_delta=expires_delta,
+        )
+
+        datetime_expires_at = (
+            datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc)
+            if expires_at
+            else None
+        )
+
+        response.set_cookie(
+            key="token",
+            value=token,
+            expires=datetime_expires_at,
+            httponly=True,
+            samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+            secure=WEBUI_AUTH_COOKIE_SECURE,
+        )
+
+        user_permissions = get_permissions(
+            user.id, request.app.state.config.USER_PERMISSIONS
+        )
+
+        try:
+            def get_client_ip(req: Request) -> str:
+                forwarded_for = req.headers.get("X-Forwarded-For")
+                if forwarded_for:
+                    return forwarded_for.split(",")[0].strip()
+                real_ip = req.headers.get("X-Real-IP")
+                if real_ip:
+                    return real_ip
+                return req.client.host if req.client else "unknown"
+
+            ip_address = get_client_ip(request)
+            user_agent = request.headers.get("User-Agent")
+            UserLogins.record_login(
+                user_id=user.id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                login_method="anonymous",
+                success=True,
+            )
+        except Exception as e:
+            log.error(f"记录匿名登录日志失败: {str(e)}")
+
+        return {
+            "token": token,
+            "token_type": "Bearer",
+            "expires_at": expires_at,
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "role": user.role,
+            "profile_image_url": user.profile_image_url,
+            "is_guest": True,
+            "permissions": user_permissions,
+            "assistant_id": user.assistant_id,
+            "is_bjny": False,
+        }
+    except HTTPException:
+        raise
+    except Exception as err:
+        log.error(f"Anonymous signin error: {str(err)}")
+        raise HTTPException(500, detail="An internal error occurred during anonymous signin.")
 
 
 ############################
@@ -375,6 +475,7 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
                     "name": user.name,
                     "role": user.role,
                     "profile_image_url": user.profile_image_url,
+                    "is_guest": getattr(user, "is_guest", False),
                     "permissions": user_permissions,
                     "assistant_id": user.assistant_id,
                 }
@@ -608,6 +709,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             "name": user.name,
             "role": user.role,
             "profile_image_url": user.profile_image_url,
+            "is_guest": getattr(user, "is_guest", False),
             "permissions": user_permissions,
             "assistant_id": user.assistant_id,
             "is_bjny": is_bjny,
@@ -673,15 +775,51 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
             )
 
         hashed = get_password_hash(form_data.password)
-        user = Auths.insert_new_auth(
-            form_data.email.lower(),
-            hashed,
-            form_data.name,
-            form_data.profile_image_url,
-            role,
-            team_id=BASE_TEAM_ID,
-            tenant_id=TENANT_ID,
-        )
+
+        user = None
+        # If an anonymous_token is provided, try to convert the current guest to a registered user
+        if getattr(form_data, "anonymous_token", None):
+            try:
+                data = decode_token(form_data.anonymous_token)
+            except Exception:
+                data = None
+
+            guest_id = data.get("id") if isinstance(data, dict) else None
+            if guest_id:
+                guest_user = Users.get_user_by_id(guest_id)
+                if guest_user and getattr(guest_user, "is_guest", False):
+                    # Update Auth email and password while keeping the same id
+                    email_updated = Auths.update_email_by_id(guest_id, form_data.email.lower())
+                    password_updated = Auths.update_user_password_by_id(guest_id, hashed)
+
+                    if not (email_updated and password_updated):
+                        raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
+
+                    # Update User profile fields and mark as non-guest
+                    Users.update_user_by_id(
+                        guest_id,
+                        {
+                            "email": form_data.email.lower(),
+                            "name": form_data.name,
+                            "is_guest": False,
+                            "updated_at": int(time.time()),
+                        },
+                    )
+
+                    # Reload updated user
+                    user = Users.get_user_by_id(guest_id)
+
+        # If not converting from guest, proceed with creating a new auth+user
+        if user is None:
+            user = Auths.insert_new_auth(
+                form_data.email.lower(),
+                hashed,
+                form_data.name,
+                form_data.profile_image_url,
+                role,
+                team_id=BASE_TEAM_ID,
+                tenant_id=TENANT_ID,
+            )
         # 如果是直接注册的，则分配默认知识库，否则不分配
         # if not request.headers.get('Authorization'):
         #     log.info("-------------直接注册，开始分配知识库")
@@ -746,6 +884,7 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
                 "name": user.name,
                 "role": user.role,
                 "profile_image_url": user.profile_image_url,
+                "is_guest": getattr(user, "is_guest", False),
                 "permissions": user_permissions,
                 "assistant_id": assistant_id
             }

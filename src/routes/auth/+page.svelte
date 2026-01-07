@@ -8,7 +8,7 @@
 	import { getBackendConfig } from '$lib/apis';
 	import { ldapUserSignIn, getSessionUser, userSignIn, userSignUp } from '$lib/apis/auths';
 
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL, GUEST_CREDENTIALS } from '$lib/constants';
+	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
 
 	import { generateInitialsImage, canvasPixelTest, validatePasswordStrength } from '$lib/utils';
@@ -121,12 +121,17 @@
 			return;
 		}
 
-		const sessionUser = await userSignUp(name, email, password, generateInitialsImage(name)).catch(
-			(error) => {
-				toast.error(`${error}`);
-				return null;
-			}
-		);
+		const anonymousToken = localStorage.getItem('anonymousToken') || undefined;
+		const sessionUser = await userSignUp(
+			name,
+			email,
+			password,
+			generateInitialsImage(name),
+			anonymousToken
+		).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
 
 		await setSessionUser(sessionUser);
 	};
@@ -147,14 +152,8 @@
 		await setSessionUser(sessionUser);
 	};
 	const guestSignInHandler = async () => {
-		const sessionUser = await userSignIn(GUEST_CREDENTIALS.email, GUEST_CREDENTIALS.password).catch(
-			(error) => {
-				toast.error(`${error}`);
-				return null;
-			}
-		);
-
-		await setSessionUser(sessionUser);
+		// 跳转到根路径
+		window.location.href = '/';
 	};
 
 	const submitHandler = async () => {

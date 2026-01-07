@@ -9,8 +9,6 @@
 	import { fade, slide } from 'svelte/transition';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { userSignOut } from '$lib/apis/auths';
-	import { GUEST_CREDENTIALS } from '$lib/constants';
-
 	const i18n = getContext('i18n');
 
 	export let show = false;
@@ -19,19 +17,21 @@
 
 	const dispatch = createEventDispatcher();
 
-	let isGuestUser = false;
+	let isAnonymousUser = false;
 
-	$: isGuestUser = $user?.email === GUEST_CREDENTIALS.email;
+	// Check if user is anonymous using the is_guest field from backend
+	$: isAnonymousUser = $user?.is_guest === true;
 
 	const gotoLoginPage = async () => {
 		try {
 			await userSignOut();
 		} catch (error) {
-			console.error('Guest session cleanup failed', error);
+			console.error('Anonymous session cleanup failed', error);
 		}
 
 		await user.set(undefined);
 		localStorage.removeItem('token');
+		// localStorage.removeItem('anonymousToken');
 
 		show = false;
 		window.location.href = '/auth';
@@ -56,7 +56,7 @@
 			align="start"
 			transition={(e) => fade(e, { duration: 100 })}
 		>
-			{#if isGuestUser}
+			{#if isAnonymousUser}
 				<button
 					class="flex rounded-md py-2 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
 					on:click={gotoLoginPage}
@@ -86,7 +86,7 @@
 				<!-- <hr class=" border-gray-100 dark:border-gray-850 my-1 p-0" /> -->
 			{/if}
 
-			{#if !isGuestUser}
+			{#if !isAnonymousUser}
 				<button
 					class="flex rounded-md py-2 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
 					on:click={async () => {
@@ -202,14 +202,14 @@
 				</a> -->
 			{/if}
 
-			{#if !isGuestUser}
+			{#if !isAnonymousUser}
 				<hr class=" border-gray-100 dark:border-gray-850 my-1 p-0" />
 
 				<button
 					class="flex rounded-md py-2 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
 					on:click={async () => {
 						await userSignOut();
-						user.set(null);
+						user.set(undefined);
 
 						localStorage.removeItem('token');
 						location.href = '/auth';

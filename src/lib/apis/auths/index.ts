@@ -286,13 +286,52 @@ export const userSignIn = async (email: string, password: string) => {
 	return res;
 };
 
+export const createAnonymousAccount = async () => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/anonymous`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		credentials: 'include'
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.log(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
 export const userSignUp = async (
 	name: string,
 	email: string,
 	password: string,
-	profile_image_url: string
+	profile_image_url: string,
+	anonymousToken?: string
 ) => {
 	let error = null;
+
+	const body: any = {
+		name: name,
+		email: email,
+		password: password,
+		profile_image_url: profile_image_url
+	};
+
+	if (anonymousToken) {
+		body.anonymous_token = anonymousToken;
+	}
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/signup`, {
 		method: 'POST',
@@ -300,12 +339,7 @@ export const userSignUp = async (
 			'Content-Type': 'application/json'
 		},
 		credentials: 'include',
-		body: JSON.stringify({
-			name: name,
-			email: email,
-			password: password,
-			profile_image_url: profile_image_url
-		})
+		body: JSON.stringify(body)
 	})
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();

@@ -12,14 +12,11 @@
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
-	import { GUEST_CREDENTIALS } from '$lib/constants';
 
 	const i18n = getContext('i18n');
 
 	export let saveHandler: Function;
 	export let saveSettings: Function;
-
-	$: isGuestUser = $user?.email === GUEST_CREDENTIALS.email;
 
 	let profileImageUrl = '';
 	let name = '';
@@ -266,11 +263,9 @@
 			</div> -->
 		</div>
 
-		{#if !isGuestUser}
-			<div class="py-0.5">
-				<UpdatePassword />
-			</div>
-		{/if}
+		<div class="py-0.5">
+			<UpdatePassword />
+		</div>
 
 		<hr class="border-gray-50 dark:border-gray-850 my-2" />
 

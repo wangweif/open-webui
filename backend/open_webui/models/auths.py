@@ -61,6 +61,7 @@ class UserResponse(BaseModel):
     role: str
     profile_image_url: str
     assistant_id: Optional[str] = None
+    is_guest: Optional[bool] = False
 
 
 class SigninResponse(Token, UserResponse):
@@ -96,6 +97,7 @@ class SignupForm(BaseModel):
     email: str
     password: str
     profile_image_url: Optional[str] = "/user.png"
+    anonymous_token: Optional[str] = None
 
 
 class AddUserForm(SignupForm):
@@ -113,7 +115,8 @@ class AuthsTable:
         oauth_sub: Optional[str] = None,
         assistant_id: Optional[str] = None,
         team_id: Optional[str] = None,
-        tenant_id: Optional[str] = None
+        tenant_id: Optional[str] = None,
+        is_guest: Optional[bool] = False
     ) -> Optional[UserModel]:
         with get_db() as db:
             log.info("insert_new_auth")
@@ -137,7 +140,17 @@ class AuthsTable:
             db.add(result)
 
             user = Users.insert_new_user(
-                id, name, email, profile_image_url, role, oauth_sub, assistant_id, ragflow_user_id, team_id, tenant_id
+                id,
+                name,
+                email,
+                profile_image_url,
+                role,
+                oauth_sub,
+                assistant_id,
+                ragflow_user_id,
+                team_id,
+                tenant_id,
+                is_guest,
             )
 
             db.commit()

@@ -33,14 +33,14 @@
 	import { Toaster, toast } from 'svelte-sonner';
 
 	import { executeToolServer, getBackendConfig } from '$lib/apis';
-	import { getSessionUser, userSignIn } from '$lib/apis/auths';
+	import { getSessionUser, userSignIn, createAnonymousAccount } from '$lib/apis/auths';
 
 	import '../tailwind.css';
 	import '../app.css';
 
 	import 'tippy.js/dist/tippy.css';
 
-	import { WEBUI_BASE_URL, WEBUI_HOSTNAME, GUEST_CREDENTIALS } from '$lib/constants';
+	import { WEBUI_BASE_URL, WEBUI_HOSTNAME } from '$lib/constants';
 	import i18n, { initI18n, getLanguages, changeLanguage } from '$lib/i18n';
 	import { bestMatchingLanguage } from '$lib/utils';
 	import { getAllTags, getChatList } from '$lib/apis/chats';
@@ -103,23 +103,48 @@
 		});
 	};
 
-	const autoGuestSignIn = async () => {
+	const autoAnonymousSignIn = async () => {
 		try {
-			const sessionUser = await userSignIn(GUEST_CREDENTIALS.email, GUEST_CREDENTIALS.password);
+			// Check if we already have an anonymous token stored
+			let anonymousToken = localStorage.getItem('anonymousToken');
+			
+			if (anonymousToken) {
+				// Try to use existing anonymous token
+				try {
+					const sessionUser = await getSessionUser(anonymousToken);
+					if (sessionUser?.token) {
+						localStorage.token = sessionUser.token;
+						$socket?.emit('user-join', { auth: { token: sessionUser.token } });
+						await user.set(sessionUser);
+						await config.set(await getBackendConfig());
+						return true;
+					}
+				} catch (error) {
+					// Anonymous token is invalid, remove it
+					localStorage.removeItem('anonymousToken');
+					anonymousToken = null;
+				}
+			}
 
-			if (!sessionUser?.token) {
+			// Create new anonymous account
+			const anonymousUser = await createAnonymousAccount();
+
+			if (!anonymousUser?.token) {
 				return false;
 			}
 
-			localStorage.token = sessionUser.token;
-			$socket?.emit('user-join', { auth: { token: sessionUser.token } });
+			// Store both tokens for future use
+			localStorage.token = anonymousUser.token;
+			localStorage.setItem('anonymousToken', anonymousUser.token);
+			
+			$socket?.emit('user-join', { auth: { token: anonymousUser.token } });
 
-			await user.set(sessionUser);
+			await user.set(anonymousUser);
 			await config.set(await getBackendConfig());
 
 			return true;
 		} catch (error) {
-			console.error('Auto guest sign-in failed:', error);
+			console.error('Auto anonymous sign-in failed:', error);
 			return false;
 		}
 	};
@@ -589,9 +614,9 @@
 						await goto(`/auth?redirect=${encodedUrl}`);
 					}
 				} else if (!isAuthRoute && !isSharedChatRoute && !isGuestChatRoute) {
-					const guestLoggedIn = await autoGuestSignIn();
+					const anonymousLoggedIn = await autoAnonymousSignIn();
 
-					if (!guestLoggedIn) {
+					if (!anonymousLoggedIn) {
 						await goto(`/auth?redirect=${encodedUrl}`);
 					}
 				}
