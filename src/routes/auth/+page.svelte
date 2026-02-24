@@ -52,6 +52,8 @@
 			
 			// 检查是否需要强制更改密码
 			if (sessionUser.requires_password_change) {
+				// 显示密码过期提示
+				toast.error('您的密码已过期（90天），请修改密码后再登录。');
 				pendingSessionUser = sessionUser;
 				pendingSessionToken = sessionUser.token ?? null;
 				showForcePasswordChange = true;

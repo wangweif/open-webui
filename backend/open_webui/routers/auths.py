@@ -601,14 +601,12 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
                 log.error(f"记录登录失败日志失败: {str(e)}")
         
         # 如果登录成功，检查密码是否过期
+        password_expired = False
         if user:
             with get_db() as db:
                 auth = db.query(Auth).filter_by(id=user.id, active=True).first()
                 if auth and is_password_expired(auth.password_changed_at):
-                    raise HTTPException(
-                        status.HTTP_403_FORBIDDEN,
-                        detail=ERROR_MESSAGES.PASSWORD_EXPIRED
-                    )
+                    password_expired = True
 
     if user:
 
@@ -693,11 +691,13 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         except Exception as e:
             log.error(f"记录登录日志失败: {str(e)}")
 
-        # 检测密码是否是初始密码"123456"
+        # 检测密码是否是初始密码"123456"或密码已过期
         requires_password_change = False
         if WEBUI_AUTH and not WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
             # 只有在使用密码登录时才检测
             if form_data.password == "123456":
+                requires_password_change = True
+            elif password_expired:
                 requires_password_change = True
 
         return {
