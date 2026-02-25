@@ -3,16 +3,16 @@ from enum import Enum
 
 class MESSAGES(str, Enum):
     DEFAULT = lambda msg="": f"{msg if msg else ''}"
-    MODEL_ADDED = lambda model="": f"The model '{model}' has been added successfully."
+    MODEL_ADDED = lambda model="": f"模型 '{model}' 已成功添加。"
     MODEL_DELETED = (
-        lambda model="": f"The model '{model}' has been deleted successfully."
+        lambda model="": f"模型 '{model}' 已成功删除。"
     )
 
 
 class WEBHOOK_MESSAGES(str, Enum):
     DEFAULT = lambda msg="": f"{msg if msg else ''}"
     USER_SIGNUP = lambda username="": (
-        f"New user signed up: {username}" if username else "New user signed up"
+        f"新用户注册: {username}" if username else "新用户注册"
     )
 
 
@@ -21,91 +21,91 @@ class ERROR_MESSAGES(str, Enum):
         return super().__str__()
 
     DEFAULT = (
-        lambda err="": f'{"Something went wrong :/" if err == "" else "[ERROR: " + str(err) + "]"}'
+        lambda err="": f'{"出错了 :/" if err == "" else "[错误: " + str(err) + "]"}'
     )
-    ENV_VAR_NOT_FOUND = "Required environment variable not found. Terminating now."
-    CREATE_USER_ERROR = "Oops! Something went wrong while creating your account. Please try again later. If the issue persists, contact support for assistance."
-    DELETE_USER_ERROR = "Oops! Something went wrong. We encountered an issue while trying to delete the user. Please give it another shot."
-    EMAIL_MISMATCH = "Uh-oh! This email does not match the email your provider is registered with. Please check your email and try again."
-    EMAIL_TAKEN = "Uh-oh! This email is already registered. Sign in with your existing account or choose another email to start anew."
+    ENV_VAR_NOT_FOUND = "未找到所需的环境变量，程序即将终止。"
+    CREATE_USER_ERROR = "创建账户时出错，请稍后重试。如果问题持续存在，请联系技术支持。"
+    DELETE_USER_ERROR = "删除用户时出错，请重试。"
+    EMAIL_MISMATCH = "此邮箱与您注册的邮箱不匹配，请检查后重试。"
+    EMAIL_TAKEN = "此邮箱已被注册，请使用已有账户登录或选择其他邮箱。"
     USERNAME_TAKEN = (
-        "Uh-oh! This username is already registered. Please choose another username."
+        "此用户名已被注册，请选择其他用户名。"
     )
-    PASSWORD_TOO_LONG = "Uh-oh! The password you entered is too long. Please make sure your password is less than 72 bytes long."
+    PASSWORD_TOO_LONG = "密码过长，请确保密码长度小于72字节。"
     PASSWORD_TOO_WEAK = "密码强度不符合要求：密码长度至少需要8位，且必须包含大写字母、小写字母、数字、特殊字符中的至少3种。"
     PASSWORD_EXPIRED = "您的密码已过期（90天），请修改密码后再登录。"
     ACCOUNT_LOCKED = "账户因登录失败次数过多已被锁定，请30分钟后再试。"
-    COMMAND_TAKEN = "Uh-oh! This command is already registered. Please choose another command string."
-    FILE_EXISTS = "Uh-oh! This file is already registered. Please choose another file."
+    COMMAND_TAKEN = "此命令已被注册，请选择其他命令。"
+    FILE_EXISTS = "此文件已被注册，请选择其他文件。"
 
-    ID_TAKEN = "Uh-oh! This id is already registered. Please choose another id string."
-    MODEL_ID_TAKEN = "Uh-oh! This model id is already registered. Please choose another model id string."
-    NAME_TAG_TAKEN = "Uh-oh! This name tag is already registered. Please choose another name tag string."
+    ID_TAKEN = "此ID已被注册，请选择其他ID。"
+    MODEL_ID_TAKEN = "此模型ID已被注册，请选择其他模型ID。"
+    NAME_TAG_TAKEN = "此名称标签已被注册，请选择其他名称标签。"
 
     INVALID_TOKEN = (
-        "Your session has expired or the token is invalid. Please sign in again."
+        "会话已过期或令牌无效，请重新登录。"
     )
     INVALID_CRED = "邮箱或密码错误，请检查后重试。"
-    INVALID_EMAIL_FORMAT = "The email format you entered is invalid. Please double-check and make sure you're using a valid email address (e.g., yourname@example.com)."
+    INVALID_EMAIL_FORMAT = "邮箱格式无效，请确保使用有效的邮箱地址（例如：yourname@example.com）。"
     INVALID_PASSWORD = (
-        "The password provided is incorrect. Please check for typos and try again."
+        "密码错误，请检查后重试。"
     )
-    INVALID_TRUSTED_HEADER = "Your provider has not provided a trusted header. Please contact your administrator for assistance."
+    INVALID_TRUSTED_HEADER = "您的提供商未提供可信的请求头，请联系管理员寻求帮助。"
 
-    EXISTING_USERS = "You can't turn off authentication because there are existing users. If you want to disable WEBUI_AUTH, make sure your web interface doesn't have any existing users and is a fresh installation."
+    EXISTING_USERS = "无法关闭身份验证，因为已存在用户。如果要禁用 WEBUI_AUTH，请确保您的 Web 界面没有任何现有用户且是全新安装。"
 
-    UNAUTHORIZED = "401 Unauthorized"
-    ACCESS_PROHIBITED = "You do not have permission to access this resource. Please contact your administrator for assistance."
+    UNAUTHORIZED = "401 未授权"
+    ACCESS_PROHIBITED = "您没有权限访问此资源，请联系管理员寻求帮助。"
     ACTION_PROHIBITED = (
-        "The requested action has been restricted as a security measure."
+        "出于安全考虑，此操作已被限制。"
     )
 
-    FILE_NOT_SENT = "FILE_NOT_SENT"
-    FILE_NOT_SUPPORTED = "Oops! It seems like the file format you're trying to upload is not supported. Please upload a file with a supported format and try again."
+    FILE_NOT_SENT = "文件未发送"
+    FILE_NOT_SUPPORTED = "您尝试上传的文件格式不受支持，请上传支持的格式后重试。"
 
-    NOT_FOUND = "We could not find what you're looking for :/"
-    USER_NOT_FOUND = "We could not find what you're looking for :/"
-    API_KEY_NOT_FOUND = "Oops! It looks like there's a hiccup. The API key is missing. Please make sure to provide a valid API key to access this feature."
-    API_KEY_NOT_ALLOWED = "Use of API key is not enabled in the environment."
+    NOT_FOUND = "未找到您要查找的内容 :/"
+    USER_NOT_FOUND = "未找到您要查找的用户 :/"
+    API_KEY_NOT_FOUND = "API密钥缺失，请提供有效的API密钥以访问此功能。"
+    API_KEY_NOT_ALLOWED = "环境中未启用API密钥的使用。"
 
-    MALICIOUS = "Unusual activities detected, please try again in a few minutes."
+    MALICIOUS = "检测到异常活动，请几分钟后重试。"
 
-    PANDOC_NOT_INSTALLED = "Pandoc is not installed on the server. Please contact your administrator for assistance."
+    PANDOC_NOT_INSTALLED = "服务器未安装 Pandoc，请联系管理员寻求帮助。"
     INCORRECT_FORMAT = (
-        lambda err="": f"Invalid format. Please use the correct format{err}"
+        lambda err="": f"格式无效，请使用正确的格式{err}"
     )
-    RATE_LIMIT_EXCEEDED = "API rate limit exceeded"
+    RATE_LIMIT_EXCEEDED = "API调用频率超限"
 
-    MODEL_NOT_FOUND = lambda name="": f"Model '{name}' was not found"
-    OPENAI_NOT_FOUND = lambda name="": "OpenAI API was not found"
-    OLLAMA_NOT_FOUND = "WebUI could not connect to Ollama"
-    CREATE_API_KEY_ERROR = "Oops! Something went wrong while creating your API key. Please try again later. If the issue persists, contact support for assistance."
-    API_KEY_CREATION_NOT_ALLOWED = "API key creation is not allowed in the environment."
+    MODEL_NOT_FOUND = lambda name="": f"未找到模型 '{name}'"
+    OPENAI_NOT_FOUND = lambda name="": "未找到 OpenAI API"
+    OLLAMA_NOT_FOUND = "WebUI 无法连接到 Ollama"
+    CREATE_API_KEY_ERROR = "创建API密钥时出错，请稍后重试。如果问题持续存在，请联系技术支持。"
+    API_KEY_CREATION_NOT_ALLOWED = "环境中不允许创建API密钥。"
 
-    EMPTY_CONTENT = "The content provided is empty. Please ensure that there is text or data present before proceeding."
+    EMPTY_CONTENT = "提供的内容为空，请确保在继续之前有文本或数据。"
 
-    DB_NOT_SQLITE = "This feature is only available when running with SQLite databases."
+    DB_NOT_SQLITE = "此功能仅在使用 SQLite 数据库时可用。"
 
     INVALID_URL = (
-        "Oops! The URL you provided is invalid. Please double-check and try again."
+        "您提供的URL无效，请检查后重试。"
     )
 
     WEB_SEARCH_ERROR = (
-        lambda err="": f"{err if err else 'Oops! Something went wrong while searching the web.'}"
+        lambda err="": f"{err if err else '网络搜索时出错。'}"
     )
 
     OLLAMA_API_DISABLED = (
-        "The Ollama API is disabled. Please enable it to use this feature."
+        "Ollama API 已禁用，请启用后使用此功能。"
     )
 
     FILE_TOO_LARGE = (
-        lambda size="": f"Oops! The file you're trying to upload is too large. Please upload a file that is less than {size}."
+        lambda size="": f"您尝试上传的文件过大，请上传小于 {size} 的文件。"
     )
 
     DUPLICATE_CONTENT = (
-        "Duplicate content detected. Please provide unique content to proceed."
+        "检测到重复内容，请提供唯一内容以继续。"
     )
-    FILE_NOT_PROCESSED = "Extracted content is not available for this file. Please ensure that the file is processed before proceeding."
+    FILE_NOT_PROCESSED = "此文件的提取内容不可用，请确保文件已处理后再继续。"
 
 
 class TASKS(str, Enum):
