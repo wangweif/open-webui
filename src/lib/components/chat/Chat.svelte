@@ -834,6 +834,28 @@
 					goto(`/c/iframe?src=${encodeURIComponent(iframeUrl)}&title=${encodeURIComponent(selectedModel.name)}`);
 				}
 			}
+
+			// 检查选中的模型是否包含 openclaw
+			if (selectedModels.includes('openclaw')) {
+				// 构建基础URL（hash部分）
+				let hashParams = '';
+				
+				// 如果用户是管理员，添加key参数
+				if ($user?.role === 'admin') {
+					hashParams += '?key=bjzntd@123456';
+				}
+
+				hashParams += '&token=1d8fe2de8f71595d183e9386cee34eb3cef6d618bc95ea34'
+				
+				const iframeUrl = `http://115.191.38.11/${hashParams}`;
+				
+				const params = new URLSearchParams({
+					src: iframeUrl,
+					title: 'OpenClaw'
+				});
+
+				goto(`/c/iframe?${params.toString()}`)
+			}
 		} catch (error) {
 			console.error('检测 aiOfficeWebViewer 模型时发生错误:', error);
 		}

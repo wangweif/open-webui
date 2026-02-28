@@ -80,7 +80,7 @@
                     bind:this={iframeElement}
                     src={iframeSrc}
                     title={title}
-                    class="w-full h-full border-0"
+                    class="w-full h-full border-0 mt-5"
                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"
                 ></iframe>
             {:else}
