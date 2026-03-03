@@ -12,6 +12,8 @@ import traceback
 
 from contextlib import asynccontextmanager
 from urllib.parse import urlencode, parse_qs, urlparse
+
+import uvicorn
 from pydantic import BaseModel
 from sqlalchemy import text
 
@@ -1585,3 +1587,6 @@ if os.path.exists(FRONTEND_BUILD_DIR):
     )
 else:
     log.warning(f"Frontend build directory not found at '{FRONTEND_BUILD_DIR}'. Serving API only.")
+
+if __name__ == '__main__':
+    uvicorn.run(app, host="0.0.0.0", port=8080)
