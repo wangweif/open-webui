@@ -838,16 +838,15 @@
 			// 检查选中的模型是否包含 openclaw
 			if (selectedModels.includes('openclaw')) {
 				// 构建基础URL（hash部分）
-				let hashParams = '';
-				
-				// 如果用户是管理员，添加key参数
-				if ($user?.role === 'admin') {
-					hashParams += '?key=bjzntd@123456';
+				// 用户id
+				let hashParams = '&userid=';
+				if ($user?.id) {
+					hashParams += encodeURIComponent($user.id);
+				} else {
+					hashParams += 'default_user';
 				}
 
-				hashParams += '&token=1d8fe2de8f71595d183e9386cee34eb3cef6d618bc95ea34'
-				
-				const iframeUrl = `http://115.191.38.11/${hashParams}`;
+				const iframeUrl = `https://dp.bjzntd.com/?access_token=123456${hashParams}`;
 				
 				const params = new URLSearchParams({
 					src: iframeUrl,
