@@ -639,12 +639,12 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         user_permissions = get_permissions(
             user.id, request.app.state.config.USER_PERMISSIONS
         )
-        # if user.assistant_id == None or user.assistant_id == "":
-        #     print("用户没有助手，创建助手") 
-        #     assistant_id = await create_assistant(user.ragflow_user_id)
-        #     user.assistant_id = assistant_id
-        #     # 更新用户
-        #     Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
+        if user.assistant_id == None or user.assistant_id == "":
+            print("用户没有助手，创建助手") 
+            assistant_id = await create_assistant(user.ragflow_user_id)
+            user.assistant_id = assistant_id
+            # 更新用户
+            Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
 
         # 检查用户是否属于农业局组
         is_bjny = False
@@ -821,17 +821,17 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
                 tenant_id=TENANT_ID,
             )
         # 如果是直接注册的，则分配默认知识库，否则不分配
-        # if not request.headers.get('Authorization'):
-        #     log.info("-------------直接注册，开始分配知识库")
-        #     await assign_base_kb_permission(user.ragflow_user_id)
-        #     # 将用户添加到UserTenant表
-        #     await add_user_to_user_tenant(TENANT_ID,user.email)
-        #     # 将用户添加到游客权限组
-        #     await add_user_to_tourist_group(user.id)
+        if not request.headers.get('Authorization'):
+            log.info("-------------直接注册，开始分配知识库")
+            await assign_base_kb_permission(user.ragflow_user_id)
+            # 将用户添加到UserTenant表
+            await add_user_to_user_tenant(TENANT_ID,user.email)
+            # 将用户添加到游客权限组
+            await add_user_to_tourist_group(user.id)
 
-        assistant_id = None
+        assistant_id = await create_assistant(user.ragflow_user_id)
 
-        # Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
+        Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
         if user:
             expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
             expires_at = None
