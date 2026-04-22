@@ -578,15 +578,6 @@
 				return;
 			}
 
-			// 检查 rag_flow_webapi_pipeline_cs 模型的文件类型限制
-			if (
-				isRagFlowModel &&
-				!['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/avif'].includes(file['type'])
-			) {
-				showRagFlowFileTypeError();
-				return;
-			}
-
 			if (
 				['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/avif'].includes(file['type'])
 			) {
