@@ -97,21 +97,29 @@ li p {
 
 ::-webkit-scrollbar-thumb {
 	--tw-border-opacity: 1;
-	background-color: rgba(236, 236, 236, 0.8);
+	background-color: rgba(120, 120, 120, 0.4);
 	border-color: rgba(255, 255, 255, var(--tw-border-opacity));
 	border-radius: 9999px;
 	border-width: 1px;
 }
 
+::-webkit-scrollbar-thumb:active {
+	background-color: rgba(80, 80, 80, 0.8);
+}
+
 /* Dark theme scrollbar styles */
 .dark ::-webkit-scrollbar-thumb {
-	background-color: rgba(42, 42, 42, 0.8); /* Darker color for dark theme */
+	background-color: rgba(160, 160, 160, 0.3);
 	border-color: rgba(0, 0, 0, var(--tw-border-opacity));
+}
+
+.dark ::-webkit-scrollbar-thumb:active {
+	background-color: rgba(200, 200, 200, 0.7);
 }
 
 ::-webkit-scrollbar {
 	height: 0.8rem;
-	width: 0.4rem;
+	width: 0.6rem;
 }
 
 ::-webkit-scrollbar-track {
@@ -181,13 +189,17 @@ select {
 	display: none;
 }
 
-.scrollbar-hidden:active::-webkit-scrollbar-thumb,
-.scrollbar-hidden:focus::-webkit-scrollbar-thumb,
-.scrollbar-hidden:hover::-webkit-scrollbar-thumb {
-	visibility: visible;
-}
 .scrollbar-hidden::-webkit-scrollbar-thumb {
-	visibility: hidden;
+	background-color: rgba(120, 120, 120, 0.3);
+}
+.scrollbar-hidden:active::-webkit-scrollbar-thumb {
+	background-color: rgba(80, 80, 80, 0.8);
+}
+.dark .scrollbar-hidden::-webkit-scrollbar-thumb {
+	background-color: rgba(160, 160, 160, 0.3);
+}
+.dark .scrollbar-hidden:active::-webkit-scrollbar-thumb {
+	background-color: rgba(200, 200, 200, 0.7);
 }
 
 .scrollbar-hidden::-webkit-scrollbar-corner {
