@@ -138,3 +138,7 @@ opentelemetry-instrumentation-requests==0.52b1
 opentelemetry-instrumentation-logging==0.52b1
 opentelemetry-instrumentation-httpx==0.52b1
 opentelemetry-instrumentation-aiohttp-client==0.52b1
+
+## Utilities
+opencc==1.1.9
+diskcache==5.6.3
