@@ -238,11 +238,12 @@
 
 		<script>
 			// On page load or when changing themes, best to add inline in `head` to avoid FOUC
-			(() => {
-				const metaThemeColorTag = document.querySelector('meta[name="theme-color"]');
-				const prefersDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+			(function () {
+				var metaThemeColorTag = document.querySelector('meta[name="theme-color"]');
+				var darkThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+				var prefersDarkTheme = darkThemeQuery.matches;
 
-				if (!localStorage?.theme) {
+				if (!localStorage.theme) {
 					localStorage.theme = 'light';
 				}
 
@@ -268,7 +269,7 @@
 					metaThemeColorTag.setAttribute('content', '#171717');
 				}
 
-				window.matchMedia('(prefers-color-scheme: dark)').addListener((e) => {
+				darkThemeQuery.addListener(function (e) {
 					if (localStorage.theme === 'system') {
 						if (e.matches) {
 							document.documentElement.classList.add('dark');
@@ -283,19 +284,19 @@
 				});
 
 				function setSplashImage() {
-					const logo = document.getElementById('logo');
-					const isDarkMode = document.documentElement.classList.contains('dark');
+					var logo = document.getElementById('logo');
+					var isDarkMode = document.documentElement.classList.contains('dark');
 
-					if (isDarkMode) {
-						const darkImage = new Image();
+					if (isDarkMode && logo) {
+						var darkImage = new Image();
 						darkImage.src = '/static/splash-dark.png';
 
-						darkImage.onload = () => {
+						darkImage.onload = function () {
 							logo.src = '/static/splash-dark.png';
 							logo.style.filter = ''; // Ensure no inversion is applied if splash-dark.png exists
 						};
 
-						darkImage.onerror = () => {
+						darkImage.onerror = function () {
 							logo.style.filter = 'invert(1)'; // Invert image if splash-dark.png is missing
 						};
 					}

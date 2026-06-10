@@ -49,6 +49,8 @@ export default defineConfig(({ mode }) => {
 			KNOWLEDGE_BASE_URL: JSON.stringify(env.KNOWLEDGE_BASE_URL || "http://know.baafs.net.cn/knowledge")
 		},
 		build: {
+			target: 'chrome78',
+			cssTarget: 'chrome78',
 			sourcemap: true,
 			outDir: (env.PUBLIC_BUILD_TARGET || env.BUILD_TARGET) ? `build-${env.PUBLIC_BUILD_TARGET || env.BUILD_TARGET}` : 'build'
 		},
