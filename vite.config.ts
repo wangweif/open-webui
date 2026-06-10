@@ -1,7 +1,73 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig, loadEnv } from 'vite';
+import type { Plugin } from 'vite';
 
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+
+const stripCssCascadeLayers = (css: string) => {
+	let output = '';
+	let index = 0;
+
+	while (index < css.length) {
+		const layerIndex = css.indexOf('@layer', index);
+
+		if (layerIndex === -1) {
+			output += css.slice(index);
+			break;
+		}
+
+		output += css.slice(index, layerIndex);
+
+		let cursor = layerIndex + '@layer'.length;
+		while (cursor < css.length && /\s/.test(css[cursor])) {
+			cursor += 1;
+		}
+
+		const blockStart = css.indexOf('{', cursor);
+		const statementEnd = css.indexOf(';', cursor);
+
+		if (statementEnd !== -1 && (blockStart === -1 || statementEnd < blockStart)) {
+			index = statementEnd + 1;
+			continue;
+		}
+
+		if (blockStart === -1) {
+			output += css.slice(layerIndex);
+			break;
+		}
+
+		let depth = 1;
+		let blockEnd = blockStart + 1;
+
+		while (blockEnd < css.length && depth > 0) {
+			const character = css[blockEnd];
+
+			if (character === '{') {
+				depth += 1;
+			} else if (character === '}') {
+				depth -= 1;
+			}
+
+			blockEnd += 1;
+		}
+
+		output += css.slice(blockStart + 1, blockEnd - 1);
+		index = blockEnd;
+	}
+
+	return output;
+};
+
+const chrome78CssCompatPlugin = (): Plugin => ({
+	name: 'chrome78-css-compat',
+	generateBundle(_options, bundle) {
+		for (const asset of Object.values(bundle)) {
+			if (asset.type === 'asset' && asset.fileName.endsWith('.css') && typeof asset.source === 'string') {
+				asset.source = stripCssCascadeLayers(asset.source);
+			}
+		}
+	}
+});
 
 // /** @type {import('vite').Plugin} */
 // const viteServerConfig = {
@@ -30,6 +96,7 @@ export default defineConfig(({ mode }) => {
 	return {
 		plugins: [
 			sveltekit(),
+			chrome78CssCompatPlugin(),
 			viteStaticCopy({
 				targets: [
 					{
