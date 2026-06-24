@@ -34,6 +34,18 @@ async def get_all_base_models(request: Request, user: UserModel = None):
     function_models = []
     openai_models = []
     ollama_models = []
+    claude_models = []
+
+    if request.app.state.config.ENABLE_CLAUDE_CODE:
+        claude_models = [
+            {
+                "id": "claude-code",
+                "name": "Claude Code",
+                "object": "model",
+                "created": int(time.time()),
+                "owned_by": "claude",
+            }
+        ]
 
     if request.app.state.config.ENABLE_OPENAI_API:
         openai_models = await openai.get_all_models(request, user=user)
@@ -55,7 +67,7 @@ async def get_all_base_models(request: Request, user: UserModel = None):
         ]
 
     function_models = await get_function_models(request)
-    models = function_models + openai_models + ollama_models
+    models = claude_models + function_models + openai_models + ollama_models
 
     return models
 

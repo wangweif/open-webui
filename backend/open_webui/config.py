@@ -916,6 +916,42 @@ TOOL_SERVER_CONNECTIONS = PersistentConfig(
 )
 
 ####################################
+# CLAUDE CODE
+####################################
+
+
+ENABLE_CLAUDE_CODE = PersistentConfig(
+    "ENABLE_CLAUDE_CODE",
+    "claude_code.enable",
+    os.environ.get("ENABLE_CLAUDE_CODE", "True").lower() == "true",
+)
+
+CLAUDE_CODE_PATH = PersistentConfig(
+    "CLAUDE_CODE_PATH",
+    "claude_code.path",
+    os.environ.get("CLAUDE_CODE_PATH", "claude"),
+)
+
+CLAUDE_CODE_WORKSPACE_ROOT = PersistentConfig(
+    "CLAUDE_CODE_WORKSPACE_ROOT",
+    "claude_code.workspace_root",
+    os.environ.get("CLAUDE_CODE_WORKSPACE_ROOT", f"{DATA_DIR}/claude-workspaces"),
+)
+
+CLAUDE_CODE_DANGEROUSLY_SKIP_PERMISSIONS = PersistentConfig(
+    "CLAUDE_CODE_DANGEROUSLY_SKIP_PERMISSIONS",
+    "claude_code.dangerously_skip_permissions",
+    os.environ.get("CLAUDE_CODE_DANGEROUSLY_SKIP_PERMISSIONS", "False").lower()
+    == "true",
+)
+
+CLAUDE_CODE_DEFAULT_SYSTEM_PROMPT = PersistentConfig(
+    "CLAUDE_CODE_DEFAULT_SYSTEM_PROMPT",
+    "claude_code.default_system_prompt",
+    os.environ.get("CLAUDE_CODE_DEFAULT_SYSTEM_PROMPT", ""),
+)
+
+####################################
 # WEBUI
 ####################################
 
