@@ -941,7 +941,7 @@ CLAUDE_CODE_WORKSPACE_ROOT = PersistentConfig(
 CLAUDE_CODE_DANGEROUSLY_SKIP_PERMISSIONS = PersistentConfig(
     "CLAUDE_CODE_DANGEROUSLY_SKIP_PERMISSIONS",
     "claude_code.dangerously_skip_permissions",
-    os.environ.get("CLAUDE_CODE_DANGEROUSLY_SKIP_PERMISSIONS", "False").lower()
+    os.environ.get("CLAUDE_CODE_DANGEROUSLY_SKIP_PERMISSIONS", "True").lower()
     == "true",
 )
 

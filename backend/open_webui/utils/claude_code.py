@@ -147,9 +147,14 @@ def _extract_delta(event: dict) -> Optional[str]:
     if not isinstance(inner, dict):
         return None
 
-    if inner.get("type") == "content_block_delta":
+    inner_type = inner.get("type")
+
+    if inner_type == "content_block_delta":
         delta = inner.get("delta") or {}
         return delta.get("text")
+
+    if inner_type == "content_block_start":
+        return "\n"
 
     return None
 
@@ -259,7 +264,7 @@ async def _stream_claude_code(
                 continue
 
             delta = _extract_delta(event)
-            if delta:
+            if delta is not None:
                 yield _openai_chunk(chat_completion_id, model_id, {"content": delta})
 
             if event.get("type") == "error":
