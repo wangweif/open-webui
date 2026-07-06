@@ -205,6 +205,7 @@ async def _stream_claude_code(
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                limit=1024 * 1024 * 20,  # 20MB，避免 Claude Code 输出长行时 readline() 溢出
             )
         else:
             proc = await asyncio.create_subprocess_exec(
@@ -214,6 +215,7 @@ async def _stream_claude_code(
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                limit=1024 * 1024 * 20,  # 20MB，避免 Claude Code 输出长行时 readline() 溢出
             )
     except FileNotFoundError:
         raise HTTPException(
