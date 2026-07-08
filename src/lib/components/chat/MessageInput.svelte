@@ -352,6 +352,12 @@
 		});
 	};
 
+	// 将 dataURL（如截图/粘贴/压缩后的图片）转换为 File 对象，便于走文件上传接口
+	const dataUrlToFile = async (dataUrl: string, fileName: string) => {
+		const blob = await (await fetch(dataUrl)).blob();
+		return blobToFile(blob, fileName);
+	};
+
 	const screenCaptureHandler = async () => {
 		try {
 			// Request screen media
@@ -379,8 +385,9 @@
 
 			// Convert the canvas to a Base64 image URL
 			const imageUrl = canvas.toDataURL('image/png');
-			// Add the captured image to the files array to render it
-			files = [...files, { type: 'image', url: imageUrl }];
+			// 将截图作为文件上传保存，聊天携带时按文件处理
+			const imageFile = await dataUrlToFile(imageUrl, `screenshot-${uuidv4()}.png`);
+			await uploadFileHandler(imageFile, false, 'image');
 			// Clean memory: Clear video srcObject
 			video.srcObject = null;
 		} catch (error) {
@@ -389,7 +396,11 @@
 		}
 	};
 
-	const uploadFileHandler = async (file, fullContext: boolean = false) => {
+	const uploadFileHandler = async (
+		file,
+		fullContext: boolean = false,
+		itemType: 'file' | 'image' = 'file'
+	) => {
 		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_upload ?? true)) {
 			toast.error($i18n.t('You do not have permission to upload files.'));
 			return null;
@@ -409,7 +420,7 @@
 
 		const tempItemId = uuidv4();
 		const fileItem = {
-			type: 'file',
+			type: itemType,
 			file: '',
 			id: null,
 			url: '',
@@ -471,7 +482,10 @@
 				fileItem.id = uploadedFile.id;
 				fileItem.collection_name =
 					uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
-				fileItem.url = `${WEBUI_API_BASE_URL}/files/${uploadedFile.id}`;
+				fileItem.url =
+					itemType === 'image'
+						? `${WEBUI_API_BASE_URL}/files/${uploadedFile.id}/content`
+						: `${WEBUI_API_BASE_URL}/files/${uploadedFile.id}`;
 
 				files = files;
 			} else {
@@ -585,28 +599,28 @@
 					toast.error($i18n.t('Selected model(s) do not support image inputs'));
 					return;
 				}
-				let reader = new FileReader();
-				reader.onload = async (event) => {
-					let imageUrl = event.target.result;
+				// 图片按文件处理：如需压缩则先压缩，再统一走文件上传接口保存
+				if ($settings?.imageCompression ?? false) {
+					const width = $settings?.imageCompressionSize?.width ?? null;
+					const height = $settings?.imageCompressionSize?.height ?? null;
 
-					if ($settings?.imageCompression ?? false) {
-						const width = $settings?.imageCompressionSize?.width ?? null;
-						const height = $settings?.imageCompressionSize?.height ?? null;
-
-						if (width || height) {
-							imageUrl = await compressImage(imageUrl, width, height);
-						}
+					if (width || height) {
+						const reader = new FileReader();
+						reader.onload = async (event) => {
+							const compressedUrl = await compressImage(
+								event.target?.result as string,
+								width,
+								height
+							);
+							const compressedFile = await dataUrlToFile(compressedUrl, file.name);
+							await uploadFileHandler(compressedFile, false, 'image');
+						};
+						reader.readAsDataURL(file);
+						return;
 					}
+				}
 
-					files = [
-						...files,
-						{
-							type: 'image',
-							url: `${imageUrl}`
-						}
-					];
-				};
-				reader.readAsDataURL(file);
+				uploadFileHandler(file, false, 'image');
 			} else {
 				uploadFileHandler(file);
 			}
@@ -1176,19 +1190,11 @@
 																}
 
 																const blob = item.getAsFile();
-																const reader = new FileReader();
-
-																reader.onload = function (e) {
-																	files = [
-																		...files,
-																		{
-																			type: 'image',
-																			url: `${e.target.result}`
-																		}
-																	];
-																};
-
-																reader.readAsDataURL(blob);
+																const pastedFile = blobToFile(
+																	blob,
+																	blob.name || `pasted-image-${uuidv4()}.png`
+																);
+																uploadFileHandler(pastedFile, false, 'image');
 															} else if (item.type === 'text/plain') {
 																if ($settings?.largeTextAsFile ?? false) {
 																	const text = clipboardData.getData('text/plain');
@@ -1417,19 +1423,11 @@
 															}
 
 															const blob = item.getAsFile();
-															const reader = new FileReader();
-
-															reader.onload = function (e) {
-																files = [
-																	...files,
-																	{
-																		type: 'image',
-																		url: `${e.target.result}`
-																	}
-																];
-															};
-
-															reader.readAsDataURL(blob);
+															const pastedFile = blobToFile(
+																blob,
+																blob.name || `pasted-image-${uuidv4()}.png`
+															);
+															uploadFileHandler(pastedFile, false, 'image');
 														} else if (item.type === 'text/plain') {
 															if ($settings?.largeTextAsFile ?? false) {
 																const text = clipboardData.getData('text/plain');

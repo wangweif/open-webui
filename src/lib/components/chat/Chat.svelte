@@ -1631,6 +1631,10 @@
 			...(userMessage?.files ?? []).filter((item) =>
 				['doc', 'file', 'collection'].includes(item.type)
 			),
+			// 图片按文件处理：已上传（有 id）的图片以 {type:'file', id, name} 携带，不含具体内容
+			...(userMessage?.files ?? [])
+				.filter((item) => item.type === 'image' && item.id)
+				.map((item) => ({ type: 'file', id: item.id, name: item.name })),
 			...(responseMessage?.files ?? []).filter((item) => ['web_search_results'].includes(item.type))
 		);
 		// Remove duplicates
@@ -1682,30 +1686,34 @@
 		].filter((message) => message);
 
 		messages = messages
-			.map((message, idx, arr) => ({
-				role: message.role,
-				...((message.files?.filter((file) => file.type === 'image').length > 0 ?? false) &&
-				message.role === 'user'
-					? {
-							content: [
-								{
-									type: 'text',
-									text: message?.merged?.content ?? message.content
-								},
-								...message.files
-									.filter((file) => file.type === 'image')
-									.map((file) => ({
+			.map((message, idx, arr) => {
+				// 图片按文件处理：有 id 的图片已在顶层 files 中携带，此处只兼容旧格式（无 id）的图片，
+				// 将其内联为 image_url，避免破坏历史会话
+				const legacyImages = (message.files ?? []).filter(
+					(file) => file.type === 'image' && !file.id
+				);
+				return {
+					role: message.role,
+					...(legacyImages.length > 0 && message.role === 'user'
+						? {
+								content: [
+									{
+										type: 'text',
+										text: message?.merged?.content ?? message.content
+									},
+									...legacyImages.map((file) => ({
 										type: 'image_url',
 										image_url: {
 											url: file.url
 										}
 									}))
-							]
-						}
-					: {
-							content: message?.merged?.content ?? message.content
-						})
-			}))
+								]
+							}
+						: {
+								content: message?.merged?.content ?? message.content
+							})
+				};
+			})
 			.filter((message) => message?.role === 'user' || message?.content?.trim());
 
 		const res = await generateOpenAIChatCompletion(
