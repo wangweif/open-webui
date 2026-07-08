@@ -300,6 +300,15 @@ async def generate_claude_code_chat_completion(request, form_data: dict, user: A
             detail="Claude Code requires a user message",
         )
 
+    # 如果存在附件，则提取 id 和 name 拼接到 user_message 中；没有则不处理
+    files = form_data.get("files") or metadata.get("files") or []
+    attachments = [f for f in files if f.get("id")]
+    if attachments:
+        attachment_lines = "\n".join(
+            f"- id: {f.get('id')}, name: {f.get('name') or f.get('filename')}" for f in attachments
+        )
+        user_message = f"{user_message}\n\n附件：\n{attachment_lines}"
+
     binding, resume = _get_or_create_binding(user, metadata, model_id, user_message)
     system_prompt = _get_system_prompt(model_id)
     workspace_path = Path(binding.workspace_path)
