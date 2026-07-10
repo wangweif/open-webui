@@ -9,6 +9,7 @@ from open_webui.utils.ragflow_assistant import (
     get_kbs,
     update_assistant,
     get_accessible_kbs,
+    get_user_accessible_kbs,
     create_assistant_for_app,
 )
 from open_webui.models.users import Users
@@ -537,4 +538,89 @@ async def get_model_assistant(
 
     except Exception as e:
         log.error(f"Error getting model assistant: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class UserAccessibleKbsResponse(BaseModel):
+    kb_id: str
+    kb_name: str
+
+
+@router.get("/user/accessible-kbs")
+async def get_user_accessible_knowledge_bases(
+    user=Depends(get_verified_user)
+) -> List[UserAccessibleKbsResponse]:
+    """
+    获取当前用户可访问的所有知识库列表
+    不依赖 assistant，直接从 RAGFlow 获取用户权限范围内的所有知识库
+    用于知识库选择器显示所有可用知识库
+    """
+    try:
+        if not user.ragflow_user_id:
+            return []
+
+        response = await get_user_accessible_kbs(user.ragflow_user_id)
+
+        knowledge_bases = []
+        if 'data' in response:
+            for kb in response['data']:
+                knowledge_bases.append(UserAccessibleKbsResponse(
+                    kb_id=kb['kb_id'],
+                    kb_name=kb['kb_name'],
+                ))
+
+        return knowledge_bases
+
+    except Exception as e:
+        log.error(f"Error getting user accessible knowledge bases: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class KbSelectionRequest(BaseModel):
+    model_id: str
+    kb_ids: List[str]
+
+
+@router.get("/user/kb-selections")
+async def get_user_kb_selections(
+    user=Depends(get_verified_user)
+):
+    """
+    获取当前用户所有应用的知识库选择配置
+    从 user.settings.kb_selections 中读取
+    返回格式: { model_id: [kb_ids], ... }
+    """
+    try:
+        user_db = Users.get_user_by_id(user.id)
+        if user_db and user_db.settings:
+            return user_db.settings.get("kb_selections", {})
+        return {}
+    except Exception as e:
+        log.error(f"Error getting user kb selections: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/user/kb-selections")
+async def save_user_kb_selection(
+    request: KbSelectionRequest,
+    user=Depends(get_verified_user)
+):
+    """
+    保存用户对特定应用的知识库选择
+    将 kb_ids 按 model_id 分类保存到 user.settings.kb_selections 中
+    """
+    try:
+        user_db = Users.get_user_by_id(user.id)
+        current_settings = user_db.settings if user_db and user_db.settings else {}
+        kb_selections = current_settings.get("kb_selections", {})
+
+        # 更新指定 model_id 的 kb_ids
+        kb_selections[request.model_id] = request.kb_ids
+
+        # 保存回 user settings
+        Users.update_user_settings_by_id(user.id, {"kb_selections": kb_selections})
+
+        return {"success": True, "kb_selections": kb_selections}
+    except Exception as e:
+        log.error(f"Error saving user kb selection: {e}")
         raise HTTPException(status_code=500, detail=str(e))

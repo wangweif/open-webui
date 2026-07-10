@@ -7,38 +7,50 @@
 	import { flyAndScale } from '$lib/utils/transitions';
 	import {
 		getAssistantInfo,
-		updateAssistantKnowledgeBases,
 		updateAssistantTavily,
 		updateAssistantReasoning,
-		getModelAssistant
+		getModelAssistant,
+		getUserAccessibleKbs,
+		getUserKbSelections,
+		saveUserKbSelection,
 	} from '$lib/apis/ragflow';
-	import type { AssistantInfo, GetOrCreateAssistantResponse } from '$lib/apis/ragflow';
+	import type { AssistantInfo } from '$lib/apis/ragflow';
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import GlobeAlt from '../icons/GlobeAlt.svelte';
 	import { user } from '$lib/stores';
+
 	export let selectedModelId: string = '';
 	export let assistantId: string = '';
 	export let showKnowledgeBaseButton: boolean = false;
 	export let showKbWebSearchButton: boolean = false;
 	export let showEnhancedSearchButton: boolean = false;
 	export let showDeepResearchButton: boolean = false;
+
+	// assistant 相关状态（用于 tavily/reasoning 等功能）
 	let assistantInfo: AssistantInfo | null = null;
+	let currentAssistantId = '';
+
+	// 用户可访问的知识库列表（不再从 assistant 获取）
+	let userAccessibleKbs: { kb_id: string; kb_name: string }[] = [];
+
+	// 用户的知识库选择状态
+	let selectedKbIds: string[] = [];
+	let kbSelections: Record<string, string[]> = {};
+
 	let loading = false;
 	let showKnowledgeBasePanel = false;
 	let showTavilyPanel = false;
-	let selectedKbIds: string[] = [];
 	let tavilyApiKey = '';
 	let tavilyEnabled = false;
 	let reasoningEnabled = false;
 	let deepResearchEnabled = false;
-	let currentAssistantId = '';
 
-	// 在选择rag_flow_webapi_pipeline_cs和n8n_project_research模型时显示
+	// 在选择启用了知识库选择器的模型时显示
 	$: shouldShow = showKnowledgeBaseButton || showKbWebSearchButton || showEnhancedSearchButton || showDeepResearchButton;
 
-	// 监听模型变化，获取或创建assistant并加载信息
+	// 监听模型变化，加载数据
 	$: if (shouldShow && selectedModelId && $user?.id) {
-		loadAssistantInfo();
+		loadKnowledgeBaseData();
 	}
 
 	onMount(() => {
@@ -47,35 +59,45 @@
 		deepResearchEnabled = savedDeepResearch === 'true';
 	});
 
-	async function loadAssistantInfo() {
-		// 先获取或创建assistant
+	async function loadKnowledgeBaseData() {
 		if (!selectedModelId || !$user?.id || !localStorage.token) return;
-
-		const assistantResponse = await getModelAssistant(localStorage.token, selectedModelId);
-		currentAssistantId = assistantResponse.assistant_id;
 
 		loading = true;
 		try {
-			// 如果创建了新的assistant，显示消息
+			// 1. 获取用户可访问的所有知识库（不依赖 assistant）
+			const kbs = await getUserAccessibleKbs(localStorage.token);
+			userAccessibleKbs = kbs || [];
+			console.log('userAccessibleKbs:', userAccessibleKbs);
+
+			// 2. 获取用户的知识库选择配置
+			kbSelections = await getUserKbSelections(localStorage.token);
+			console.log('kbSelections:', kbSelections);
+
+			// 3. 获取当前模型的已选知识库
+			selectedKbIds = kbSelections[selectedModelId] || [];
+			console.log('selectedKbIds:', selectedKbIds);
+
+			// 4. 分发初始 kb_ids 事件
+			dispatch('kbIdsChange', { kb_ids: selectedKbIds });
+
+			// 5. 获取 assistant 信息（用于 tavily/reasoning 等其他功能）
+			const assistantResponse = await getModelAssistant(localStorage.token, selectedModelId);
+			currentAssistantId = assistantResponse.assistant_id;
+
 			if (assistantResponse.is_new) {
 				console.log('创建了新的assistant:', assistantResponse.message);
 			}
 
-			// 加载assistant信息
-			assistantInfo = await getAssistantInfo(localStorage.token, currentAssistantId);
-			console.log('assistantInfo', assistantInfo);
-			selectedKbIds = [...assistantInfo.kb_ids];
-
-			// 分发初始 kb_ids 事件
-			dispatch('kbIdsChange', { kb_ids: selectedKbIds });
-
-			tavilyApiKey = assistantInfo.tavily_api_key || '';
-			tavilyEnabled = assistantInfo.tavily_enabled;
-			reasoningEnabled = assistantInfo.reasoning_enabled || false;
-			console.log('tavilyApiKey,tavilyEnabled,reasoningEnabled', assistantInfo);
+			try {
+				assistantInfo = await getAssistantInfo(localStorage.token, currentAssistantId);
+				tavilyApiKey = assistantInfo.tavily_api_key || '';
+				tavilyEnabled = assistantInfo.tavily_enabled;
+				reasoningEnabled = assistantInfo.reasoning_enabled || false;
+			} catch (e) {
+				console.warn('获取 assistant 信息失败（非关键）:', e);
+			}
 		} catch (error) {
-			console.error('Failed to load assistant info:', error);
-			// toast.error('Failed to load assistant configuration');
+			console.error('加载知识库数据失败:', error);
 		} finally {
 			loading = false;
 		}
@@ -99,18 +121,16 @@
 		dispatch('kbIdsChange', { kb_ids: newKbIds });
 
 		try {
-			await updateAssistantKnowledgeBases(localStorage.token, {
-				assistant_id: currentAssistantId,
-				kb_ids: newKbIds
-			});
-			// toast.success('Knowledge base configuration updated');
+			// 保存到用户 settings 中的 kb_selections
+			await saveUserKbSelection(localStorage.token, selectedModelId, newKbIds);
+
+			// 更新本地缓存
+			kbSelections[selectedModelId] = newKbIds;
 		} catch (error) {
 			// 回滚更改
 			selectedKbIds = previousKbIds;
-			// 回滚时也要分发事件
 			dispatch('kbIdsChange', { kb_ids: previousKbIds });
-			console.error('Failed to update knowledge bases:', error);
-			// toast.error('Failed to update knowledge base configuration');
+			console.error('保存知识库选择失败:', error);
 		}
 	}
 
@@ -123,15 +143,13 @@
 
 		try {
 			await updateAssistantTavily(localStorage.token, {
-				assistant_id: assistantId,
+				assistant_id: currentAssistantId,
 				tavily_enabled: newTavilyEnabled
 			});
-			// toast.success(`Web search ${newTavilyEnabled ? 'enabled' : 'disabled'}`);
 		} catch (error) {
 			// 回滚更改
 			tavilyEnabled = previousTavilyEnabled;
 			console.error('Failed to update tavily config:', error);
-			// toast.error('Failed to update web search configuration');
 		}
 	}
 
@@ -144,15 +162,13 @@
 
 		try {
 			await updateAssistantReasoning(localStorage.token, {
-				assistant_id: assistantId,
+				assistant_id: currentAssistantId,
 				reasoning_enabled: newReasoningEnabled
 			});
-			// toast.success(`Enhanced search ${newReasoningEnabled ? 'enabled' : 'disabled'}`);
 		} catch (error) {
 			// 回滚更改
 			reasoningEnabled = previousReasoningEnabled;
 			console.error('Failed to update reasoning config:', error);
-			// toast.error('Failed to update enhanced search configuration');
 		}
 	}
 
@@ -165,10 +181,10 @@
 	}
 </script>
 
-<!-- 只在rag_flow_webapi_pipeline_cs模型时显示 -->
+<!-- 只在启用了知识库选择器的应用时显示 -->
 {#if shouldShow}
 	<div class="ragflow-container inline-flex items-center gap-1">
-		<!-- 联网搜索按钮 - 参考Web Search样式 -->
+		<!-- 联网搜索按钮 -->
 		{#if showKbWebSearchButton}
 			<button
 				on:click={toggleTavily}
@@ -176,7 +192,7 @@
 				class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {tavilyEnabled
 					? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
 					: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
-				disabled={loading || !assistantInfo}
+				disabled={loading}
 			>
 				<GlobeAlt className="size-5" strokeWidth="1.75" />
 				<span
@@ -186,7 +202,7 @@
 			</button>
 		{/if}
 
-		<!-- 增强搜索按钮 - 参考联网搜索按钮样式 -->
+		<!-- 增强搜索按钮 -->
 		{#if showEnhancedSearchButton}
 			<button
 				on:click={toggleReasoning}
@@ -194,7 +210,7 @@
 				class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden border {reasoningEnabled
 					? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
 					: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
-				disabled={loading || !assistantInfo}
+				disabled={loading}
 			>
 				<svg
 					class="size-5"
@@ -216,7 +232,7 @@
 			</button>
 		{/if}
 
-		<!-- 深度研究按钮 - 参考增强搜索按钮样式 -->
+		<!-- 深度研究按钮 -->
 		{#if showDeepResearchButton}
 			<button
 				on:click={toggleDeepResearch}
@@ -245,7 +261,7 @@
 			</button>
 		{/if}
 
-		<!-- 知识库选择按钮 - 使用Dropdown组件，参考InputMenu样式 -->
+		<!-- 知识库选择按钮 -->
 		{#if showKnowledgeBaseButton}
 			<Dropdown
 				bind:show={showKnowledgeBasePanel}
@@ -261,7 +277,7 @@
 						0 || showKnowledgeBasePanel
 						? 'bg-primary-100 dark:bg-primary-500/20 border-primary-400/20 text-primary-500 dark:text-primary-400'
 						: 'bg-transparent border-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
-					disabled={loading || !assistantInfo}
+					disabled={loading}
 				>
 					<svg
 						class="size-5"
@@ -280,11 +296,11 @@
 						class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px]"
 						>知识库选择</span
 					>
-					{#if assistantInfo && assistantInfo.knowledge_bases.length > 0}
+					{#if userAccessibleKbs.length > 0}
 						<span
 							class="ml-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full text-xs font-medium"
 						>
-							{selectedKbIds.length}/{assistantInfo.knowledge_bases.length}
+							{selectedKbIds.length}/{userAccessibleKbs.length}
 						</span>
 					{/if}
 				</button>
@@ -298,13 +314,13 @@
 						align="start"
 						transition={flyAndScale}
 					>
-						{#if assistantInfo && assistantInfo.knowledge_bases.length === 0}
+						{#if userAccessibleKbs.length === 0}
 							<div class="px-3 py-2 text-center">
 								<p class="text-gray-500 dark:text-gray-400 text-sm">暂无可用知识库</p>
 							</div>
-						{:else if assistantInfo}
+						{:else}
 							<div class="max-h-48 overflow-y-auto scrollbar-hidden">
-								{#each assistantInfo.knowledge_bases as kb}
+								{#each userAccessibleKbs as kb}
 									<button
 										class="flex w-full justify-between gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800"
 										on:click={() => toggleKnowledgeBase(kb.kb_id)}
@@ -356,7 +372,7 @@
 			</Dropdown>
 		{/if}
 
-		<!-- Loading图标 - 与其他按钮在同一水平线 -->
+		<!-- Loading图标 -->
 		{#if loading}
 			<div class="loading-container">
 				<svg class="size-4 animate-spin text-gray-600 dark:text-gray-300" viewBox="0 0 24 24">

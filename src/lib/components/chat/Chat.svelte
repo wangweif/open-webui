@@ -156,6 +156,7 @@
 	let prompt = '';
 	let chatFiles = [];
 	let files = [];
+	let kb_ids: string[] = [];
 	let params = {};
 
 	$: if (chatIdProp) {
@@ -1737,6 +1738,7 @@
 				},
 
 				files: (files?.length ?? 0) > 0 ? files : undefined,
+				kb_ids: kb_ids.length > 0 ? kb_ids : undefined,
 				tool_ids: selectedToolIds.length > 0 ? selectedToolIds : undefined,
 				tool_servers: $toolServers,
 
@@ -2188,6 +2190,7 @@
 								{taskIds}
 								{selectedModels}
 								bind:files
+								bind:kb_ids
 								bind:prompt
 								bind:autoScroll
 								bind:selectedToolIds
@@ -2241,6 +2244,7 @@
 								{history}
 								{selectedModels}
 								bind:files
+								bind:kb_ids
 								bind:prompt
 								bind:autoScroll
 								bind:selectedToolIds

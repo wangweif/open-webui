@@ -79,7 +79,12 @@ async def process_pipeline_inlet_filter(request, payload, user, models):
         "assistant_id": assistant_id,
     }
     kb_ids = []
-    if assistant_id:
+    # 优先从请求 payload 中获取前端传来的 kb_ids
+    if payload.get("kb_ids"):
+        kb_ids = payload["kb_ids"]
+        # 从 payload 中移除 kb_ids，避免传递给下游
+        del payload["kb_ids"]
+    elif assistant_id:
         try:
             assistant_response = await get_assistant(assistant_id)
             print("assistant_response", assistant_response)

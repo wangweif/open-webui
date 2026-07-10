@@ -197,11 +197,59 @@ async def get_kbs(kb_ids):
 # 获取用户可以访问的知识库列表
 async def get_accessible_kbs(assistant_id):
     api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/assistant_accessible?assistant_id={assistant_id}"
-    
+
     session = await get_session()
     headers = {'Content-Type': 'application/json'}
     async with session.get(api_url, headers=headers) as response:
         return await response.json()
+
+
+# 获取用户可访问的所有知识库列表（不依赖 assistant）
+async def get_user_accessible_kbs(ragflow_user_id):
+    """获取用户可访问的所有知识库列表
+
+    Args:
+        ragflow_user_id: RAGFlow 系统中的用户 ID
+
+    Returns:
+        dict: 包含知识库列表的响应数据
+    """
+    token = create_token(data={"id": TENANT_ID})
+    # 使用分页参数获取所有知识库，page_size 设置较大值以确保一次性获取所有数据
+    api_url = f"{KNOWLEDGE_BASE_URL}/v1/kb/list?tenant_id={TENANT_ID}&page=1&page_size=1000"
+
+    session = await get_session()
+    headers = {'Content-Type': 'application/json', 'Cookie': 'token=' + token}
+
+    try:
+        async with session.get(api_url, headers=headers) as response:
+            kb_list_response = await response.json()
+
+        # 获取用户有权限的知识库
+        perm_api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/accessible?tenant_id={TENANT_ID}&user_id={ragflow_user_id}"
+        async with session.get(perm_api_url, headers=headers) as response:
+            perm_response = await response.json()
+
+        # 提取用户可访问的 kb_ids
+        accessible_kb_ids = set()
+        if 'data' in perm_response:
+            for item in perm_response['data']:
+                accessible_kb_ids.add(item['kb_id'])
+
+        # 从全部知识库中筛选用户可访问的知识库
+        knowledge_bases = []
+        if 'data' in kb_list_response:
+            for kb in kb_list_response['data']:
+                if kb['id'] in accessible_kb_ids:
+                    knowledge_bases.append({
+                        'kb_id': kb['id'],
+                        'kb_name': kb['name'],
+                    })
+
+        return {'data': knowledge_bases}
+    except Exception as e:
+        log.error(f"获取用户可访问知识库失败: {str(e)}")
+        return {'data': []}
 
 # 将用户添加到UserTenant表
 async def add_user_to_user_tenant(tenant_id,email):
