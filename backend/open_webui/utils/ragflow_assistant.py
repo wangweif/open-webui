@@ -212,38 +212,36 @@ async def get_user_accessible_kbs(ragflow_user_id):
         ragflow_user_id: RAGFlow 系统中的用户 ID
 
     Returns:
-        dict: 包含知识库列表的响应数据
+        dict: 包含知识库列表的响应数据，每个 item 包含 kb_id 和 kb_name
     """
     token = create_token(data={"id": TENANT_ID})
-    # 使用分页参数获取所有知识库，page_size 设置较大值以确保一次性获取所有数据
-    api_url = f"{KNOWLEDGE_BASE_URL}/v1/kb/list?tenant_id={TENANT_ID}&page=1&page_size=1000"
-
     session = await get_session()
     headers = {'Content-Type': 'application/json', 'Cookie': 'token=' + token}
 
     try:
-        async with session.get(api_url, headers=headers) as response:
-            kb_list_response = await response.json()
-
-        # 获取用户有权限的知识库
+        # 获取用户有权限的知识库列表（响应中每个 item 已包含 kb_id、kb_name、kb_info）
         perm_api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/accessible?tenant_id={TENANT_ID}&user_id={ragflow_user_id}"
         async with session.get(perm_api_url, headers=headers) as response:
             perm_response = await response.json()
 
-        # 提取用户可访问的 kb_ids
-        accessible_kb_ids = set()
-        if 'data' in perm_response:
-            for item in perm_response['data']:
-                accessible_kb_ids.add(item['kb_id'])
+        if perm_response.get('code') != 0:
+            log.error(f"获取用户可访问知识库失败: {perm_response}")
+            return {'data': []}
 
-        # 从全部知识库中筛选用户可访问的知识库
+        # 直接从 perm_response 中提取知识库信息，按 kb_id 去重
+        # 每个 kb 因 read/write 两种权限会出现两次
         knowledge_bases = []
-        if 'data' in kb_list_response:
-            for kb in kb_list_response['data']:
-                if kb['id'] in accessible_kb_ids:
+        seen_kb_ids = set()
+        if 'data' in perm_response and isinstance(perm_response['data'], list):
+            for item in perm_response['data']:
+                kb_id = item.get('kb_id')
+                if kb_id and kb_id not in seen_kb_ids:
+                    seen_kb_ids.add(kb_id)
+                    # 优先使用 kb_name，为空时回退到 kb_info.name
+                    kb_name = item.get('kb_name') or (item.get('kb_info') or {}).get('name', '')
                     knowledge_bases.append({
-                        'kb_id': kb['id'],
-                        'kb_name': kb['name'],
+                        'kb_id': kb_id,
+                        'kb_name': kb_name,
                     })
 
         return {'data': knowledge_bases}

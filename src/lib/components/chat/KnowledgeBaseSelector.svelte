@@ -9,7 +9,6 @@
 		getAssistantInfo,
 		updateAssistantTavily,
 		updateAssistantReasoning,
-		getModelAssistant,
 		getUserAccessibleKbs,
 		getUserKbSelections,
 		saveUserKbSelection,
@@ -81,20 +80,17 @@
 			dispatch('kbIdsChange', { kb_ids: selectedKbIds });
 
 			// 5. 获取 assistant 信息（用于 tavily/reasoning 等其他功能）
-			const assistantResponse = await getModelAssistant(localStorage.token, selectedModelId);
-			currentAssistantId = assistantResponse.assistant_id;
-
-			if (assistantResponse.is_new) {
-				console.log('创建了新的assistant:', assistantResponse.message);
-			}
-
-			try {
-				assistantInfo = await getAssistantInfo(localStorage.token, currentAssistantId);
-				tavilyApiKey = assistantInfo.tavily_api_key || '';
-				tavilyEnabled = assistantInfo.tavily_enabled;
-				reasoningEnabled = assistantInfo.reasoning_enabled || false;
-			} catch (e) {
-				console.warn('获取 assistant 信息失败（非关键）:', e);
+			// 直接使用父组件传入的 assistantId，不再调用 getModelAssistant 接口
+			if (assistantId) {
+				currentAssistantId = assistantId;
+				try {
+					assistantInfo = await getAssistantInfo(localStorage.token, currentAssistantId);
+					tavilyApiKey = assistantInfo.tavily_api_key || '';
+					tavilyEnabled = assistantInfo.tavily_enabled;
+					reasoningEnabled = assistantInfo.reasoning_enabled || false;
+				} catch (e) {
+					console.warn('获取 assistant 信息失败（非关键）:', e);
+				}
 			}
 		} catch (error) {
 			console.error('加载知识库数据失败:', error);
