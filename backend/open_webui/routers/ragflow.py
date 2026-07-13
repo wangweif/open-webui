@@ -8,7 +8,6 @@ from open_webui.utils.ragflow_assistant import (
     get_assistant,
     get_kbs,
     update_assistant,
-    get_accessible_kbs,
     get_user_accessible_kbs,
 )
 from open_webui.models.users import Users
@@ -50,67 +49,6 @@ class UpdateReasoningRequest(BaseModel):
 class UpdateRefineMultiturnRequest(BaseModel):
     assistant_id: str
     refine_multiturn: bool = False
-
-
-@router.get("/assistant/{assistant_id}/info")
-async def get_assistant_info(
-    assistant_id: str,
-) -> AssistantInfo:
-    """
-    获取assistant的完整信息，包括kb_ids、知识库列表和tavily_api_key
-    当选择rag_flow_webapi_pipeline_cs模型时调用此接口
-    """
-    try:
-        # 获取assistant信息
-        assistant_response = await get_assistant(assistant_id)
-        print("assistant_response", assistant_response)
-        
-        if 'data' not in assistant_response:
-            raise HTTPException(status_code=404, detail="Assistant not found")
-        
-        assistant_data = assistant_response['data']
-        kb_ids = assistant_data.get('kb_ids', [])
-        kb_names = assistant_data.get('kb_names', [])
-        prompt_config = assistant_data.get('prompt_config', {})
-        if 'tavily_api_key' in prompt_config:
-            tavily_api_key = prompt_config['tavily_api_key']
-        else:
-            tavily_api_key = None
-        
-        reasoning_enabled = prompt_config.get('reasoning', False)
-        
-        knowledge_bases = []
-        
-        for kb_id, kb_name in zip(kb_ids, kb_names):
-            knowledge_bases.append(KnowledgeBase(
-                kb_id=kb_id,
-                kb_name=kb_name,
-                enabled=True
-            ))
-        
-        accessible_kbs = await get_accessible_kbs(assistant_id)
-        
-        if 'data' in accessible_kbs:
-            for kb in accessible_kbs['data']:
-                if kb['kb_id'] not in kb_ids and kb['kb_id'] not in [kb.kb_id for kb in knowledge_bases]:
-                    knowledge_bases.append(KnowledgeBase(
-                        kb_id=kb['kb_info']['id'],
-                        kb_name=kb['kb_info']['name'],
-                        enabled=False
-                    ))
-
-        return AssistantInfo(
-            assistant_id=assistant_id,
-            kb_ids=kb_ids,
-            knowledge_bases=knowledge_bases,
-            tavily_api_key=tavily_api_key,
-            tavily_enabled=bool(tavily_api_key),
-            reasoning_enabled=reasoning_enabled
-        )
-        
-    except Exception as e:
-        log.error(f"Error getting assistant info: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/assistant/{assistant_id}/knowledge-bases")

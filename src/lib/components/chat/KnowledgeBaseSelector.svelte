@@ -6,14 +6,12 @@
 	import { DropdownMenu } from 'bits-ui';
 	import { flyAndScale } from '$lib/utils/transitions';
 	import {
-		getAssistantInfo,
 		updateAssistantTavily,
 		updateAssistantReasoning,
 		getUserAccessibleKbs,
 		getUserKbSelections,
 		saveUserKbSelection,
 	} from '$lib/apis/ragflow';
-	import type { AssistantInfo } from '$lib/apis/ragflow';
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import GlobeAlt from '../icons/GlobeAlt.svelte';
 	import { user } from '$lib/stores';
@@ -26,7 +24,6 @@
 	export let showDeepResearchButton: boolean = false;
 
 	// assistant 相关状态（用于 tavily/reasoning 等功能）
-	let assistantInfo: AssistantInfo | null = null;
 	let currentAssistantId = '';
 
 	// 用户可访问的知识库列表（不再从 assistant 获取）
@@ -79,19 +76,8 @@
 			// 4. 分发初始 kb_ids 事件
 			dispatch('kbIdsChange', { kb_ids: selectedKbIds });
 
-			// 5. 获取 assistant 信息（用于 tavily/reasoning 等其他功能）
-			// 直接使用父组件传入的 assistantId，不再调用 getModelAssistant 接口
-			if (assistantId) {
-				currentAssistantId = assistantId;
-				try {
-					assistantInfo = await getAssistantInfo(localStorage.token, currentAssistantId);
-					tavilyApiKey = assistantInfo.tavily_api_key || '';
-					tavilyEnabled = assistantInfo.tavily_enabled;
-					reasoningEnabled = assistantInfo.reasoning_enabled || false;
-				} catch (e) {
-					console.warn('获取 assistant 信息失败（非关键）:', e);
-				}
-			}
+			// 5. 使用父组件传入的 assistantId（用于 tavily/reasoning 等 toggle 操作）
+			currentAssistantId = assistantId || '';
 		} catch (error) {
 			console.error('加载知识库数据失败:', error);
 		} finally {

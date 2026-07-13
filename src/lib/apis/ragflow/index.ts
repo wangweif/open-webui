@@ -134,39 +134,6 @@ export const updateAssistantKnowledgeBases = async (
 };
 
 /**
- * 获取assistant的完整信息，包括知识库和tavily配置
- */
-export const getAssistantInfo = async (
-	token: string,
-	assistantId: string
-): Promise<AssistantInfo> => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_API_BASE_URL}/ragflow/assistant/${assistantId}/info`, {
-		method: 'GET',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail ?? 'Server connection failed';
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
-};
-
-/**
  * 更新assistant的tavily搜索配置
  */
 export const updateAssistantTavily = async (
