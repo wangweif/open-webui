@@ -59,10 +59,32 @@ def get_sorted_filters(model_id, models):
     return sorted_filters
 
 
+class ModelAppMapping:
+    """模型到应用ID的映射"""
+
+    MODEL_APP_ID_MAP = {
+        "rag_flow_webapi_pipeline_cs": 1,
+        "n8n_project_research": 2,
+        "contract_review": 3,
+    }
+
+    @classmethod
+    def get_app_id(cls, model_id: str):
+        return cls.MODEL_APP_ID_MAP.get(model_id)
+
+    @classmethod
+    def is_supported_model(cls, model_id: str) -> bool:
+        return model_id in cls.MODEL_APP_ID_MAP
+
+    @classmethod
+    def is_supported_model_except_rag_flow(cls, model_id: str) -> bool:
+        """判断是否在 MODEL_APP_ID_MAP 中，且不为 rag_flow_webapi_pipeline_cs"""
+        return model_id in cls.MODEL_APP_ID_MAP and model_id != "rag_flow_webapi_pipeline_cs"
+
+
 async def process_pipeline_inlet_filter(request, payload, user, models):
     # 通过model.id 获取assistant_id信息
     assistant_id = user.assistant_id
-    from open_webui.routers.ragflow import ModelAppMapping
     from open_webui.models.app_sessions import AppSessions
     model_id = payload["model"]
     if ModelAppMapping.is_supported_model_except_rag_flow(model_id):

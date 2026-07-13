@@ -309,6 +309,12 @@ async def generate_claude_code_chat_completion(request, form_data: dict, user: A
         )
         user_message = f"{user_message}\n\n附件：\n{attachment_lines}"
 
+    # 如果存在kb_ids，就将其拼接到user_message中，没有则不处理
+    kb_ids = form_data.get("kb_ids") or metadata.get("kb_ids") or []
+    if kb_ids:
+        kb_ids_str = ", ".join(kb_ids)
+        user_message = f"{user_message}\n\n知识库ID：{kb_ids_str}"
+
     binding, resume = _get_or_create_binding(user, metadata, model_id, user_message)
     system_prompt = _get_system_prompt(model_id)
     workspace_path = Path(binding.workspace_path)
