@@ -2697,7 +2697,6 @@ LDAP_CA_CERT_FILE = PersistentConfig(
 LDAP_CIPHERS = PersistentConfig(
     "LDAP_CIPHERS", "ldap.server.ciphers", os.environ.get("LDAP_CIPHERS", "ALL")
 )
-
 # -------------以下是知识库的配置-------------------
 # TENANT_ID RAGFLOW的管理员ID
 # KNOWLEDGE_BASE_URL RAGFLOW——API的URL
@@ -2713,26 +2712,34 @@ LDAP_CIPHERS = PersistentConfig(
 # RAGFLOW_ADMIN_EMAIL = "admin@bjzntd.com"
 # RAGFLOW_ADMIN_PASSWORD = "gckyCut2u+kbS1zeOr3T3pxVJEKm9wyFTWCX1qN5yXf8VtFY1TQAKR27DKSDm3SjT2HiJLPmG+Lm6oHLgznCSTUsis7dtCBO/5gfuP4Qep+1Fmt1s1flPdaDqmrniaLi8rmIv3BhlftfqQoDjVok5beYwLmpbNqFlC1vbiQd0R8F/3vO05hcLEWMmkLEZntooVwchJjgkN99XIdxWRlFTR3WwS/k7mTiaaOhN3ruyNIbtsumTz3CZsv/Ugqvh8PE+Q68z7ozvUFPT9l37/RODfWuw6PSoT/xSboaslCqVioS1rEzOh8Njl41OZGpSNbpCph/Tn2YSkFfvypDYHCPjg=="
 
-# 现在知识库统一使用know.baafs.net.cn，只有base_kb_id不同
-#----------测试：8.250---------
-BASE_KB_ID = "c86cb2a461e311f0aa946727ecf0ec23"
+# 知识库统一使用know.baafs.net.cn，只有base_kb_id不同
+# 通过 .env 文件配置各环境：
+#   BASE_KB_ID - RAGFLOW知识库ID
+#   TENANT_ID - RAGFLOW租户ID
+#   KNOWLEDGE_BASE_URL - RAGFLOW服务地址
+#   BASE_TEAM_ID - RAGFLOW初始团队ID
+#   RAGFLOW_ADMIN_EMAIL - RAGFLOW管理员邮箱
+#   RAGFLOW_ADMIN_PASSWORD - RAGFLOW管理员密码
+#   RAGFLOW_TAVILY_API_KEY - 联网搜索key
+#   FEISHU_WEBHOOK - 飞书机器人webhook
+#   ENABLE_FEISHU_NOTIFICATIONS - 是否开启飞书通知
+#   AGRICULTURE_BUREAU_GROUP_IDS - 农业局组ID列表(逗号分隔)
+#   RAGFLOW_LLM_ID - RAGFLOW默认LLM模型ID
+#   RAGFLOW_RERANK_ID - RAGFLOW默认Rerank模型ID
+#   RAGFLOW_SIMILARITY_THRESHOLD - RAGFLOW相似度阈值
+#   RAGFLOW_VECTOR_SIMILARITY_WEIGHT - RAGFLOW向量相似度权重
 
-#----------生产：8.88---------
-# BASE_KB_ID = "c701d4ba1e7411f0900f5d9844683d0c"
-
-# 公共配置
-TENANT_ID = "7b55c7fa19c011f0808539c1213cc878"
-KNOWLEDGE_BASE_URL = "https://know.baafs.net.cn"
-BASE_TEAM_ID = "007f7536404811f0a58a09681006223d"
-RAGFLOW_ADMIN_EMAIL = "admin@bjzntd.com"
-RAGFLOW_ADMIN_PASSWORD = "Pg9WHt9UdxhoUiFVs8uZjWdQP9e66iAKFElOUV43Q4iWl4mfEPHgbVhrAc+GyAwGxPd8uPB97nb4jRaFp/V8Pr6zD1hpvJrk1gxi9/Na0m9rGaVZV04M8wSXnZhIfMgtr0wclSieneCvxeiA2WAalynFOMAVV+37H8lL/pkvIjyHrIyDZwY2Q4XzNa9NZBBl1UNoyw1eTbFKI5hWqwFNynUNJRkwVkezrfI5TdW5S71XziM9U8vckiDHU2iLwvHS73/l7L+YdrEKtNu98LJAWqxD4YxtgJKB6288l4LkjD9G6KFQZCYOnI1sgG0ZyikObv3SnDXNwZyx/brxPc5TWQ=="
-
-# 联网搜索 key
-RAGFLOW_TAVILY_API_KEY = "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"
-
-# 飞书机器人(异常监控) & 通知开关
-FEISHU_WEBHOOK = "https://open.feishu.cn/open-apis/bot/v2/hook/859eddaf-ed59-4e6c-83b9-8722121c094f"
-ENABLE_FEISHU_NOTIFICATIONS = False
-
-# 农业局组ID列表，用于判断用户是否属于农业局
-AGRICULTURE_BUREAU_GROUP_IDS = ["1b2d9c89-6327-4b96-b72d-5270290b651a","041e5877-2a8c-4156-9771-a0044f83d8c2"]
+BASE_KB_ID = os.environ.get("BASE_KB_ID", "c86cb2a461e311f0aa946727ecf0ec23")
+TENANT_ID = os.environ.get("TENANT_ID", "7b55c7fa19c011f0808539c1213cc878")
+KNOWLEDGE_BASE_URL = os.environ.get("KNOWLEDGE_BASE_URL", "http://192.168.8.88:9380")
+BASE_TEAM_ID = os.environ.get("BASE_TEAM_ID", "007f7536404811f0a58a09681006223d")
+RAGFLOW_ADMIN_EMAIL = os.environ.get("RAGFLOW_ADMIN_EMAIL", "admin@bjzntd.com")
+RAGFLOW_ADMIN_PASSWORD = os.environ.get("RAGFLOW_ADMIN_PASSWORD", "Pg9WHt9UdxhoUiFVs8uZjWdQP9e66iAKFElOUV43Q4iWl4mfEPHgbVhrAc+GyAwGxPd8uPB97nb4jRaFp/V8Pr6zD1hpvJrk1gxi9/Na0m9rGaVZV04M8wSXnZhIfMgtr0wclSieneCvxeiA2WAalynFOMAVV+37H8lL/pkvIjyHrIyDZwY2Q4XzNa9NZBBl1UNoyw1eTbFKI5hWqwFNynUNJRkwVkezrfI5TdW5S71XziM9U8vckiDHU2iLwvHS73/l7L+YdrEKtNu98LJAWqxD4YxtgJKB6288l4LkjD9G6KFQZCYOnI1sgG0ZyikObv3SnDXNwZyx/brxPc5TWQ==")
+RAGFLOW_TAVILY_API_KEY = os.environ.get("RAGFLOW_TAVILY_API_KEY", "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")
+FEISHU_WEBHOOK = os.environ.get("FEISHU_WEBHOOK", "https://open.feishu.cn/open-apis/bot/v2/hook/859eddaf-ed59-4e6c-83b9-8722121c094f")
+ENABLE_FEISHU_NOTIFICATIONS = os.environ.get("ENABLE_FEISHU_NOTIFICATIONS", "False").lower() == "true"
+AGRICULTURE_BUREAU_GROUP_IDS = os.environ.get("AGRICULTURE_BUREAU_GROUP_IDS", "1b2d9c89-6327-4b96-b72d-5270290b651a,041e5877-2a8c-4156-9771-a0044f83d8c2").split(",")
+RAGFLOW_LLM_ID = os.environ.get("RAGFLOW_LLM_ID", "Qwen3:32B___VLLM@VLLM")
+RAGFLOW_RERANK_ID = os.environ.get("RAGFLOW_RERANK_ID", "bge-reranker-v2-m3___VLLM@VLLM")
+RAGFLOW_SIMILARITY_THRESHOLD = float(os.environ.get("RAGFLOW_SIMILARITY_THRESHOLD", "0.2"))
+RAGFLOW_VECTOR_SIMILARITY_WEIGHT = float(os.environ.get("RAGFLOW_VECTOR_SIMILARITY_WEIGHT", "0.3"))

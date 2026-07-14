@@ -1,6 +1,6 @@
 import aiohttp
 import asyncio
-from open_webui.config import TENANT_ID, KNOWLEDGE_BASE_URL, BASE_KB_ID
+from open_webui.config import TENANT_ID, KNOWLEDGE_BASE_URL, BASE_KB_ID, RAGFLOW_LLM_ID, RAGFLOW_RERANK_ID, RAGFLOW_SIMILARITY_THRESHOLD, RAGFLOW_VECTOR_SIMILARITY_WEIGHT
 import requests
 from open_webui.utils.auth import create_token
 import logging
@@ -92,16 +92,16 @@ async def create_assistant(user_id):
             ]
         },
         "kb_ids": kb_ids,
-        "llm_id": "Qwen3:32B___VLLM@VLLM",
+        "llm_id": RAGFLOW_LLM_ID,
         "llm_setting": {
             "temperature": 0.1,
             "top_p": 0.3,
             "presence_penalty": 0.4,
             "frequency_penalty": 0.7
         },
-        "similarity_threshold": 0.2,
-        "vector_similarity_weight": 0.3,
-        "rerank_id": "bge-reranker-v2-m3___VLLM@VLLM",
+        "similarity_threshold": RAGFLOW_SIMILARITY_THRESHOLD,
+        "vector_similarity_weight": RAGFLOW_VECTOR_SIMILARITY_WEIGHT,
+        "rerank_id": RAGFLOW_RERANK_ID,
         "top_n": 30,
         "top_k": 2048,
         "user_id": user_id
