@@ -294,11 +294,11 @@ async def generate_claude_code_chat_completion(request, form_data: dict, user: A
     messages = form_data.get("messages") or []
     user_message = _get_last_user_message(messages)
 
-    if not user_message:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Claude Code requires a user message",
-        )
+    # if not user_message:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail="Claude Code requires a user message",
+    #     )
 
     # 如果存在附件，则提取 id 和 name 拼接到 user_message 中；没有则不处理
     files = form_data.get("files") or metadata.get("files") or []
