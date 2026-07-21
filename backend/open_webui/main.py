@@ -81,6 +81,8 @@ from open_webui.routers import (
     page_views,
     qa_records,
     user_logs,
+    oauth_server,
+    oauth_clients,
 )
 
 from open_webui.routers.retrieval import (
@@ -408,6 +410,9 @@ class SPAStaticFiles(StaticFiles):
             if ex.status_code == 404:
                 if path.endswith(".js"):
                     # Return 404 for javascript files
+                    raise ex
+                elif path.startswith("oauth/") and not path.startswith("oauth/consent"):
+                    # Don't fallback for OAuth API paths (they go to FastAPI router)
                     raise ex
                 else:
                     return await super().get_response("index.html", scope)
@@ -1026,6 +1031,8 @@ app.include_router(ragflow.router, prefix="/api/v1/ragflow", tags=["ragflow"])
 app.include_router(page_views.router, prefix="/api/v1/page-views", tags=["page-views"])
 app.include_router(qa_records.router, prefix="/api/v1/qa-records", tags=["qa-records"])
 app.include_router(user_logs.router, prefix="/api/v1/user-logs", tags=["user-logs"])
+app.include_router(oauth_server.router, prefix="/oauth", tags=["oauth"])
+app.include_router(oauth_clients.router, prefix="/api/v1/oauth", tags=["oauth"])
 
 
 try:
