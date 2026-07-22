@@ -350,7 +350,7 @@
 						class="w-full text-sm bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
 						type="text"
 						bind:value={createForm.redirect_uris}
-						placeholder="多个地址用逗号分隔,例如: http://localhost:9999/callback"
+						placeholder="例如: http://localhost:9999/callback"
 						autocomplete="off"
 						required
 					/>
