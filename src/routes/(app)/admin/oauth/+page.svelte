@@ -6,6 +6,7 @@
 	import dayjs from 'dayjs';
 
 	import { WEBUI_NAME, user } from '$lib/stores';
+	import { copyToClipboard as copyToClipboardUtil } from '$lib/utils';
 	import {
 		getOAuthClients,
 		createOAuthClient,
@@ -153,15 +154,13 @@
 		};
 	}
 
-	function copyToClipboard(text: string) {
-		navigator.clipboard
-			.writeText(text)
-			.then(() => {
-				toast.success('已复制到剪贴板');
-			})
-			.catch(() => {
-				toast.error('复制失败');
-			});
+	async function copyToClipboard(text: string) {
+		const res = await copyToClipboardUtil(text);
+		if (res) {
+			toast.success('已复制到剪贴板');
+		} else {
+			toast.error('复制失败');
+		}
 	}
 </script>
 
