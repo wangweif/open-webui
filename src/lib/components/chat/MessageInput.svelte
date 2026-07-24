@@ -189,6 +189,11 @@
 	$: showEnhancedSearchButton = modelCapabilities.enhancedSearch ?? false;
 	$: showDeepResearchButton = modelCapabilities.deepResearch ?? false;
 	$: showKnowledgeBaseButton = modelCapabilities.knowledgeBase ?? false;
+
+	// 当选择的应用不含知识库选择按钮时，清空上一个应用残留的 kb_ids，避免误带参数
+	$: if (!showKnowledgeBaseButton && kb_ids.length > 0) {
+		kb_ids = [];
+	}
 	// 根据附件上传类型控制上传按钮显示
 	$: showFileUploadButton = attachmentUploadType 
 		? attachmentUploadType === 'file' : false;
