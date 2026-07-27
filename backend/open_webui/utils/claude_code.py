@@ -141,6 +141,19 @@ def _openai_chunk(chat_id: str, model_id: str, delta: dict, finish_reason: Optio
     return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
+# Claude Code CLI（Node.js）在 Windows 退出阶段偶发的 libuv 断言崩溃，
+# 会话内容其实已正常输出完毕，这类 stderr 属于收尾噪音，不应作为错误上报。
+_BENIGN_STDERR_PATTERNS = (
+    "UV_HANDLE_CLOSING",
+    "Assertion failed",
+    "async.c",
+)
+
+
+def _is_benign_stderr(chunk: str) -> bool:
+    return any(pattern in chunk for pattern in _BENIGN_STDERR_PATTERNS)
+
+
 def _extract_delta(event: dict) -> Optional[str]:
     event_type = event.get("type")
     inner = event.get("event") if event_type == "stream_event" else event
@@ -280,9 +293,19 @@ async def _stream_claude_code(
             stderr_task.cancel()
 
     if return_code != 0:
-        stderr = "\n".join(chunk for chunk in stderr_chunks if chunk)
-        message = stderr or f"Claude Code exited with status {return_code}"
-        yield _openai_chunk(chat_completion_id, model_id, {"content": f"\n\nError: {message}"})
+        real_errors = [
+            chunk
+            for chunk in stderr_chunks
+            if chunk and not _is_benign_stderr(chunk)
+        ]
+        if real_errors:
+            message = "\n".join(real_errors)
+            yield _openai_chunk(chat_completion_id, model_id, {"content": f"\n\nError: {message}"})
+        else:
+            log.warning(
+                f"Claude Code exited with status {return_code} "
+                f"(ignoring benign libuv teardown crash); stderr: {stderr_chunks}"
+            )
 
     yield _openai_chunk(chat_completion_id, model_id, {}, finish_reason="stop")
     yield "data: [DONE]\n\n"
