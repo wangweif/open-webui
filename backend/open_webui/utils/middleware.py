@@ -793,13 +793,14 @@ async def process_chat_payload(request, form_data, user, metadata, model):
 
     variables = form_data.pop("variables", None)
 
-    # Process the form_data through the pipeline
-    try:
-        form_data = await process_pipeline_inlet_filter(
-            request, form_data, user, models
-        )
-    except Exception as e:
-        raise e
+    # Claude Code is a provider, not a pipeline target.
+    if model.get("owned_by") != "claude":
+        try:
+            form_data = await process_pipeline_inlet_filter(
+                request, form_data, user, models
+            )
+        except Exception as e:
+            raise e
 
     try:
         filter_functions = [

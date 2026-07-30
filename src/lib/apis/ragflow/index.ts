@@ -134,39 +134,6 @@ export const updateAssistantKnowledgeBases = async (
 };
 
 /**
- * 获取assistant的完整信息，包括知识库和tavily配置
- */
-export const getAssistantInfo = async (
-	token: string,
-	assistantId: string
-): Promise<AssistantInfo> => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_API_BASE_URL}/ragflow/assistant/${assistantId}/info`, {
-		method: 'GET',
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-			authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail ?? 'Server connection failed';
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
-};
-
-/**
  * 更新assistant的tavily搜索配置
  */
 export const updateAssistantTavily = async (
@@ -234,33 +201,96 @@ export const updateAssistantReasoning = async (
 	return res;
 };
 
-export interface GetOrCreateAssistantRequest {
-	model_id: string;
-	user_id: string;
-}
-
-export interface GetOrCreateAssistantResponse {
-	assistant_id: string;
-	is_new: boolean;
-	message: string;
-}
-
 /**
- * 根据模型ID获取当前用户的assistant信息, app_session 不存在则创建新的assistant
+ * 获取当前用户可访问的所有知识库列表
+ * 不依赖 assistant，直接从 RAGFlow 获取用户权限范围内的所有知识库
  */
-export const getModelAssistant = async (
-	token: string,
-	modelId: string
-): Promise<GetOrCreateAssistantResponse> => {
+export const getUserAccessibleKbs = async (
+	token: string
+): Promise<{ kb_id: string; kb_name: string }[]> => {
 	let error = null;
 
-	const res = await fetch(`${WEBUI_API_BASE_URL}/ragflow/model/${modelId}/assistant`, {
+	const res = await fetch(`${WEBUI_API_BASE_URL}/ragflow/user/accessible-kbs`, {
 		method: 'GET',
 		headers: {
 			Accept: 'application/json',
 			'Content-Type': 'application/json',
 			authorization: `Bearer ${token}`
 		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.log(err);
+			error = err.detail ?? 'Server connection failed';
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
+/**
+ * 获取用户所有应用的知识库选择配置
+ * 返回格式: { model_id: [kb_ids], ... }
+ */
+export const getUserKbSelections = async (
+	token: string
+): Promise<Record<string, string[]>> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/ragflow/user/kb-selections`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.log(err);
+			error = err.detail ?? 'Server connection failed';
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
+/**
+ * 保存用户对特定应用的知识库选择
+ * 将 kb_ids 按 model_id 分类保存到 user.settings.kb_selections 中
+ */
+export const saveUserKbSelection = async (
+	token: string,
+	modelId: string,
+	kbIds: string[]
+): Promise<{ success: boolean; kb_selections: Record<string, string[]> }> => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/ragflow/user/kb-selections`, {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
+			model_id: modelId,
+			kb_ids: kbIds
+		})
 	})
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();

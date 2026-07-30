@@ -467,7 +467,6 @@
 		});
 
 		await initChannels();
-		await initModels();
 		await initChatList();
 
 		window.addEventListener('keydown', onKeyDown);

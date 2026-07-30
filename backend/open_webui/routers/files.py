@@ -18,6 +18,7 @@ from fastapi import (
     Query, Form,
 )
 from fastapi.responses import FileResponse, StreamingResponse
+from open_webui.config import UPLOAD_DIR
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
 from open_webui.models.files import (
@@ -86,7 +87,7 @@ async def get_original_file(
 ):
     realname = f"{file_id}_{filename}"
     #realpath = f"E:/work/git/open-webui/backend/data/uploads/{realname}"
-    upload_file_base_path = Path(__file__).resolve().parent.parent.parent.parent.parent / "xiaozhi_data/uploads"
+    upload_file_base_path = UPLOAD_DIR
     # print("f{upload_file_base_path}")
     realpath = str(upload_file_base_path / realname)
     logging.info(f"Uploading {realpath}")

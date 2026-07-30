@@ -8,11 +8,9 @@ from open_webui.utils.ragflow_assistant import (
     get_assistant,
     get_kbs,
     update_assistant,
-    get_accessible_kbs,
-    create_assistant_for_app,
+    get_user_accessible_kbs,
 )
 from open_webui.models.users import Users
-from open_webui.models.app_sessions import AppSessions, AppSessionModel
 from open_webui.config import RAGFLOW_TAVILY_API_KEY
 
 log = logging.getLogger(__name__)
@@ -51,67 +49,6 @@ class UpdateReasoningRequest(BaseModel):
 class UpdateRefineMultiturnRequest(BaseModel):
     assistant_id: str
     refine_multiturn: bool = False
-
-
-@router.get("/assistant/{assistant_id}/info")
-async def get_assistant_info(
-    assistant_id: str,
-) -> AssistantInfo:
-    """
-    获取assistant的完整信息，包括kb_ids、知识库列表和tavily_api_key
-    当选择rag_flow_webapi_pipeline_cs模型时调用此接口
-    """
-    try:
-        # 获取assistant信息
-        assistant_response = await get_assistant(assistant_id)
-        print("assistant_response", assistant_response)
-        
-        if 'data' not in assistant_response:
-            raise HTTPException(status_code=404, detail="Assistant not found")
-        
-        assistant_data = assistant_response['data']
-        kb_ids = assistant_data.get('kb_ids', [])
-        kb_names = assistant_data.get('kb_names', [])
-        prompt_config = assistant_data.get('prompt_config', {})
-        if 'tavily_api_key' in prompt_config:
-            tavily_api_key = prompt_config['tavily_api_key']
-        else:
-            tavily_api_key = None
-        
-        reasoning_enabled = prompt_config.get('reasoning', False)
-        
-        knowledge_bases = []
-        
-        for kb_id, kb_name in zip(kb_ids, kb_names):
-            knowledge_bases.append(KnowledgeBase(
-                kb_id=kb_id,
-                kb_name=kb_name,
-                enabled=True
-            ))
-        
-        accessible_kbs = await get_accessible_kbs(assistant_id)
-        
-        if 'data' in accessible_kbs:
-            for kb in accessible_kbs['data']:
-                if kb['kb_id'] not in kb_ids and kb['kb_id'] not in [kb.kb_id for kb in knowledge_bases]:
-                    knowledge_bases.append(KnowledgeBase(
-                        kb_id=kb['kb_info']['id'],
-                        kb_name=kb['kb_info']['name'],
-                        enabled=False
-                    ))
-
-        return AssistantInfo(
-            assistant_id=assistant_id,
-            kb_ids=kb_ids,
-            knowledge_bases=knowledge_bases,
-            tavily_api_key=tavily_api_key,
-            tavily_enabled=bool(tavily_api_key),
-            reasoning_enabled=reasoning_enabled
-        )
-        
-    except Exception as e:
-        log.error(f"Error getting assistant info: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/assistant/{assistant_id}/knowledge-bases")
@@ -400,141 +337,87 @@ async def update_assistant_refine_multiturn(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# 新增的app session管理相关接口
-class ModelAppMapping:
-    """模型到应用ID的映射"""
-
-    MODEL_APP_ID_MAP = {
-        "rag_flow_webapi_pipeline_cs": 1,
-        "n8n_project_research": 2,
-        "contract_review": 3,
-    }
-
-    @classmethod
-    def get_app_id(cls, model_id: str) -> Optional[int]:
-        return cls.MODEL_APP_ID_MAP.get(model_id)
-
-    @classmethod
-    def is_supported_model(cls, model_id: str) -> bool:
-        return model_id in cls.MODEL_APP_ID_MAP
-
-    @classmethod
-    def is_supported_model_except_rag_flow(cls, model_id: str) -> bool:
-        """判断是否在 MODEL_APP_ID_MAP 中，且不为 rag_flow_webapi_pipeline_cs"""
-        return model_id in cls.MODEL_APP_ID_MAP and model_id != "rag_flow_webapi_pipeline_cs"
+class UserAccessibleKbsResponse(BaseModel):
+    kb_id: str
+    kb_name: str
 
 
-class GetOrCreateAssistantRequest(BaseModel):
-    model_id: str
-    user_id: str
-
-
-class GetOrCreateAssistantResponse(BaseModel):
-    assistant_id: str
-    is_new: bool
-    message: str
-
-
-async def get_or_create_assistant(
-    request: GetOrCreateAssistantRequest, user=Depends(get_verified_user)
-) -> GetOrCreateAssistantResponse:
+@router.get("/user/accessible-kbs")
+async def get_user_accessible_knowledge_bases(
+    user=Depends(get_verified_user)
+) -> List[UserAccessibleKbsResponse]:
     """
-    根据模型ID和用户ID获取或创建assistant
-    专门为 n8n_project_research 和 contract_review 模型使用
-    rag_flow_webapi_pipeline_cs 模型继续使用用户表中的默认 assistant_id
+    获取当前用户可访问的所有知识库列表
+    不依赖 assistant，直接从 RAGFlow 获取用户权限范围内的所有知识库
+    用于知识库选择器显示所有可用知识库
     """
     try:
-        # rag_flow_webapi_pipeline_cs 使用用户默认的 assistant_id
-        if request.model_id == "rag_flow_webapi_pipeline_cs":
-            assistant_id = getattr(user, "assistant_id", None)
-            if not assistant_id:
-                raise HTTPException(
-                    status_code=400, detail="User does not have an associated assistant"
-                )
-            return GetOrCreateAssistantResponse(
-                assistant_id=assistant_id,
-                is_new=False,
-                message="Using default user assistant",
-            )
+        if not user.ragflow_user_id:
+            return []
 
-        # 检查是否为支持的模型
-        if not ModelAppMapping.is_supported_model(request.model_id):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Model {request.model_id} is not supported for assistant management",
-            )
+        response = await get_user_accessible_kbs(user.ragflow_user_id)
 
-        # 获取app_id
-        app_id = ModelAppMapping.get_app_id(request.model_id)
+        knowledge_bases = []
+        if 'data' in response:
+            for kb in response['data']:
+                knowledge_bases.append(UserAccessibleKbsResponse(
+                    kb_id=kb['kb_id'],
+                    kb_name=kb['kb_name'],
+                ))
 
-        # 查询是否已存在app session
-        existing_session = AppSessions.get_app_session_by_app_user(
-            app_id, user.ragflow_user_id
-        )
+        return knowledge_bases
 
-        if existing_session:
-            return GetOrCreateAssistantResponse(
-                assistant_id=existing_session.assistant_id,
-                is_new=False,
-                message="Using existing assistant",
-            )
-
-        # 创建新的assistant
-        assistant_name = f"Assistant for {request.model_id} - {user.ragflow_user_id}"
-        assistant_description = f"Dedicated assistant for {request.model_id} model"
-
-        create_response = await create_assistant_for_app(
-            name=assistant_name, description=assistant_description, user_id=user.ragflow_user_id
-        )
-
-        if "code" in create_response and create_response["code"] != 0:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to create assistant: {create_response.get('message', 'Unknown error')}",
-            )
-
-        # 从创建响应中获取assistant_id
-        if "data" not in create_response:
-            raise HTTPException(
-                status_code=500, detail="Invalid response from assistant creation"
-            )
-
-        new_assistant_id = create_response["data"]["id"]
-
-        # 保存app session记录
-        app_session = AppSessions.insert_new_app_session(
-            app_id=app_id, user_id=user.ragflow_user_id, assistant_id=new_assistant_id
-        )
-
-        if not app_session:
-            raise HTTPException(status_code=500, detail="Failed to save app session")
-
-        return GetOrCreateAssistantResponse(
-            assistant_id=new_assistant_id,
-            is_new=True,
-            message="Created new assistant successfully",
-        )
-
-    except HTTPException:
-        raise
     except Exception as e:
-        log.error(f"Error getting or creating assistant: {e}")
+        log.error(f"Error getting user accessible knowledge bases: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/model/{model_id}/assistant")
-async def get_model_assistant(
-    model_id: str, user=Depends(get_verified_user)
-) -> GetOrCreateAssistantResponse:
+class KbSelectionRequest(BaseModel):
+    model_id: str
+    kb_ids: List[str]
+
+
+@router.get("/user/kb-selections")
+async def get_user_kb_selections(
+    user=Depends(get_verified_user)
+):
     """
-    根据模型ID获取当前用户的assistant信息
-    用于模型切换时获取对应的assistant_id
+    获取当前用户所有应用的知识库选择配置
+    从 user.settings.kb_selections 中读取
+    返回格式: { model_id: [kb_ids], ... }
     """
     try:
-        # 直接调用 get_or_create_assistant 逻辑
-        request = GetOrCreateAssistantRequest(model_id=model_id, user_id=user.id)
-        return await get_or_create_assistant(request, user)
-
+        user_db = Users.get_user_by_id(user.id)
+        if user_db and user_db.settings:
+            settings_dict = user_db.settings.model_dump()
+            return settings_dict.get("kb_selections", {})
+        return {}
     except Exception as e:
-        log.error(f"Error getting model assistant: {e}")
+        log.error(f"Error getting user kb selections: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/user/kb-selections")
+async def save_user_kb_selection(
+    request: KbSelectionRequest,
+    user=Depends(get_verified_user)
+):
+    """
+    保存用户对特定应用的知识库选择
+    将 kb_ids 按 model_id 分类保存到 user.settings.kb_selections 中
+    """
+    try:
+        user_db = Users.get_user_by_id(user.id)
+        settings_dict = user_db.settings.model_dump() if user_db and user_db.settings else {}
+        kb_selections = settings_dict.get("kb_selections", {})
+
+        # 更新指定 model_id 的 kb_ids
+        kb_selections[request.model_id] = request.kb_ids
+
+        # 保存回 user settings
+        Users.update_user_settings_by_id(user.id, {"kb_selections": kb_selections})
+
+        return {"success": True, "kb_selections": kb_selections}
+    except Exception as e:
+        log.error(f"Error saving user kb selection: {e}")
         raise HTTPException(status_code=500, detail=str(e))

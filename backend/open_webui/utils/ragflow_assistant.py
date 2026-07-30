@@ -197,11 +197,57 @@ async def get_kbs(kb_ids):
 # 获取用户可以访问的知识库列表
 async def get_accessible_kbs(assistant_id):
     api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/assistant_accessible?assistant_id={assistant_id}"
-    
+
     session = await get_session()
     headers = {'Content-Type': 'application/json'}
     async with session.get(api_url, headers=headers) as response:
         return await response.json()
+
+
+# 获取用户可访问的所有知识库列表（不依赖 assistant）
+async def get_user_accessible_kbs(ragflow_user_id):
+    """获取用户可访问的所有知识库列表
+
+    Args:
+        ragflow_user_id: RAGFlow 系统中的用户 ID
+
+    Returns:
+        dict: 包含知识库列表的响应数据，每个 item 包含 kb_id 和 kb_name
+    """
+    token = create_token(data={"id": TENANT_ID})
+    session = await get_session()
+    headers = {'Content-Type': 'application/json', 'Cookie': 'token=' + token}
+
+    try:
+        # 获取用户有权限的知识库列表（响应中每个 item 已包含 kb_id、kb_name、kb_info）
+        perm_api_url = f"{KNOWLEDGE_BASE_URL}/v1/permission/kb/accessible?tenant_id={TENANT_ID}&user_id={ragflow_user_id}"
+        async with session.get(perm_api_url, headers=headers) as response:
+            perm_response = await response.json()
+
+        if perm_response.get('code') != 0:
+            log.error(f"获取用户可访问知识库失败: {perm_response}")
+            return {'data': []}
+
+        # 直接从 perm_response 中提取知识库信息，按 kb_id 去重
+        # 每个 kb 因 read/write 两种权限会出现两次
+        knowledge_bases = []
+        seen_kb_ids = set()
+        if 'data' in perm_response and isinstance(perm_response['data'], list):
+            for item in perm_response['data']:
+                kb_id = item.get('kb_id')
+                if kb_id and kb_id not in seen_kb_ids:
+                    seen_kb_ids.add(kb_id)
+                    # 优先使用 kb_name，为空时回退到 kb_info.name
+                    kb_name = item.get('kb_name') or (item.get('kb_info') or {}).get('name', '')
+                    knowledge_bases.append({
+                        'kb_id': kb_id,
+                        'kb_name': kb_name,
+                    })
+
+        return {'data': knowledge_bases}
+    except Exception as e:
+        log.error(f"获取用户可访问知识库失败: {str(e)}")
+        return {'data': []}
 
 # 将用户添加到UserTenant表
 async def add_user_to_user_tenant(tenant_id,email):

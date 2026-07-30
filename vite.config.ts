@@ -103,20 +103,28 @@ export default defineConfig(({ mode }) => {
 		// }
 		server: {
 			proxy: {
-			'/api': {
-				target: 'http://127.0.0.1:8080', // 后端地址
+				'/api': {
+					target: 'http://127.0.0.1:8080', // 后端地址
 					changeOrigin: true,
+					ws: true, // 支持WebSocket升级
 					rewrite: (path) => path.replace(/^\/api/, '/api')
 				},
 				'/openai': {
 					target: 'http://127.0.0.1:8080', // 后端地址
 					changeOrigin: true,
+					ws: true,
 					rewrite: (path) => path.replace(/^\/openai/, '/openai')
 				},
 				'/ollama': {
 					target: 'http://127.0.0.1:8080', // 后端地址
 					changeOrigin: true,
+					ws: true,
 					rewrite: (path) => path.replace(/^\/ollama/, '/ollama')
+				},
+				'/ws': {
+					target: 'http://127.0.0.1:8080', // 后端地址
+					changeOrigin: true,
+					ws: true // WebSocket支持
 				}
 			}
 		}

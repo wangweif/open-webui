@@ -32,6 +32,7 @@
 
 	export let prompt = '';
 	export let files = [];
+	export let kb_ids: string[] = [];
 
 	export let selectedToolIds = [];
 	export let imageGenerationEnabled = false;
@@ -204,6 +205,7 @@
 					{history}
 					{selectedModels}
 					bind:files
+					bind:kb_ids
 					bind:prompt
 					bind:autoScroll
 					bind:selectedToolIds

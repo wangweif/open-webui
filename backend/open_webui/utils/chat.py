@@ -22,6 +22,7 @@ from open_webui.socket.main import (
     get_event_emitter,
 )
 from open_webui.functions import generate_function_chat_completion
+from open_webui.utils.claude_code import generate_claude_code_chat_completion
 
 from open_webui.routers.openai import (
     generate_chat_completion as generate_openai_chat_completion,
@@ -253,6 +254,12 @@ async def generate_chat_completion(
             return await generate_function_chat_completion(
                 request, form_data, user=user, models=models
             )
+        if model.get("owned_by") == "claude":
+            return await generate_claude_code_chat_completion(
+                request=request,
+                form_data=form_data,
+                user=user,
+            )
         if model.get("owned_by") == "ollama":
             # Using /ollama/api/chat endpoint
             form_data = convert_payload_openai_to_ollama(form_data)
@@ -301,10 +308,11 @@ async def chat_completed(request: Request, form_data: dict, user: Any):
 
     model = models[model_id]
 
-    try:
-        data = await process_pipeline_outlet_filter(request, data, user, models)
-    except Exception as e:
-        return Exception(f"Error: {e}")
+    if model.get("owned_by") != "claude":
+        try:
+            data = await process_pipeline_outlet_filter(request, data, user, models)
+        except Exception as e:
+            return Exception(f"Error: {e}")
 
     metadata = {
         "chat_id": data["chat_id"],
