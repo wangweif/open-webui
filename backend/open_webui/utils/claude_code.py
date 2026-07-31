@@ -338,6 +338,16 @@ async def generate_claude_code_chat_completion(request, form_data: dict, user: A
         kb_ids_str = ", ".join(kb_ids)
         user_message = f"{user_message}\n\n知识库ID：{kb_ids_str}"
 
+    # deep_research 为 true 时，拼接 deep_research=true、hasOutline 及 outlineData；
+    # deep_research 为 false 但 hasOutline 为 true 时，同样按 deep_research=true 处理并拼接 outlineData
+    features = form_data.get("features") or metadata.get("features") or {}
+    has_outline = form_data.get("hasOutline")
+    if features.get("deep_research") or has_outline:
+        user_message = f"{user_message}\n\ndeep_research=true\nhasOutline={has_outline}"
+        if has_outline:
+            outline_data = form_data.get("outlineData")
+            user_message = f"{user_message}\noutlineData={outline_data}"
+
     binding, resume = _get_or_create_binding(user, metadata, model_id, user_message)
     system_prompt = _get_system_prompt(model_id)
     workspace_path = Path(binding.workspace_path)

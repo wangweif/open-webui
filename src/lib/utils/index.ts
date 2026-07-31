@@ -1395,20 +1395,23 @@ export const sortModels = (modelList: any[]) => {
 
 // 检测和解析大纲数据
 export function detectAndParseOutlineData(content: string) {
-	// 检测是否包含深度搜索提示和JSON数据
-	const searchPattern = /正在生成大纲，请稍等\.\.\.(.*)$/;
-	if(typeof content !== 'string'){
+	if (typeof content !== 'string') {
 		return {
 			isOutlineData: false,
 			outlineDone: false,
 			outlineData: null
 		};
 	}
-	const match = content.match(searchPattern);
-	
-	if (match && match[1]) {
+
+	// 检测被 ```json ... ``` 代码块包裹的大纲数据
+	// 优先匹配完整闭合的代码块
+	const closedPattern = /```json\s*([\s\S]*?)```/;
+	const closedMatch = content.match(closedPattern);
+
+	if (closedMatch && closedMatch[1] !== undefined) {
+		const jsonText = closedMatch[1].trim();
 		try {
-			const jsonData = JSON.parse(match[1]);
+			const jsonData = JSON.parse(jsonText);
 			if (jsonData.topic && jsonData.outline) {
 				return {
 					isOutlineData: true,
@@ -1417,15 +1420,27 @@ export function detectAndParseOutlineData(content: string) {
 				};
 			}
 		} catch (e) {
-			// JSON解析失败，继续正常处理
+			// 代码块已闭合但JSON解析失败，视为未完成
 			return {
 				isOutlineData: true,
 				outlineDone: false,
-				outlineData: match[1]
+				outlineData: jsonText
 			};
 		}
 	}
-	
+
+	// 匹配未闭合的代码块（流式输出中，```json 已出现但还未闭合）
+	const openPattern = /```json\s*([\s\S]*)$/;
+	const openMatch = content.match(openPattern);
+
+	if (openMatch) {
+		return {
+			isOutlineData: true,
+			outlineDone: false,
+			outlineData: openMatch[1] ?? ''
+		};
+	}
+
 	return {
 		isOutlineData: false,
 		outlineDone: false,

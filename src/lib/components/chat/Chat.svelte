@@ -1758,7 +1758,7 @@
 						($user?.role === 'admin' || $user?.permissions?.features?.web_search)
 							? webSearchEnabled || ($settings?.webSearch ?? false) === 'always'
 							: false,
-					deep_research: localStorage.getItem('deepResearchEnabled') === 'true' && model.id === 'rag_flow_webapi_pipeline_cs'
+					deep_research: localStorage.getItem('deepResearchEnabled') === 'true'
 				},
 				hasOutline : hasOutline,
 				outlineData : outlineData,
