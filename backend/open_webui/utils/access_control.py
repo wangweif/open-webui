@@ -112,6 +112,7 @@ def has_access(
     user_id: str,
     type: str = "write",
     access_control: Optional[dict] = None,
+    allow_inheritance: bool = True,
 ) -> bool:
     if access_control is None:
         return type == "read"
@@ -121,6 +122,12 @@ def has_access(
     permission_access = access_control.get(type, {})
     permitted_group_ids = permission_access.get("group_ids", [])
     permitted_user_ids = permission_access.get("user_ids", [])
+
+    # 多级权限组：父组被授权时，其全部子组成员同样视为被授权
+    if allow_inheritance and permitted_group_ids:
+        permitted_group_ids = Groups.get_group_ids_with_descendants(
+            permitted_group_ids
+        )
 
     return user_id in permitted_user_ids or any(
         group_id in permitted_group_ids for group_id in user_group_ids
@@ -140,7 +147,10 @@ def get_users_with_access(
 
     user_ids_with_access = set(permitted_user_ids)
 
-    for group_id in permitted_group_ids:
+    # 多级权限组：父组被授权时，其全部子组成员同样视为被授权
+    expanded_group_ids = Groups.get_group_ids_with_descendants(permitted_group_ids)
+
+    for group_id in expanded_group_ids:
         group_user_ids = Groups.get_group_user_ids_by_id(group_id)
         if group_user_ids:
             user_ids_with_access.update(group_user_ids)

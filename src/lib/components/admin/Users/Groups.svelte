@@ -32,17 +32,65 @@
 	export let users = [];
 
 	let groups = [];
-	let filteredGroups;
 
-	$: filteredGroups = groups.filter((user) => {
-		if (search === '') {
-			return true;
-		} else {
-			let name = user.name.toLowerCase();
-			const query = search.toLowerCase();
-			return name.includes(query);
+	// parent_id -> 子组列表映射
+	let childrenMap = {};
+	// 顶级组（parent_id 为空）
+	let rootGroups = [];
+	let filteredRootGroups = [];
+
+	// 当搜索命中某组时，同时保留其祖先链，保证树可展开到命中项
+	const buildTree = (allGroups, query) => {
+		const map = {};
+		for (const g of allGroups) {
+			const pid = g.parent_id ?? null;
+			if (pid) {
+				if (!map[pid]) map[pid] = [];
+				map[pid].push(g);
+			}
 		}
-	});
+
+		let roots = allGroups.filter((g) => !(g.parent_id ?? null));
+
+		if (query !== '') {
+			const q = query.toLowerCase();
+			const byId = {};
+			for (const g of allGroups) byId[g.id] = g;
+
+			// 收集命中项及其所有祖先
+			const keep = new Set();
+			for (const g of allGroups) {
+				if ((g.name ?? '').toLowerCase().includes(q)) {
+					let cur = g;
+					while (cur) {
+						keep.add(cur.id);
+						cur = cur.parent_id ? byId[cur.parent_id] : null;
+					}
+				}
+			}
+
+			// 依据 keep 重建映射与根
+			const fmap = {};
+			for (const g of allGroups) {
+				if (!keep.has(g.id)) continue;
+				const pid = g.parent_id ?? null;
+				if (pid && keep.has(pid)) {
+					if (!fmap[pid]) fmap[pid] = [];
+					fmap[pid].push(g);
+				}
+			}
+			childrenMap = fmap;
+			return allGroups.filter((g) => keep.has(g.id) && !(g.parent_id ?? null));
+		}
+
+		childrenMap = map;
+		return roots;
+	};
+
+	$: {
+		rootGroups = groups.filter((g) => !(g.parent_id ?? null));
+		filteredRootGroups = buildTree(groups, search);
+	}
 
 	let search = '';
 	let defaultPermissions = {
@@ -132,6 +180,10 @@
 			<div class="flex self-center w-[1px] h-6 mx-2.5 bg-gray-50 dark:bg-gray-850" />
 
 			<span class="text-lg font-medium text-gray-500 dark:text-gray-300">{groups.length}</span>
+			<span class="text-xs font-medium text-gray-400 dark:text-gray-500 self-center ml-1.5"
+				>({rootGroups.length}
+				{$i18n.t('top-level')})</span
+			>
 		</div>
 
 		<div class="flex gap-1">
@@ -175,7 +227,7 @@
 	</div>
 
 	<div>
-		{#if filteredGroups.length === 0}
+		{#if filteredRootGroups.length === 0}
 			<div class="flex flex-col items-center justify-center h-40">
 				<div class=" text-xl font-medium">
 					{$i18n.t('Organize your users')}
@@ -209,9 +261,9 @@
 
 				<hr class="mt-1.5 border-gray-100 dark:border-gray-850" />
 
-				{#each filteredGroups as group}
+				{#each filteredRootGroups as group (group.id)}
 					<div class="my-2">
-						<GroupItem {group} {users} {setGroups} />
+						<GroupItem {group} {users} {childrenMap} {setGroups} {addGroupHandler} />
 					</div>
 				{/each}
 			</div>

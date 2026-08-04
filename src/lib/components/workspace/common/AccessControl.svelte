@@ -4,21 +4,107 @@
 	const i18n = getContext('i18n');
 
 	import { getGroups } from '$lib/apis/groups';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Plus from '$lib/components/icons/Plus.svelte';
-	import UserCircleSolid from '$lib/components/icons/UserCircleSolid.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
-	import Badge from '$lib/components/common/Badge.svelte';
+	import AccessControlGroupItem from './AccessControlGroupItem.svelte';
+
+	type Group = {
+		id: string;
+		name: string;
+		parent_id?: string | null;
+		user_ids?: string[];
+		[Key: string]: any;
+	};
 
 	export let onChange: Function = () => {};
 
 	export let accessRoles = ['read'];
-	export let accessControl = {};
+	export let accessControl: any = {};
 
 	export let allowPublic = true;
 
-	let selectedGroupId = '';
-	let groups = [];
+	let groups: Group[] = [];
+
+	// parent_id -> 直属子组列表，用于树形展示
+	let childrenMap: Record<string, Group[]> = {};
+	// 顶级组（parent_id 为空）
+	let rootGroups: Group[] = [];
+
+	// 被授权组 id 闭包：用户显式选中的组 + 随父组一并授权的子孙组
+	let selectedClosure: string[] = [];
+
+	// 树中已展开的组（默认展开所有含子组的节点，便于浏览完整层级）
+	let expandedGroupIds: string[] = [];
+
+	const toggleExpand = (id: string) => {
+		if (expandedGroupIds.includes(id)) {
+			expandedGroupIds = expandedGroupIds.filter((gid) => gid !== id);
+		} else {
+			expandedGroupIds = [...expandedGroupIds, id];
+		}
+	};
+
+	// 返回某组全部子孙 id
+	const getDescendantIds = (id: string): string[] => {
+		const result: string[] = [];
+		const collect = (gid: string) => {
+			const children = childrenMap[gid] ?? [];
+			for (const child of children) {
+				result.push(child.id);
+				collect(child.id);
+			}
+		};
+		collect(id);
+		return result;
+	};
+
+	// 返回某组及其全部子孙 id
+	const getSelfAndDescendantIds = (id: string): string[] => [id, ...getDescendantIds(id)];
+
+	// 读取权限组 id 列表
+	const getReadGroupIds = (): string[] => accessControl?.read?.group_ids ?? [];
+
+	const getWriteGroupIds = (): string[] => accessControl?.write?.group_ids ?? [];
+
+	// 切换某组的授权：
+	// - 选中时，父组及其整棵子树一并授权（子组自动选中）
+	// - 取消时，父组及其整棵子树一并撤销授权
+	// 通过整体重建 accessControl 触发响应式更新
+	const toggleGroup = (id: string) => {
+		const ids = getSelfAndDescendantIds(id);
+		if (getReadGroupIds().includes(id)) {
+			accessControl = {
+				...accessControl,
+				read: {
+					...accessControl.read,
+					group_ids: getReadGroupIds().filter((gid) => !ids.includes(gid))
+				},
+				write: {
+					...accessControl.write,
+					group_ids: getWriteGroupIds().filter((gid) => !ids.includes(gid))
+				}
+			};
+		} else {
+			accessControl = {
+				...accessControl,
+				read: {
+					...accessControl.read,
+					group_ids: [...new Set([...getReadGroupIds(), ...ids])]
+				}
+			};
+		}
+	};
+
+	const toggleWritePermission = (id: string) => {
+		if (!accessRoles.includes('write')) return;
+		accessControl = {
+			...accessControl,
+			write: {
+				...accessControl.write,
+				group_ids: getWriteGroupIds().includes(id)
+					? getWriteGroupIds().filter((gid) => gid !== id)
+					: [...getWriteGroupIds(), id]
+			}
+		};
+	};
 
 	$: if (!allowPublic && accessControl === null) {
 		accessControl = {
@@ -36,6 +122,21 @@
 
 	onMount(async () => {
 		groups = await getGroups(localStorage.token);
+
+		childrenMap = {};
+		for (const group of groups) {
+			const pid = group.parent_id ?? '';
+			if (pid) {
+				if (!childrenMap[pid]) childrenMap[pid] = [];
+				childrenMap[pid].push(group);
+			}
+		}
+		rootGroups = groups.filter((group) => !(group.parent_id ?? ''));
+
+		// 默认展开所有含子组的节点，完整展示层级结构
+		expandedGroupIds = groups
+			.filter((group) => (childrenMap[group.id] ?? []).length > 0)
+			.map((group) => group.id);
 
 		if (accessControl === null) {
 			if (allowPublic) {
@@ -69,17 +170,12 @@
 
 	$: onChange(accessControl);
 
-	$: if (selectedGroupId) {
-		onSelectGroup();
-	}
-
-	const onSelectGroup = () => {
-		if (selectedGroupId !== '') {
-			accessControl.read.group_ids = [...accessControl.read.group_ids, selectedGroupId];
-
-			selectedGroupId = '';
-		}
-	};
+	// 已选闭包 = 显式授权组 + 随父组一并授权的子孙组
+	$: selectedClosure = [
+		...new Set(
+			getReadGroupIds().flatMap((id) => getSelfAndDescendantIds(id))
+		)
+	];
 </script>
 
 <div class=" rounded-lg flex flex-col gap-2">
@@ -129,7 +225,9 @@
 					class="outline-hidden bg-transparent text-sm font-medium rounded-lg block w-fit pr-10 max-w-full placeholder-gray-400"
 					value={accessControl !== null ? 'private' : 'public'}
 					on:change={(e) => {
-						if (e.target.value === 'public') {
+						// @ts-ignore
+						const target = e.target;
+						if (target.value === 'public') {
 							accessControl = null;
 						} else {
 							accessControl = {
@@ -151,6 +249,7 @@
 					{/if}
 				</select>
 
+
 				<div class=" text-xs text-gray-400 font-medium">
 					{#if accessControl !== null}
 						{$i18n.t('Only select users and groups with permission can access')}
@@ -162,105 +261,40 @@
 		</div>
 	</div>
 	{#if accessControl !== null}
-		{@const accessGroups = groups.filter((group) =>
-			accessControl.read.group_ids.includes(group.id)
-		)}
 		<div>
 			<div class="">
 				<div class="flex justify-between mb-1.5">
 					<div class="text-sm font-semibold">
 						{$i18n.t('Groups')}
 					</div>
-				</div>
-
-				<div class="mb-1">
-					<div class="flex w-full">
-						<div class="flex flex-1 items-center">
-							<div class="w-full px-0.5">
-								<select
-									class="outline-hidden bg-transparent text-sm rounded-lg block w-full pr-10 max-w-full
-									{selectedGroupId ? '' : 'text-gray-500'}
-									dark:placeholder-gray-500"
-									bind:value={selectedGroupId}
-								>
-									<option class=" text-gray-700" value="" disabled selected
-										>{$i18n.t('Select a group')}</option
-									>
-									{#each groups.filter((group) => !accessControl.read.group_ids.includes(group.id)) as group}
-										<option class=" text-gray-700" value={group.id}>{group.name}</option>
-									{/each}
-								</select>
-							</div>
-							<!-- <div>
-								<Tooltip content={$i18n.t('Add Group')}>
-									<button
-										class=" p-1 rounded-xl bg-transparent dark:hover:bg-white/5 hover:bg-black/5 transition font-medium text-sm flex items-center space-x-1"
-										type="button"
-										on:click={() => {}}
-									>
-										<Plus className="size-3.5" />
-									</button>
-								</Tooltip>
-							</div> -->
+					{#if selectedClosure.length > 0}
+						<div class="text-xs text-gray-400 dark:text-gray-500 font-medium">
+							{selectedClosure.length} {$i18n.t('groups granted')}
 						</div>
-					</div>
+					{/if}
 				</div>
 
-				<hr class=" border-gray-100 dark:border-gray-700/10 mt-1.5 mb-2.5 w-full" />
+				<div class="text-xs text-gray-400 dark:text-gray-500 mb-2">
+					{$i18n.t(
+						'Selecting a parent group automatically selects all of its child groups'
+					)}
+				</div>
 
-				<div class="flex flex-col gap-2 mb-1 px-0.5">
-					{#if accessGroups.length > 0}
-						{#each accessGroups as group}
-							<div class="flex items-center gap-3 justify-between text-xs w-full transition">
-								<div class="flex items-center gap-1.5 w-full font-medium">
-									<div>
-										<UserCircleSolid className="size-4" />
-									</div>
-
-									<div>
-										{group.name}
-									</div>
-								</div>
-
-								<div class="w-full flex justify-end items-center gap-0.5">
-									<button
-										class=""
-										type="button"
-										on:click={() => {
-											if (accessRoles.includes('write')) {
-												if (accessControl.write.group_ids.includes(group.id)) {
-													accessControl.write.group_ids = accessControl.write.group_ids.filter(
-														(group_id) => group_id !== group.id
-													);
-												} else {
-													accessControl.write.group_ids = [
-														...accessControl.write.group_ids,
-														group.id
-													];
-												}
-											}
-										}}
-									>
-										{#if accessControl.write.group_ids.includes(group.id)}
-											<Badge type={'success'} content={$i18n.t('Write')} />
-										{:else}
-											<Badge type={'info'} content={$i18n.t('Read')} />
-										{/if}
-									</button>
-
-									<button
-										class=" rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-850 transition"
-										type="button"
-										on:click={() => {
-											accessControl.read.group_ids = accessControl.read.group_ids.filter(
-												(id) => id !== group.id
-											);
-										}}
-									>
-										<XMark />
-									</button>
-								</div>
-							</div>
+				<div class="flex flex-col gap-1 mb-1 px-0.5">
+					{#if rootGroups.length > 0}
+						{#each rootGroups as group (group.id)}
+							<AccessControlGroupItem
+								group={group}
+								{groups}
+								{childrenMap}
+								{accessControl}
+								{accessRoles}
+								expandedSet={expandedGroupIds}
+								{selectedClosure}
+								{toggleExpand}
+								{toggleGroup}
+								onToggleWrite={toggleWritePermission}
+							/>
 						{/each}
 					{:else}
 						<div class="flex items-center justify-center">

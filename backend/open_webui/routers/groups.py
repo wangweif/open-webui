@@ -45,6 +45,15 @@ async def get_groups(user=Depends(get_verified_user)):
 @router.post("/create", response_model=Optional[GroupResponse])
 async def create_new_group(form_data: GroupForm, user=Depends(get_admin_user)):
     try:
+        # 若指定了父级权限组，校验其存在
+        if form_data.parent_id:
+            parent_group = Groups.get_group_by_id(form_data.parent_id)
+            if not parent_group:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=ERROR_MESSAGES.DEFAULT("Parent group not found"),
+                )
+
         group = Groups.insert_new_group(user.id, form_data)
         if group:
             return group
@@ -53,6 +62,8 @@ async def create_new_group(form_data: GroupForm, user=Depends(get_admin_user)):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ERROR_MESSAGES.DEFAULT("Error creating group"),
             )
+    except HTTPException:
+        raise
     except Exception as e:
         log.exception(f"Error creating a new group: {e}")
         raise HTTPException(
@@ -91,6 +102,22 @@ async def update_group_by_id(
         if form_data.user_ids:
             form_data.user_ids = Users.get_valid_user_ids(form_data.user_ids)
 
+        # 若改动父级权限组，校验父组存在且不构成环
+        if form_data.parent_id:
+            parent_group = Groups.get_group_by_id(form_data.parent_id)
+            if not parent_group:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=ERROR_MESSAGES.DEFAULT("Parent group not found"),
+                )
+            if Groups.would_create_cycle(id, form_data.parent_id):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=ERROR_MESSAGES.DEFAULT(
+                        "Cannot set a group's parent to itself or its descendant"
+                    ),
+                )
+
         group = Groups.update_group_by_id(id, form_data)
         if group:
             return group
@@ -99,6 +126,8 @@ async def update_group_by_id(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ERROR_MESSAGES.DEFAULT("Error updating group"),
             )
+    except HTTPException:
+        raise
     except Exception as e:
         log.exception(f"Error updating group {id}: {e}")
         raise HTTPException(
@@ -115,6 +144,16 @@ async def update_group_by_id(
 @router.delete("/id/{id}/delete", response_model=bool)
 async def delete_group_by_id(id: str, user=Depends(get_admin_user)):
     try:
+        # 禁止删除仍含子权限组的父组，需先处理其子组
+        if Groups.has_children(id):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MESSAGES.DEFAULT(
+                    "Cannot delete a group that has child groups. "
+                    "Please delete or move its child groups first."
+                ),
+            )
+
         result = Groups.delete_group_by_id(id)
         if result:
             return result
@@ -123,6 +162,8 @@ async def delete_group_by_id(id: str, user=Depends(get_admin_user)):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ERROR_MESSAGES.DEFAULT("Error deleting group"),
             )
+    except HTTPException:
+        raise
     except Exception as e:
         log.exception(f"Error deleting group {id}: {e}")
         raise HTTPException(

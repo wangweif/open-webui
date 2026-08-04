@@ -28,6 +28,8 @@ class Group(Base):
     id = Column(Text, unique=True, primary_key=True)
     user_id = Column(Text)
 
+    parent_id = Column(Text, nullable=True)
+
     name = Column(Text)
     description = Column(Text)
 
@@ -45,6 +47,8 @@ class GroupModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str
     user_id: str
+
+    parent_id: Optional[str] = None
 
     name: str
     description: str
@@ -67,6 +71,7 @@ class GroupModel(BaseModel):
 class GroupResponse(BaseModel):
     id: str
     user_id: str
+    parent_id: Optional[str] = None
     name: str
     description: str
     permissions: Optional[dict] = None
@@ -81,6 +86,7 @@ class GroupForm(BaseModel):
     name: str
     description: str
     permissions: Optional[dict] = None
+    parent_id: Optional[str] = None
 
 
 class GroupUpdateForm(GroupForm):
@@ -136,6 +142,72 @@ class GroupTable:
                 .order_by(Group.updated_at.desc())
                 .all()
             ]
+
+    def get_child_groups(self, parent_id: str) -> list[GroupModel]:
+        with get_db() as db:
+            return [
+                GroupModel.model_validate(group)
+                for group in db.query(Group)
+                .filter_by(parent_id=parent_id)
+                .order_by(Group.updated_at.desc())
+                .all()
+            ]
+
+    def get_group_ids_with_descendants(self, ids: list[str]) -> list[str]:
+        """给定一组权限组 id，返回这些组及其全部后代组的 id 列表（去重）。
+
+        用于权限继承：父组被授权时，其所有子组的成员也应视为被授权。
+        """
+        if not ids:
+            return []
+        with get_db() as db:
+            # 一次查出全部组，在内存中构建树，避免逐层查库
+            all_groups = db.query(Group).all()
+        children_map: dict[str, list[str]] = {}
+        for group in all_groups:
+            if group.parent_id:
+                children_map.setdefault(group.parent_id, []).append(group.id)
+
+        result: list[str] = []
+        visited: set[str] = set()
+
+        def collect(group_id: str) -> None:
+            if group_id in visited:
+                return
+            visited.add(group_id)
+            result.append(group_id)
+            for child_id in children_map.get(group_id, []):
+                collect(child_id)
+
+        for group_id in ids:
+            collect(group_id)
+        return result
+
+    def has_children(self, id: str) -> bool:
+        with get_db() as db:
+            return db.query(Group).filter_by(parent_id=id).first() is not None
+
+    def would_create_cycle(self, id: str, new_parent_id: Optional[str]) -> bool:
+        # 将 id 挂到 new_parent_id 下是否会形成环：
+        # 若 new_parent_id 是 id 自身，或 id 的某个后代，则形成环。
+        if not new_parent_id:
+            return False
+        if new_parent_id == id:
+            return True
+
+        # 从 new_parent_id 向上回溯祖先链，若遇到 id 则成环。
+        visited = set()
+        current_id = new_parent_id
+        while current_id:
+            if current_id == id:
+                return True
+            if current_id in visited:
+                # 数据已存在环，直接判定，避免死循环。
+                break
+            visited.add(current_id)
+            parent = self.get_group_by_id(current_id)
+            current_id = parent.parent_id if parent else None
+        return False
 
     def get_group_by_id(self, id: str) -> Optional[GroupModel]:
         try:

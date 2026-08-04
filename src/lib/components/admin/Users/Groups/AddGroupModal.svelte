@@ -7,6 +7,8 @@
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	export let onSubmit: Function = () => {};
 	export let show = false;
+	export let parentId: string | null = null;
+	export let parentName: string = '';
 
 	let name = '';
 	let description = '';
@@ -19,7 +21,8 @@
 
 		const group = {
 			name,
-			description
+			description,
+			parent_id: parentId ?? null
 		};
 
 		await onSubmit(group);
@@ -41,7 +44,11 @@
 	<div>
 		<div class=" flex justify-between dark:text-gray-100 px-5 pt-4 mb-1.5">
 			<div class=" text-lg font-medium self-center font-primary">
-				{$i18n.t('Add User Group')}
+				{#if parentId}
+					{$i18n.t('Add Sub Group')}{parentName ? ` · ${parentName}` : ''}
+				{:else}
+					{$i18n.t('Add User Group')}
+				{/if}
 			</div>
 			<button
 				class="self-center"
