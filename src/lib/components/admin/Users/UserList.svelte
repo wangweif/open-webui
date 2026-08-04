@@ -83,14 +83,25 @@
 		});
 	};
 
-	const getUserGroups = (userId) => {
-		const userGroups = groups.filter(group => group.user_ids && group.user_ids.includes(userId));
-		return userGroups;
+	// 将 groups 派生为 userId -> 权限组列表 的映射。
+	// 注意：模板和排序中必须直接引用 userGroupsMap（而非封装成函数调用），
+	// 这样 groups 异步加载完成后 Svelte 才能追踪到依赖并自动刷新列表。
+	const buildUserGroupsMap = (groupsList) => {
+		const map = {};
+		for (const group of groupsList) {
+			for (const userId of group.user_ids ?? []) {
+				if (!map[userId]) map[userId] = [];
+				map[userId].push(group);
+			}
+		}
+		return map;
 	};
 
+	$: userGroupsMap = buildUserGroupsMap(groups);
+
 	const getUserGroupNames = (userId) => {
-		const userGroups = getUserGroups(userId);
-		return userGroups.map(group => group.name).join(', ') || '无权限组';
+		const userGroups = userGroupsMap[userId] ?? [];
+		return userGroups.map((group) => group.name).join(', ') || '无权限组';
 	};
 
 	let sortKey = 'created_at'; // default sort key
@@ -378,7 +389,7 @@
 				<tr class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs">
 					<td class="px-3 py-1 min-w-[7rem] w-28">
 						<div class="flex flex-wrap gap-1">
-							{#each getUserGroups(user.id) as group}
+							{#each userGroupsMap[user.id] ?? [] as group}
 								<Badge
 									type="info"
 									content={group.name}
