@@ -39,7 +39,8 @@
 </script>
 
 {#if show}
-	<div class="w-full h-screen max-h-[100dvh] text-white relative">
+<!-- 根覆盖层必须高于 auth 页表单容器的 z-50, 否则 Get started 按钮会被透明表单层拦截点击 -->
+	<div class="w-full h-screen max-h-[100dvh] text-white relative z-[60]">
 		<div class="fixed m-10 z-50">
 			<div class="flex space-x-2">
 				<div class=" self-center">
