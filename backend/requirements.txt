@@ -98,6 +98,8 @@ pytube==15.0.0
 
 extract_msg
 pydub
+opencc
+diskcache
 duckduckgo-search~=8.0.0
 
 ## Google Drive

@@ -308,3 +308,9 @@ dist
 cypress/videos
 cypress/screenshots
 .vscode/settings.json
+
+
+# 离线镜像构建产物（不入库，可随时重新 build）
+*.tar.gz
+index.json
+manifest.json

@@ -19,6 +19,8 @@ ARG BUILD_HASH=dev-build
 # Override at your own risk - non-root configurations are untested
 ARG UID=0
 ARG GID=0
+# Set to false to skip downloading embedding/whisper models at build time (pure-chat deployment)
+ARG DOWNLOAD_MODELS=true
 
 ######## WebUI frontend ########
 FROM --platform=$BUILDPLATFORM node:22-alpine3.20 AS build
@@ -27,11 +29,17 @@ ARG BUILD_HASH
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+# Cypress 仅用于 E2E 测试, 前端构建不需要; 跳过其二进制下载, 避免 npm ci 时从 download.cypress.io 拉 175MB 且易下载损坏
+ENV CYPRESS_INSTALL_BINARY=0
+# 用国内镜像源(npm 官方源 ECONNRESET 频发) + 加重试; --registry 会自动把 lock 里的 registry.npmjs.org 重写到 npmmirror
+RUN npm ci --registry=https://registry.npmmirror.com --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
 COPY . .
 ENV APP_BUILD_HASH=${BUILD_HASH}
-RUN npm run build
+# vite build 在容器内需要更大堆内存, 否则 OOM
+ENV NODE_OPTIONS=--max-old-space-size=8192
+# 前端打包: nkxz 模式(加载 .env.nkxz); 要改环境换成 build:bjny 或改 package.json 的 build 脚本
+RUN npm run build:nkxz
 
 ######## WebUI backend ########
 FROM python:3.11-slim-bookworm AS base
@@ -44,6 +52,7 @@ ARG USE_EMBEDDING_MODEL
 ARG USE_RERANKING_MODEL
 ARG UID
 ARG GID
+ARG DOWNLOAD_MODELS
 
 ## Basis ##
 ENV ENV=prod \
@@ -102,6 +111,13 @@ RUN if [ $UID -ne 0 ]; then \
 RUN mkdir -p $HOME/.cache/chroma
 RUN echo -n 00000000-0000-0000-0000-000000000000 > $HOME/.cache/chroma/telemetry_user_id
 
+# 更换 apt 源为清华镜像(deb.debian.org 在国内不稳定, 经常 502)
+RUN if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+        sed -i 's|http://deb.debian.org/debian|https://mirrors.tuna.tsinghua.edu.cn/debian|g; s|http://security.debian.org/debian-security|https://mirrors.tuna.tsinghua.edu.cn/debian-security|g' /etc/apt/sources.list.d/debian.sources; \
+    elif [ -f /etc/apt/sources.list ]; then \
+        sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g; s|security.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list; \
+    fi
+
 # Make sure the user has access to the app and root directory
 RUN chown -R $UID:$GID /app $HOME
 
@@ -132,20 +148,27 @@ RUN if [ "$USE_OLLAMA" = "true" ]; then \
 # install python dependencies
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
 
-RUN pip3 install --no-cache-dir uv && \
+# pip/uv 使用国内 PyPI 镜像(清华); torch 的 CPU/CUDA wheel 不在 PyPI 镜像上, 仍用 pytorch 官方 index
+RUN pip3 install --no-cache-dir uv -i https://pypi.tuna.tsinghua.edu.cn/simple && \
     if [ "$USE_CUDA" = "true" ]; then \
     # If you use CUDA the whisper and embedding model will be downloaded on first use
     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
-    uv pip install --system -r requirements.txt --no-cache-dir && \
+    uv pip install --system -r requirements.txt --no-cache-dir --index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    # tiktoken encoding is required at runtime for token counting, keep it baked in (offline safe)
+    python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])" && \
+    if [ "$DOWNLOAD_MODELS" = "true" ]; then \
     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
     python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
-    python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
+    fi; \
     else \
     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --no-cache-dir && \
-    uv pip install --system -r requirements.txt --no-cache-dir && \
+    uv pip install --system -r requirements.txt --no-cache-dir --index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    # tiktoken encoding is required at runtime for token counting, keep it baked in (offline safe)
+    python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])" && \
+    if [ "$DOWNLOAD_MODELS" = "true" ]; then \
     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
     python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
-    python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
+    fi; \
     fi; \
     chown -R $UID:$GID /app/backend/data/
 

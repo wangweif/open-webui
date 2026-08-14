@@ -7,6 +7,8 @@ node_modules
 /package
 .env
 .env.*
+# 前端构建需要读取 .env.bjny(BUILD_TARGET/APP_NAME/页脚等定制), 仅构建阶段使用, 不会进入最终镜像
+!.env.bjny
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 __pycache__
@@ -18,3 +20,7 @@ uploads
 **/*.db
 _test
 backend/data/*
+# 离线镜像包/部署产物不要进入构建上下文(避免把 1GB+ tar.gz 打进 COPY . . 的 node 构建层)
+*.tar.gz
+offline-deploy/
+demo.gif

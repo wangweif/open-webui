@@ -1,0 +1,29 @@
+# docker-compose.local.yaml
+# 【本机 macOS 开发测试用】与 docker-compose.offline.yaml 的区别:
+#   数据目录用已存在的命名卷 open-webui_open-webui-data(而非 /root/data bind mount),
+#   因为 macOS Docker Desktop 不共享 /root, bind mount 会报 Mounts denied。
+# 用法: docker compose -f docker-compose.local.yaml up -d
+services:
+  open-webui:
+    image: open-webui:offline-nkxz
+    pull_policy: never
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "3000:8080" # 宿主机端口:容器端口
+    volumes:
+      - open-webui-data:/app/backend/data # 数据持久化(数据库/上传文件/配置), 复用已有卷
+      - ./.env:/app/.env # 后端环境变量(SSO 等)
+    environment:
+      - 'OPENAI_API_BASE_URLS=http://模型服务IP:8000/v1;http://pipeline服务IP:9099/api/v1'
+      - 'OPENAI_API_KEYS=;'
+      - 'WEBUI_SECRET_KEY=<改成一段随机字符串>'
+      - 'RAG_EMBEDDING_ENGINE=ollama'
+      - 'RAG_RERANKING_MODEL='
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+volumes:
+  open-webui-data:
+    external: true
+    name: open-webui_open-webui-data
