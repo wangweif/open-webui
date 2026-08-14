@@ -385,6 +385,27 @@ WEBUI_AUTH_COOKIE_SECURE = (
 if WEBUI_AUTH and WEBUI_SECRET_KEY == "":
     raise ValueError(ERROR_MESSAGES.ENV_VAR_NOT_FOUND)
 
+####################################
+# Seeyon OA 单点登录 (CIP 门户认证机制 - 单地址模式)
+####################################
+
+ENABLE_SEEYON_SSO = os.environ.get("ENABLE_SEEYON_SSO", "False").lower() == "true"
+# OA ticket 校验接口完整地址（ticket 换取用户信息）
+SEEYON_SSO_VALIDATE_URL = os.environ.get(
+    "SEEYON_SSO_VALIDATE_URL",
+    "https://oa.bjny.org.cn:8443/seeyon/thirdpartyController.do",
+)
+# 回调 OA 校验接口超时（秒）
+SEEYON_SSO_TIMEOUT = float(os.environ.get("SEEYON_SSO_TIMEOUT", "10"))
+# 是否校验 OA 的 SSL 证书；OA 为自签证书时可设 False（生产建议改为 CA 信任）
+SEEYON_SSO_VERIFY_SSL = (
+    os.environ.get("SEEYON_SSO_VERIFY_SSL", "True").lower() == "true"
+)
+# OA 登录名非邮箱时，自动开户的邮箱后缀（如 bjny.org.cn）；为空则使用 {loginName}@localhost
+SEEYON_SSO_EMAIL_SUFFIX = os.environ.get("SEEYON_SSO_EMAIL_SUFFIX", "")
+# SSO 自动开户的默认角色
+SEEYON_SSO_DEFAULT_ROLE = os.environ.get("SEEYON_SSO_DEFAULT_ROLE", "user")
+
 ENABLE_WEBSOCKET_SUPPORT = (
     os.environ.get("ENABLE_WEBSOCKET_SUPPORT", "True").lower() == "true"
 )
