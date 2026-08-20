@@ -20,6 +20,8 @@
 
 	const i18n = getContext('i18n');
 
+	const isRkyEnv = typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'rky';
+
 	let loaded = false;
 
 	let mode = $config?.features.enable_ldap ? 'ldap' : 'signin';
@@ -307,11 +309,17 @@
 					<div class="mt-5 pb-10 w-full dark:text-gray-100">
 						<div class="mb-8 flex items-center justify-center">
 							<div class="flex-shrink-0">
-								<img
-									src="/login.jpg"
-									alt="农科小智"
-									class="w-40 h-40 object-contain"
-								/>
+								{#if isRkyEnv}
+									<div class="w-40 h-40 flex items-center justify-center">
+										<span class="text-3xl font-bold text-green-700 dark:text-green-400">热科小智</span>
+									</div>
+								{:else}
+									<img
+										src="/login.jpg"
+										alt="农科小智"
+										class="w-40 h-40 object-contain"
+									/>
+								{/if}
 							</div>
 							<!-- <div class="ml-4">
 								<div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
