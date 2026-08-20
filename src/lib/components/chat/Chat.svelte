@@ -11,6 +11,9 @@
 		const FOOTER_TEXT_BJNY: string;
 	}
 
+	const isRkyEnv = typeof BUILD_TARGET !== 'undefined' && BUILD_TARGET === 'rky';
+	const defaultBackgroundImageUrl = isRkyEnv ? '/chat-bg-rky.png' : null;
+
 	import { getContext, onDestroy, onMount, tick } from 'svelte';
 	const i18n: Writable<i18nType> = getContext('i18n');
 
@@ -2116,16 +2119,18 @@
 	id="chat-container"
 >
 	{#if !loading}
-		{#if $settings?.backgroundImageUrl ?? null}
+		{#if $settings?.backgroundImageUrl ?? defaultBackgroundImageUrl}
 			<div
 				class="absolute {$showSidebar
 					? 'md:max-w-[calc(100%-260px)] md:translate-x-[260px]'
 					: ''} top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-				style="background-image: url({$settings.backgroundImageUrl})  "
+				style="background-image: url({$settings.backgroundImageUrl ?? defaultBackgroundImageUrl})  "
 			/>
 
 			<div
-				class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
+				class="absolute top-0 left-0 w-full h-full z-0 {$settings?.backgroundImageUrl
+					? 'bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90'
+					: 'bg-linear-to-t from-white to-white/30 dark:from-gray-900 dark:to-gray-900/50'}"
 			/>
 		{/if}
 
@@ -2199,7 +2204,7 @@
 								bind:webSearchEnabled
 								bind:atSelectedModel
 								toolServers={$toolServers}
-								transparentBackground={$settings?.backgroundImageUrl ?? false}
+								transparentBackground={($settings?.backgroundImageUrl ?? defaultBackgroundImageUrl) ?? false}
 								{stopResponse}
 								{createMessagePair}
 								onChange={(input) => {
@@ -2252,7 +2257,7 @@
 								bind:codeInterpreterEnabled
 								bind:webSearchEnabled
 								bind:atSelectedModel
-								transparentBackground={$settings?.backgroundImageUrl ?? false}
+								transparentBackground={($settings?.backgroundImageUrl ?? defaultBackgroundImageUrl) ?? false}
 								toolServers={$toolServers}
 								{stopResponse}
 								{createMessagePair}
