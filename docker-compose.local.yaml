@@ -1,7 +1,7 @@
 # docker-compose.local.yaml
 # 【本机 macOS 开发测试用】与 docker-compose.offline.yaml 的区别:
-#   数据目录用已存在的命名卷 open-webui_open-webui-data(而非 /root/data bind mount),
-#   因为 macOS Docker Desktop 不共享 /root, bind mount 会报 Mounts denied。
+#   数据目录用本机 /Users/lzh/data/open-webui bind mount(与 ragflow 本地版共享同一 webui.db),
+#   而不是 /root/data(服务器路径, Mac 不共享 /root)。
 # 用法: docker compose -f docker-compose.local.yaml up -d
 services:
   open-webui:
@@ -12,18 +12,24 @@ services:
     ports:
       - "3000:8080" # 宿主机端口:容器端口
     volumes:
-      - open-webui-data:/app/backend/data # 数据持久化(数据库/上传文件/配置), 复用已有卷
+      # 数据持久化(数据库/上传文件/配置): 与 ragflow 本地版共享同一目录，
+      # 两边都能读到 webui.db（ragflow 挂到 /ragflow/data）
+      - /Users/lzh/data/open-webui:/app/backend/data
       - ./.env:/app/.env # 后端环境变量(SSO 等)
     environment:
-      - 'OPENAI_API_BASE_URLS=http://模型服务IP:8000/v1;http://pipeline服务IP:9099/api/v1'
-      - 'OPENAI_API_KEYS=;'
-      - 'WEBUI_SECRET_KEY=<改成一段随机字符串>'
+      # ragflow 后端 API 地址（本地用 host.docker.internal，生产改成服务器 IP）
+      - 'KNOWLEDGE_BASE_URL=http://host.docker.internal:9380'
+      # === 模型服务(OpenAI 兼容 API) 和 Pipeline 服务, 分号分隔, 多个地址可一起写 ===
+      # 注意 pipeline 地址不要带 /api/v1（xiaozhi 的路由是 /v1/... 或裸 /...，带 /api/v1 会 404）
+      - 'OPENAI_API_BASE_URLS=http://模型服务IP:8000/v1;http://host.docker.internal:9099'
+      # 与上面地址一一对应的 API Key, 没有就留空字符串；pipeline 那个必须填 PIPELINES_API_KEY
+      - 'OPENAI_API_KEYS=;0p3n-w3bu!'
+      # 必须和 ragflow 的 XIAOZHI_JWT_SECRET_KEY(t0p-s3cr3t) 一致，否则知识库免登嵌入会失败
+      - 'WEBUI_SECRET_KEY=t0p-s3cr3t'
+      # 不使用 RAG 知识库检索: 置为非空值(如 ollama/openai)可跳过启动时下载
+      # sentence-transformers embedding 模型(内网离线环境务必设置, 否则会一直尝试联网下载)
       - 'RAG_EMBEDDING_ENGINE=ollama'
+      # 重排序模型留空(默认), 不会触发下载
       - 'RAG_RERANKING_MODEL='
     extra_hosts:
       - host.docker.internal:host-gateway
-
-volumes:
-  open-webui-data:
-    external: true
-    name: open-webui_open-webui-data

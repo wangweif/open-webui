@@ -745,17 +745,17 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
             tenant_id=TENANT_ID,
         )
         # 如果是直接注册的，则分配默认知识库，否则不分配
-        # if not request.headers.get('Authorization'):
-        #     log.info("-------------直接注册，开始分配知识库")
-        #     await assign_base_kb_permission(user.ragflow_user_id)
-        #     # 将用户添加到UserTenant表
-        #     await add_user_to_user_tenant(TENANT_ID,user.email)
-        #     # 将用户添加到游客权限组
-        #     await add_user_to_tourist_group(user.id)
+        if not request.headers.get('Authorization'):
+            log.info("-------------直接注册，开始分配知识库")
+            await assign_base_kb_permission(user.ragflow_user_id)
+            # 将用户添加到UserTenant表
+            await add_user_to_user_tenant(TENANT_ID,user.ragflow_user_id)
+            # 将用户添加到游客权限组
+            await add_user_to_tourist_group(user.id)
 
-        assistant_id = None
+        assistant_id = await create_assistant(user.ragflow_user_id)
 
-        # Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
+        Users.update_user_by_id(user.id,{"assistant_id":assistant_id})
         if user:
             expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
             expires_at = None
@@ -890,7 +890,16 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
             form_data.name,
             form_data.profile_image_url,
             form_data.role,
+            team_id=BASE_TEAM_ID,
+            tenant_id=TENANT_ID,
         )
+
+        # 用户开通：分配知识库权限 + 添加到租户 + 加游客组 + 创建助手（与注册逻辑一致）
+        await assign_base_kb_permission(user.ragflow_user_id)
+        await add_user_to_user_tenant(TENANT_ID, user.ragflow_user_id)
+        await add_user_to_tourist_group(user.id)
+        assistant_id = await create_assistant(user.ragflow_user_id)
+        Users.update_user_by_id(user.id, {"assistant_id": assistant_id})
 
         if user:
             token = create_token(data={"id": user.id})

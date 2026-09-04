@@ -7,8 +7,9 @@ node_modules
 /package
 .env
 .env.*
-# 前端构建需要读取 .env.bjny(BUILD_TARGET/APP_NAME/页脚等定制), 仅构建阶段使用, 不会进入最终镜像
+# 前端构建需要读取 .env.bjny / .env.nkxz(BUILD_TARGET/APP_NAME/页脚等定制), 仅构建阶段使用, 不会进入最终镜像
 !.env.bjny
+!.env.nkxz
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 __pycache__

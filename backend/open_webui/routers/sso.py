@@ -27,6 +27,12 @@ from open_webui.models.users import Users
 from open_webui.models.user_logins import UserLogins
 from open_webui.utils.auth import create_token
 from open_webui.utils.misc import parse_duration, validate_email_format
+from open_webui.utils.ragflow_assistant import (
+    create_assistant,
+    assign_base_kb_permission,
+    add_user_to_user_tenant,
+)
+from open_webui.routers.groups import add_user_to_tourist_group
 
 router = APIRouter()
 
@@ -92,7 +98,7 @@ def _fetch_oa_user(ticket: str) -> Optional[dict]:
     }
 
 
-def _resolve_or_create_user(login_name: str, member_name: str):
+async def _resolve_or_create_user(login_name: str, member_name: str):
     """根据 OA 登录名解析或自动创建本地用户。"""
     oauth_sub = f"{SSO_OAUTH_SUB_PREFIX}{login_name}"
 
@@ -127,6 +133,12 @@ def _resolve_or_create_user(login_name: str, member_name: str):
         log.info(
             f"Seeyon SSO: 已自动创建用户 email={user.email} name={user.name}"
         )
+        # 用户开通：分配知识库权限 + 添加到租户 + 加游客组 + 创建助手（与注册逻辑一致）
+        await assign_base_kb_permission(user.ragflow_user_id)
+        await add_user_to_user_tenant(TENANT_ID, user.ragflow_user_id)
+        await add_user_to_tourist_group(user.id)
+        assistant_id = await create_assistant(user.ragflow_user_id)
+        Users.update_user_by_id(user.id, {"assistant_id": assistant_id})
     return user
 
 
@@ -165,7 +177,7 @@ async def seeyon_sso_login(
         log.error("Seeyon SSO: ticket 校验失败，跳转登录页")
         return RedirectResponse(url=login_page)
 
-    user = _resolve_or_create_user(info["login_name"], info["member_name"])
+    user = await _resolve_or_create_user(info["login_name"], info["member_name"])
     if not user:
         log.error("Seeyon SSO: 用户解析/创建失败，跳转登录页")
         return RedirectResponse(url=login_page)

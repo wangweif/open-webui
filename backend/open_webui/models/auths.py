@@ -1,4 +1,5 @@
 import logging
+import os
 import uuid
 import time
 from typing import Optional
@@ -119,6 +120,10 @@ class AuthsTable:
             log.info("insert_new_auth")
 
             id = str(uuid.uuid4())
+            # 确保 tenant_id/team_id 有默认值（共享租户/团队）
+            tenant_id = tenant_id or os.environ.get("TENANT_ID", "7b55c7fa19c011f0808539c1213cc878")
+            team_id = team_id or os.environ.get("BASE_TEAM_ID", "2a9ccea4660411f0aa946727ecf0ec23")
+            # 普通用户 ragflow_user_id = 自己的 id（管理员特殊，为 tenant_id）
             ragflow_user_id = id
 
             current_time = int(time.time())

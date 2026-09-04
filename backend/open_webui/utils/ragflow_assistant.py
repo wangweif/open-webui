@@ -204,11 +204,11 @@ async def get_accessible_kbs(assistant_id):
         return await response.json()
 
 # 将用户添加到UserTenant表
-async def add_user_to_user_tenant(tenant_id,email):
+async def add_user_to_user_tenant(tenant_id, user_id):
     token = create_token(data={"id": tenant_id})
     api_url = f"{KNOWLEDGE_BASE_URL}/v1/tenant/{tenant_id}/user"
     payload = {
-        "email": email
+        "user_id": user_id
     }
     response = requests.post(api_url,json=payload,headers={'Content-Type': 'application/json','Cookie': 'token=' + token})
     response_data = response.json()
