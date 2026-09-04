@@ -1359,7 +1359,7 @@ export const sortModels = (modelList: any[]) => {
 	// 定义模型排序顺序
 	const modelOrder = [
 		'rag_flow_webapi_pipeline_cs',
-		'Qwen3:32B', 
+		'Qwen3.6', 
 		'identification_webapi_pipeline_cs',
 		'chatbi_query_analasis_pipeline',
 		'aiPrice',

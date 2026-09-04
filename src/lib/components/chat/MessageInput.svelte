@@ -203,7 +203,7 @@
 	// 保持原有的模型特定逻辑
 	$: isRagFlowModel = selectedModelIds.includes('rag_flow_webapi_pipeline_cs');
 	$: isAiPriceModel = selectedModelIds.includes('aiPrice');
-	$: isWebSearchModel = selectedModelIds.includes('Qwen3:32B');
+	$: isWebSearchModel = selectedModelIds.includes('Qwen3.6');
 	$: isNongJingSanziModel = selectedModelIds.includes('NongJing-sanzi');
 	$: isIdentificationModel = selectedModelIds.includes('identification_webapi_pipeline_cs');
 	$: isAgriculturePriceModel = selectedModelIds.includes('data_query_analysis_pipeline');
